@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Web Level Editor</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #container { display: flex; height: 100vh; }
+        #sidebar {
+            width: 320px;
+            background: #f4f4f4;
+            border-right: 1px solid #ccc;
+            padding: 24px 16px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        #main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #eaf6ff;
+        }
+        .section { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; }
+        input, select, button { margin-bottom: 8px; }
+        textarea { width: 100%; height: 120px; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <div class="section">
+                <label for="slot-length">Word Slot Length</label>
+                <select id="slot-length">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4" selected>4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+                <button id="add-slot">Add Slot</button>
+            </div>
+            <div class="section">
+                <label for="word-input">Add Words (comma separated)</label>
+                <input type="text" id="word-input" placeholder="TAP,ACT" />
+                <button id="add-words">Add Words</button>
+                <button id="shuffle-words">Shuffle Words</button>
+            </div>
+            <div class="section">
+                <label><input type="checkbox" id="connect-mode" /> Connect Mode</label>
+                <button id="connect-btn">Connect</button>
+            </div>
+            <div class="section">
+                <button id="json-btn">JSON</button>
+                <textarea id="json-output" readonly></textarea>
+            </div>
+        </div>
+        <div id="main">
+            <div id="editor-game"></div>
+        </div>
+    </div>
+    <script src="../phaser.min.js"></script>
+    <script src="level_editor.js"></script>
+</body>
+</html>
