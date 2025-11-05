@@ -24,14 +24,42 @@ class LevelEditorScene extends Phaser.Scene {
         this.renderConnections();
     }
     drawAreaBackgrounds() {
-        // Top word slots area
+        // Draw grid for slot area with origin at bottom midpoint
+        const gridColor = 0xcfd8dc;
+        const gridLineWidth = 1;
+        const slotAreaWidth = this.sys.game.canvas.width;
+        const slotAreaHeight = this.slotAreaHeight;
+        const gridSize = 50;
+        const originX = slotAreaWidth / 2;
+        const originY = slotAreaHeight;
+        // Draw slot area background first (for contrast)
         this.add.rectangle(
-            this.sys.game.canvas.width / 2,
-            this.slotAreaHeight / 2,
-            this.sys.game.canvas.width,
-            this.slotAreaHeight,
+            slotAreaWidth / 2,
+            slotAreaHeight / 2,
+            slotAreaWidth,
+            slotAreaHeight,
             0xe3f2fd
-        ).setDepth(-10);
+        ).setDepth(-12);
+        // Vertical grid lines
+        for (let x = originX; x <= slotAreaWidth; x += gridSize) {
+            this.add.line(0, 0, x, originY, x, 0, gridColor)
+                .setOrigin(0)
+                .setLineWidth(gridLineWidth)
+                .setDepth(-11);
+        }
+        for (let x = originX - gridSize; x >= 0; x -= gridSize) {
+            this.add.line(0, 0, x, originY, x, 0, gridColor)
+                .setOrigin(0)
+                .setLineWidth(gridLineWidth)
+                .setDepth(-11);
+        }
+        // Horizontal grid lines
+        for (let y = originY; y >= 0; y -= gridSize) {
+            this.add.line(0, 0, 0, y, slotAreaWidth, y, gridColor)
+                .setOrigin(0)
+                .setLineWidth(gridLineWidth)
+                .setDepth(-11);
+        }
         // Bottom word bank area
         this.add.rectangle(
             this.sys.game.canvas.width / 2,
@@ -76,14 +104,22 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     addSlot(length) {
-        // Center slot in slot area
-        const slotAreaWidth = this.sys.game.canvas.width;
-        const slotAreaHeight = this.slotAreaHeight;
-        const x = 50; // percent
-        const y = 10 + this.slots.length * 15; // percent, staggered
-        this.slots.push({ length, x, y });
-        this.renderSlots();
-        this.renderConnections();
+    // Center slot in slot area and align to grid
+    const slotAreaWidth = this.sys.game.canvas.width;
+    const slotAreaHeight = this.slotAreaHeight;
+    const gridSize = 50;
+    // Snap to grid origin (bottom center)
+    const originX = slotAreaWidth / 2;
+    const originY = slotAreaHeight;
+    // Place slot a few grid cells above origin, centered
+    const gridY = Math.floor((originY - (100 + this.slots.length * gridSize)) / gridSize) * gridSize;
+    const gridX = originX;
+    // Convert to percent
+    const x = (gridX / slotAreaWidth) * 100;
+    const y = (gridY / slotAreaHeight) * 100;
+    this.slots.push({ length, x, y });
+    this.renderSlots();
+    this.renderConnections();
     }
 
     addWords(val) {
@@ -102,6 +138,7 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     renderSlots() {
+    const gridSize = 50;
         if (this.slotSprites) {
             this.slotSprites.forEach(g => g.destroy());
         }
@@ -113,12 +150,12 @@ class LevelEditorScene extends Phaser.Scene {
         this.slots.forEach((slot, slotIdx) => {
             // Create a container for the slot
             let slotContainer = this.add.container(0, 0);
-            let baseX = (slot.x / 100) * slotAreaWidth;
-            let baseY = (slot.y / 100) * slotAreaHeight;
+            let baseX = Math.round((slot.x / 100) * slotAreaWidth / 50) * 50;
+            let baseY = Math.round((slot.y / 100) * slotAreaHeight / 50) * 50;
             let slotTotalWidth = slot.length * slotSize + (slot.length - 1) * gap;
-            // Place squares inside the container at relative positions
+            // Place squares inside the container at grid-aligned positions
             for (let i = 0; i < slot.length; i++) {
-                let x = i * (slotSize + gap) - slotTotalWidth / 2 + slotSize / 2;
+                let x = i * gridSize - ((slot.length - 1) * gridSize) / 2;
                 let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i });
@@ -141,11 +178,14 @@ class LevelEditorScene extends Phaser.Scene {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
-                    slotContainer.x = dragX;
-                    slotContainer.y = dragY;
+                    // Snap to grid
+                    let snappedX = Math.round(dragX / gridSize) * gridSize;
+                    let snappedY = Math.round(dragY / gridSize) * gridSize;
+                    slotContainer.x = snappedX;
+                    slotContainer.y = snappedY;
                     // Update slot position in percent
-                    slot.x = (dragX / slotAreaWidth) * 100;
-                    slot.y = (dragY / slotAreaHeight) * 100;
+                    slot.x = (snappedX / slotAreaWidth) * 100;
+                    slot.y = (snappedY / slotAreaHeight) * 100;
                     // Update interactive area to match new position
                     slotContainer.input.hitArea.x = -slotTotalWidth/2;
                     slotContainer.input.hitArea.y = -slotSize/2;
