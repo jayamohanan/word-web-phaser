@@ -64,6 +64,8 @@ class LevelEditorScene extends Phaser.Scene {
         document.getElementById('connect-mode').onchange = (e) => {
             this.connectMode = e.target.checked;
             this.selectedSquares = [];
+            // Re-render slots to update interactivity
+            this.renderSlots();
         };
         document.getElementById('connect-btn').onclick = () => {
             this.tryConnect();
@@ -109,21 +111,47 @@ class LevelEditorScene extends Phaser.Scene {
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
         this.slots.forEach((slot, slotIdx) => {
-            let slotGroup = this.add.group();
+            // Create a container for the slot
+            let slotContainer = this.add.container(0, 0);
             let baseX = (slot.x / 100) * slotAreaWidth;
             let baseY = (slot.y / 100) * slotAreaHeight;
             let slotTotalWidth = slot.length * slotSize + (slot.length - 1) * gap;
-            let startX = baseX - slotTotalWidth / 2;
+            // Place squares inside the container at relative positions
             for (let i = 0; i < slot.length; i++) {
-                let x = startX + i * (slotSize + gap);
-                let y = baseY;
+                let x = i * (slotSize + gap) - slotTotalWidth / 2 + slotSize / 2;
+                let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i });
-                square.setInteractive();
-                square.on('pointerdown', () => this.squareClicked(slotIdx, i, square));
-                slotGroup.add(square);
+                // Only set interactive and pointerdown in connect mode
+                if (this.connectMode) {
+                    square.setInteractive();
+                    square.on('pointerdown', () => this.squareClicked(slotIdx, i, square));
+                }
+                slotContainer.add(square);
             }
-            this.slotSprites.push(slotGroup);
+            // Set container position to baseX, baseY
+            slotContainer.x = baseX;
+            slotContainer.y = baseY;
+            // Make the whole slot draggable when not in connect mode
+            if (!this.connectMode) {
+                slotContainer.setSize(slotTotalWidth, slotSize);
+                slotContainer.setInteractive(new Phaser.Geom.Rectangle(-slotTotalWidth/2, -slotSize/2, slotTotalWidth, slotSize), Phaser.Geom.Rectangle.Contains);
+                this.input.setDraggable(slotContainer);
+                slotContainer.on('pointerdown', () => {
+                    console.log(`Slot container clicked: slotIdx=${slotIdx}`);
+                });
+                slotContainer.on('drag', (pointer, dragX, dragY) => {
+                    slotContainer.x = dragX;
+                    slotContainer.y = dragY;
+                    // Update slot position in percent
+                    slot.x = (dragX / slotAreaWidth) * 100;
+                    slot.y = (dragY / slotAreaHeight) * 100;
+                    // Update interactive area to match new position
+                    slotContainer.input.hitArea.x = -slotTotalWidth/2;
+                    slotContainer.input.hitArea.y = -slotSize/2;
+                });
+            }
+            this.slotSprites.push(slotContainer);
         });
     }
 
@@ -153,18 +181,8 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     squareClicked(slotIdx, squareIdx, square) {
-        if (!this.connectMode) {
-            // Drag slot
-            this.input.setDraggable(square);
-            square.on('drag', (pointer, dragX, dragY) => {
-                square.x = dragX;
-                square.y = dragY;
-                // Update slot position
-                const slot = this.slots[slotIdx];
-                slot.x = (dragX / this.sys.game.canvas.width) * 100;
-                slot.y = (dragY / this.slotAreaHeight) * 100;
-            });
-        } else {
+        // Only allow selection in connect mode, never draggable
+        if (this.connectMode) {
             // Connect mode: select squares
             if (this.selectedSquares.length < 2) {
                 this.selectedSquares.push({ slotIdx, squareIdx, square });
