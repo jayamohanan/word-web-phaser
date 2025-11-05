@@ -158,7 +158,6 @@ class LevelEditorScene extends Phaser.Scene {
             
             // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
-                comsole
                 let x = i * CONFIG.GRID_SIZE;
                 let y = 0;
                 let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
