@@ -138,57 +138,47 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     renderSlots() {
-    const gridSize = 50;
         if (this.slotSprites) {
             this.slotSprites.forEach(g => g.destroy());
         }
         this.slotSprites = [];
-        const slotSize = 50;
-        const gap = 8;
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
         this.slots.forEach((slot, slotIdx) => {
-            // Create a container for the slot
             let slotContainer = this.add.container(0, 0);
-            let baseX = Math.round((slot.x / 100) * slotAreaWidth / 50) * 50;
-            let baseY = Math.round((slot.y / 100) * slotAreaHeight / 50) * 50;
-            let slotTotalWidth = slot.length * slotSize + (slot.length - 1) * gap;
-            // Place squares inside the container at grid-aligned positions
+            // Snap slot to grid
+            let baseX = Math.round((slot.x / 100) * slotAreaWidth / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
+            let baseY = Math.round((slot.y / 100) * slotAreaHeight / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
+            // Place squares so each is centered in a grid cell
             for (let i = 0; i < slot.length; i++) {
-                let x = i * gridSize - ((slot.length - 1) * gridSize) / 2;
+                let x = i * CONFIG.GRID_SIZE - ((slot.length - 1) * CONFIG.GRID_SIZE) / 2;
                 let y = 0;
-                let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
+                let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i });
-                // Only set interactive and pointerdown in connect mode
                 if (this.connectMode) {
                     square.setInteractive();
                     square.on('pointerdown', () => this.squareClicked(slotIdx, i, square));
                 }
                 slotContainer.add(square);
             }
-            // Set container position to baseX, baseY
             slotContainer.x = baseX;
             slotContainer.y = baseY;
-            // Make the whole slot draggable when not in connect mode
             if (!this.connectMode) {
-                slotContainer.setSize(slotTotalWidth, slotSize);
-                slotContainer.setInteractive(new Phaser.Geom.Rectangle(-slotTotalWidth/2, -slotSize/2, slotTotalWidth, slotSize), Phaser.Geom.Rectangle.Contains);
+                slotContainer.setSize(slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH);
+                slotContainer.setInteractive(new Phaser.Geom.Rectangle(-slot.length * CONFIG.GRID_SIZE / 2, -CONFIG.SQUARE_WIDTH / 2, slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH), Phaser.Geom.Rectangle.Contains);
                 this.input.setDraggable(slotContainer);
                 slotContainer.on('pointerdown', () => {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
-                    // Snap to grid
-                    let snappedX = Math.round(dragX / gridSize) * gridSize;
-                    let snappedY = Math.round(dragY / gridSize) * gridSize;
+                    let snappedX = Math.round(dragX / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
+                    let snappedY = Math.round(dragY / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
                     slotContainer.x = snappedX;
                     slotContainer.y = snappedY;
-                    // Update slot position in percent
                     slot.x = (snappedX / slotAreaWidth) * 100;
                     slot.y = (snappedY / slotAreaHeight) * 100;
-                    // Update interactive area to match new position
-                    slotContainer.input.hitArea.x = -slotTotalWidth/2;
-                    slotContainer.input.hitArea.y = -slotSize/2;
+                    slotContainer.input.hitArea.x = -slot.length * CONFIG.GRID_SIZE / 2;
+                    slotContainer.input.hitArea.y = -CONFIG.SQUARE_WIDTH / 2;
                 });
             }
             this.slotSprites.push(slotContainer);
