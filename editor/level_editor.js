@@ -158,6 +158,7 @@ class LevelEditorScene extends Phaser.Scene {
             
             // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
+                comsole
                 let x = i * CONFIG.GRID_SIZE;
                 let y = 0;
                 let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
@@ -174,7 +175,15 @@ class LevelEditorScene extends Phaser.Scene {
             slotContainer.y = anchorY;
             if (!this.connectMode) {
                 slotContainer.setSize(slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH);
-                slotContainer.setInteractive(new Phaser.Geom.Rectangle(0, -CONFIG.SQUARE_WIDTH / 2, slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH), Phaser.Geom.Rectangle.Contains);
+                    slotContainer.setInteractive(
+                        new Phaser.Geom.Rectangle(
+                            -CONFIG.GRID_SIZE / 2,
+                            -CONFIG.SQUARE_WIDTH / 2,
+                            slot.length * CONFIG.GRID_SIZE,
+                            CONFIG.SQUARE_WIDTH
+                        ),
+                        Phaser.Geom.Rectangle.Contains
+                    );
                 this.input.setDraggable(slotContainer);
                 slotContainer.on('pointerdown', () => {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
