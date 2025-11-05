@@ -40,14 +40,14 @@ class LevelEditorScene extends Phaser.Scene {
             slotAreaHeight,
             0xe3f2fd
         ).setDepth(-12);
-        // Vertical grid lines
-        for (let x = originX; x <= slotAreaWidth; x += gridSize) {
+        // Vertical grid lines (offset so column 0 center is at origin)
+        for (let x = originX - gridSize / 2; x <= slotAreaWidth; x += gridSize) {
             this.add.line(0, 0, x, originY, x, 0, gridColor)
                 .setOrigin(0)
                 .setLineWidth(gridLineWidth)
                 .setDepth(-11);
         }
-        for (let x = originX - gridSize; x >= 0; x -= gridSize) {
+        for (let x = originX - gridSize / 2; x >= 0; x -= gridSize) {
             this.add.line(0, 0, x, originY, x, 0, gridColor)
                 .setOrigin(0)
                 .setLineWidth(gridLineWidth)
@@ -105,16 +105,20 @@ class LevelEditorScene extends Phaser.Scene {
 
     addSlot(length) {
     // Spawn slot so first square is at center of a grid cell
+    // Grid origin is at bottom midpoint of slot area
     const slotAreaWidth = this.sys.game.canvas.width;
     const slotAreaHeight = this.slotAreaHeight;
     const gridSize = CONFIG.GRID_SIZE;
-    const gridCols = Math.floor(slotAreaWidth / gridSize);
-    const gridRows = Math.floor(slotAreaHeight / gridSize);
-    const centerCol = Math.floor(gridCols / 2);
+    const originX = slotAreaWidth / 2;
+    const originY = slotAreaHeight;
+    
+    // Spawn slot at grid cell: column 0 (center), a few rows up from bottom
+    const anchorCol = 0; // Center column
     const rowFromBottom = 2 + this.slots.length;
-    const spawnRow = Math.max(gridRows - rowFromBottom, 0);
-    // Store anchor cell for slot
-    this.slots.push({ length, anchorCol: centerCol, anchorRow: spawnRow });
+    const anchorRow = -rowFromBottom; // Negative row = above origin
+    
+    // Store anchor cell for slot (relative to grid origin)
+    this.slots.push({ length, anchorCol, anchorRow });
     this.renderSlots();
     this.renderConnections();
     }
@@ -141,12 +145,18 @@ class LevelEditorScene extends Phaser.Scene {
         this.slotSprites = [];
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
+        const originX = slotAreaWidth / 2;
+        const originY = slotAreaHeight;
+        
         this.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container(0, 0);
-            // Calculate anchor cell center
-            let baseX = slot.anchorCol * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-            let baseY = slot.anchorRow * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
-            // Place squares so first square is at anchor cell center, next squares offset by grid size
+            
+            // Calculate anchor cell center relative to grid origin (bottom midpoint)
+            // anchorCol = 0 means center column, negative anchorRow means above origin
+            let anchorX = originX + (slot.anchorCol * CONFIG.GRID_SIZE);
+            let anchorY = originY + (slot.anchorRow * CONFIG.GRID_SIZE);
+            
+            // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
                 let x = i * CONFIG.GRID_SIZE;
                 let y = 0;
@@ -158,25 +168,30 @@ class LevelEditorScene extends Phaser.Scene {
                 }
                 slotContainer.add(square);
             }
-            // Offset container so first square is at anchor cell center
-            slotContainer.x = baseX;
-            slotContainer.y = baseY;
+            
+            // Place container so first square is centered at anchor grid cell
+            slotContainer.x = anchorX;
+            slotContainer.y = anchorY;
             if (!this.connectMode) {
                 slotContainer.setSize(slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH);
-                slotContainer.setInteractive(new Phaser.Geom.Rectangle(-slot.length * CONFIG.GRID_SIZE / 2, -CONFIG.SQUARE_WIDTH / 2, slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH), Phaser.Geom.Rectangle.Contains);
+                slotContainer.setInteractive(new Phaser.Geom.Rectangle(0, -CONFIG.SQUARE_WIDTH / 2, slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH), Phaser.Geom.Rectangle.Contains);
                 this.input.setDraggable(slotContainer);
                 slotContainer.on('pointerdown', () => {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
-                    let snappedX = Math.round(dragX / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
-                    let snappedY = Math.round(dragY / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
+                    // Snap to grid cells relative to origin
+                    let offsetFromOriginX = dragX - originX;
+                    let offsetFromOriginY = dragY - originY;
+                    let snappedCol = Math.round(offsetFromOriginX / CONFIG.GRID_SIZE);
+                    let snappedRow = Math.round(offsetFromOriginY / CONFIG.GRID_SIZE);
+                    let snappedX = originX + snappedCol * CONFIG.GRID_SIZE;
+                    let snappedY = originY + snappedRow * CONFIG.GRID_SIZE;
+                    
                     slotContainer.x = snappedX;
                     slotContainer.y = snappedY;
-                    slot.x = (snappedX / slotAreaWidth) * 100;
-                    slot.y = (snappedY / slotAreaHeight) * 100;
-                    slotContainer.input.hitArea.x = -slot.length * CONFIG.GRID_SIZE / 2;
-                    slotContainer.input.hitArea.y = -CONFIG.SQUARE_WIDTH / 2;
+                    slot.anchorCol = snappedCol;
+                    slot.anchorRow = snappedRow;
                 });
             }
             this.slotSprites.push(slotContainer);
