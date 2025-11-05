@@ -104,20 +104,17 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     addSlot(length) {
-    // Center slot in slot area and align to grid
+    // Spawn slot so first square is at center of a grid cell
     const slotAreaWidth = this.sys.game.canvas.width;
     const slotAreaHeight = this.slotAreaHeight;
-    const gridSize = 50;
-    // Snap to grid origin (bottom center)
-    const originX = slotAreaWidth / 2;
-    const originY = slotAreaHeight;
-    // Place slot a few grid cells above origin, centered
-    const gridY = Math.floor((originY - (100 + this.slots.length * gridSize)) / gridSize) * gridSize;
-    const gridX = originX;
-    // Convert to percent
-    const x = (gridX / slotAreaWidth) * 100;
-    const y = (gridY / slotAreaHeight) * 100;
-    this.slots.push({ length, x, y });
+    const gridSize = CONFIG.GRID_SIZE;
+    const gridCols = Math.floor(slotAreaWidth / gridSize);
+    const gridRows = Math.floor(slotAreaHeight / gridSize);
+    const centerCol = Math.floor(gridCols / 2);
+    const rowFromBottom = 2 + this.slots.length;
+    const spawnRow = Math.max(gridRows - rowFromBottom, 0);
+    // Store anchor cell for slot
+    this.slots.push({ length, anchorCol: centerCol, anchorRow: spawnRow });
     this.renderSlots();
     this.renderConnections();
     }
@@ -146,12 +143,12 @@ class LevelEditorScene extends Phaser.Scene {
         const slotAreaHeight = this.slotAreaHeight;
         this.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container(0, 0);
-            // Snap slot to grid
-            let baseX = Math.round((slot.x / 100) * slotAreaWidth / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
-            let baseY = Math.round((slot.y / 100) * slotAreaHeight / CONFIG.GRID_SIZE) * CONFIG.GRID_SIZE;
-            // Place squares so each is centered in a grid cell
+            // Calculate anchor cell center
+            let baseX = slot.anchorCol * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
+            let baseY = slot.anchorRow * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE / 2;
+            // Place squares so first square is at anchor cell center, next squares offset by grid size
             for (let i = 0; i < slot.length; i++) {
-                let x = i * CONFIG.GRID_SIZE - ((slot.length - 1) * CONFIG.GRID_SIZE) / 2;
+                let x = i * CONFIG.GRID_SIZE;
                 let y = 0;
                 let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i });
@@ -161,6 +158,7 @@ class LevelEditorScene extends Phaser.Scene {
                 }
                 slotContainer.add(square);
             }
+            // Offset container so first square is at anchor cell center
             slotContainer.x = baseX;
             slotContainer.y = baseY;
             if (!this.connectMode) {
