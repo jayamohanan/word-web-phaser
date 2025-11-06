@@ -71,9 +71,9 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     setupLayout() {
-        this.slotAreaHeight = this.sys.game.canvas.height * 0.6;
-        this.bankAreaY = this.slotAreaHeight;
-        this.bankAreaHeight = this.sys.game.canvas.height * 0.4;
+    this.slotAreaHeight = this.sys.game.canvas.height * CONFIG.SLOT_AREA_HEIGHT_FACTOR;
+    this.bankAreaY = this.slotAreaHeight;
+    this.bankAreaHeight = this.sys.game.canvas.height * (1 - CONFIG.SLOT_AREA_HEIGHT_FACTOR);
     }
 
     setupUIHooks() {
@@ -116,7 +116,8 @@ class LevelEditorScene extends Phaser.Scene {
     const anchorCol = 0; // Center column
     const rowFromBottom = 2 + this.slots.length;
     const anchorRow = -rowFromBottom; // Negative row = above origin
-    
+    console.log(`Adding slot: length=${length}, anchorCol=${anchorCol}, anchorRow=${anchorRow}`);
+
     // Store anchor cell for slot (relative to grid origin)
     this.slots.push({ length, anchorCol, anchorRow });
     this.renderSlots();
@@ -396,7 +397,11 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     generateJSON() {
-        const slots = this.slots.map(s => ({ length: s.length, x: s.x, y: s.y }));
+        const slots = this.slots.map(s => ({
+            length: s.length,
+            anchorCol: s.anchorCol,
+            anchorRow: s.anchorRow
+        }));
         const words = this.words.slice();
         const connections = this.connections.slice();
         const json = JSON.stringify({ slots, words, connections }, null, 2);
