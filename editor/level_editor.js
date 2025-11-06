@@ -294,6 +294,40 @@ class LevelEditorScene extends Phaser.Scene {
             const selected = allDistances.find(d => d.i === bestA && d.j === bestB);
             if (selected) {
                 console.log(`Selected: A side ${selected.i} (${selected.ptA.x},${selected.ptA.y}) to B side ${selected.j} (${selected.ptB.x},${selected.ptB.y}) with shortest distance = ${selected.dist}`);
+                let ptA, ptB;
+                const slotAContainer = this.slotSprites[a.slotIdx];
+                const slotBContainer = this.slotSprites[b.slotIdx];
+                if (slotAContainer && typeof slotAContainer.getChildren === 'function' && slotBContainer && typeof slotBContainer.getChildren === 'function') {
+                    const squareAObj = slotAContainer.getChildren()[a.squareIdx];
+                    const squareBObj = slotBContainer.getChildren()[b.squareIdx];
+                    if (squareAObj && squareBObj) {
+                        ptA = this.getSquareSideMidpoint(squareAObj, bestA);
+                        ptB = this.getSquareSideMidpoint(squareBObj, bestB);
+                    }
+                }
+                // Fallback to selected.ptA/ptB if not found
+                if (!ptA || !ptB) {
+                    ptA = selected.ptA;
+                    ptB = selected.ptB;
+                }
+                // Draw line using absolute coordinates, origin at (0,0)
+                // Use the stroke color of the first selected square for the line
+                let lineColor = 0x000000;
+                let squareAObj = null;
+                if (slotAContainer && typeof slotAContainer.getChildren === 'function') {
+                    squareAObj = slotAContainer.getChildren()[a.squareIdx];
+                }
+                if (squareAObj && squareAObj.strokeColor !== undefined) {
+                    lineColor = squareAObj.strokeColor;
+                } else if (a.square && a.square.strokeColor !== undefined) {
+                    lineColor = a.square.strokeColor;
+                }
+                let tempLine = this.add.line(0, 0, ptA.x, ptA.y, ptB.x, ptB.y, lineColor)
+                    .setOrigin(0, 0)
+                    .setLineWidth(2)
+                    .setDepth(1000);
+                // Optionally, remove this temp line after a short delay (uncomment if desired)
+                // this.time.delayedCall(1000, () => tempLine.destroy());
             }
             // Connection string
             const connStr = `${a.slotIdx}${a.squareIdx}${bestA}-${b.slotIdx}${b.squareIdx}${bestB}`;
