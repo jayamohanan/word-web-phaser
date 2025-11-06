@@ -236,16 +236,21 @@ class LevelEditorScene extends Phaser.Scene {
     squareClicked(slotIdx, squareIdx, square) {
         // Only allow selection in connect mode, never draggable
         if (this.connectMode) {
-            // Connect mode: select squares
-            if (this.selectedSquares.length < 2) {
-                this.selectedSquares.push({ slotIdx, squareIdx, square });
-                square.setFillStyle(0xffe066);
+            // Remove previous selection from same slot, if any
+            let prevIdx = this.selectedSquares.findIndex(s => s.slotIdx === slotIdx);
+            if (prevIdx !== -1) {
+                // Unhighlight previous square from this slot
+                this.selectedSquares[prevIdx].square.setFillStyle(0xffffff);
+                this.selectedSquares.splice(prevIdx, 1);
             }
-            if (this.selectedSquares.length > 2) {
-                this.selectedSquares.forEach(s => s.square.setFillStyle(0xffffff));
-                this.selectedSquares = [{ slotIdx, squareIdx, square }];
-                square.setFillStyle(0xffe066);
+            // If already two squares selected, remove the oldest
+            if (this.selectedSquares.length === 2) {
+                this.selectedSquares[0].square.setFillStyle(0xffffff);
+                this.selectedSquares.shift();
             }
+            // Add new selection and highlight
+            this.selectedSquares.push({ slotIdx, squareIdx, square });
+            square.setFillStyle(0xffe066);
         }
     }
 
