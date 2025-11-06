@@ -154,8 +154,8 @@ class LevelEditorScene extends Phaser.Scene {
             // Calculate anchor cell center relative to grid origin (bottom midpoint)
             // anchorCol = 0 means center column, negative anchorRow means above origin
             let anchorX = originX + (slot.anchorCol * CONFIG.GRID_SIZE);
-            let anchorY = originY + (slot.anchorRow * CONFIG.GRID_SIZE);
-            
+            let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow)*0.5) * CONFIG.GRID_SIZE);
+
             // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
                 let x = i * CONFIG.GRID_SIZE;
