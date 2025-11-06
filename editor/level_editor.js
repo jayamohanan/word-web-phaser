@@ -251,22 +251,49 @@ class LevelEditorScene extends Phaser.Scene {
     tryConnect() {
         if (this.selectedSquares.length === 2) {
             const [a, b] = this.selectedSquares;
-            // Find closest side midpoints
             const squareA = a.square;
             const squareB = b.square;
             let minDist = Infinity;
             let bestA = 0, bestB = 0;
-            for (let i = 0; i < 4; i++) {
+
+            // Helper to get allowed side indices for a square in a slot
+            function allowedSides(slotLength, squareIdx) {
+                if (slotLength === 1) {
+                    return [0, 1, 2, 3]; // single square, all sides
+                }
+                if (squareIdx === 0) {
+                    return [0, 2, 3]; // first: ignore right (1)
+                }
+                if (squareIdx === slotLength - 1) {
+                    return [0, 1, 2]; // last: ignore left (3)
+                }
+                return [0, 2]; // middle: only top/bottom
+            }
+
+            const slotA = this.slots[a.slotIdx];
+            const slotB = this.slots[b.slotIdx];
+            const allowedA = allowedSides(slotA.length, a.squareIdx);
+            const allowedB = allowedSides(slotB.length, b.squareIdx);
+
+            let allDistances = [];
+            for (let i of allowedA) {
                 const ptA = this.getSquareSideMidpoint(squareA, i);
-                for (let j = 0; j < 4; j++) {
+                for (let j of allowedB) {
                     const ptB = this.getSquareSideMidpoint(squareB, j);
                     const dist = Phaser.Math.Distance.Between(ptA.x, ptA.y, ptB.x, ptB.y);
+                    allDistances.push({ i, j, ptA, ptB, dist });
+                    console.log(`A side ${i} (${ptA.x},${ptA.y}) to B side ${j} (${ptB.x},${ptB.y}): distance = ${dist}`);
                     if (dist < minDist) {
                         minDist = dist;
                         bestA = i;
                         bestB = j;
                     }
                 }
+            }
+            // Show which combination is selected
+            const selected = allDistances.find(d => d.i === bestA && d.j === bestB);
+            if (selected) {
+                console.log(`Selected: A side ${selected.i} (${selected.ptA.x},${selected.ptA.y}) to B side ${selected.j} (${selected.ptB.x},${selected.ptB.y}) with shortest distance = ${selected.dist}`);
             }
             // Connection string
             const connStr = `${a.slotIdx}${a.squareIdx}${bestA}-${b.slotIdx}${b.squareIdx}${bestB}`;
@@ -288,8 +315,18 @@ class LevelEditorScene extends Phaser.Scene {
             const [from, to] = connStr.split('-');
             const fromInfo = this.decodeConn(from);
             const toInfo = this.decodeConn(to);
-            const fromSquare = this.slotSprites[fromInfo.slotIdx].getChildren()[fromInfo.squareIdx];
-            const toSquare = this.slotSprites[toInfo.slotIdx].getChildren()[toInfo.squareIdx];
+            const fromSlot = this.slotSprites[fromInfo.slotIdx];
+            const toSlot = this.slotSprites[toInfo.slotIdx];
+            if (!fromSlot || typeof fromSlot.getChildren !== 'function' || !toSlot || typeof toSlot.getChildren !== 'function') {
+                console.warn('Connection skipped: slotSprites entry missing or not a Container', { fromInfo, toInfo });
+                return;
+            }
+            const fromSquare = fromSlot.getChildren()[fromInfo.squareIdx];
+            const toSquare = toSlot.getChildren()[toInfo.squareIdx];
+            if (!fromSquare || !toSquare) {
+                console.warn('Connection skipped: square missing in slot', { fromInfo, toInfo });
+                return;
+            }
             const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
             const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setLineWidth(3);
@@ -306,13 +343,21 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     getSquareSideMidpoint(square, sideIdx) {
-        const { x, y, width, height } = square;
+        // Get global position: container.x/y + square.x/y
+        let parent = square.parentContainer;
+        let gx = square.x;
+        let gy = square.y;
+        if (parent) {
+            gx += parent.x;
+            gy += parent.y;
+        }
+        const { width, height } = square;
         switch (sideIdx) {
-            case 0: return { x: x, y: y - height / 2 };
-            case 1: return { x: x + width / 2, y: y };
-            case 2: return { x: x, y: y + height / 2 };
-            case 3: return { x: x - width / 2, y: y };
-            default: return { x, y };
+            case 0: return { x: gx, y: gy - height / 2 };
+            case 1: return { x: gx + width / 2, y: gy };
+            case 2: return { x: gx, y: gy + height / 2 };
+            case 3: return { x: gx - width / 2, y: gy };
+            default: return { x: gx, y: gy };
         }
     }
 
