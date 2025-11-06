@@ -153,13 +153,14 @@ class LevelEditorScene extends Phaser.Scene {
             
             // Calculate anchor cell center relative to grid origin (bottom midpoint)
             // anchorCol = 0 means center column, negative anchorRow means above origin
-            let anchorX = originX + (slot.anchorCol * CONFIG.GRID_SIZE);
-            let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow)*0.5) * CONFIG.GRID_SIZE);
+            let anchorX = originX + ((slot.anchorCol-0.5) * CONFIG.GRID_SIZE);
+            let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow)*1) * CONFIG.GRID_SIZE);
+            let square = this.add.rectangle(anchorX, anchorY, 2, 2, 0xff0000).setStrokeStyle(2, 0x000000);
 
             // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
-                let x = i * CONFIG.GRID_SIZE;
-                let y = 0;
+                let x = i * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE/2;
+                let y = 0+ CONFIG.GRID_SIZE/2;
                 let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i });
                 if (this.connectMode) {
@@ -173,16 +174,16 @@ class LevelEditorScene extends Phaser.Scene {
             slotContainer.x = anchorX;
             slotContainer.y = anchorY;
             if (!this.connectMode) {
-                slotContainer.setSize(slot.length * CONFIG.GRID_SIZE, CONFIG.SQUARE_WIDTH);
-                    slotContainer.setInteractive(
-                        new Phaser.Geom.Rectangle(
-                            -CONFIG.GRID_SIZE / 2,
-                            -CONFIG.SQUARE_WIDTH / 2,
-                            slot.length * CONFIG.GRID_SIZE,
-                            CONFIG.SQUARE_WIDTH
-                        ),
-                        Phaser.Geom.Rectangle.Contains
-                    );
+                slotContainer.setInteractive(
+                    new Phaser.Geom.Rectangle(
+                        0,
+                        0,
+                        slot.length * CONFIG.GRID_SIZE,
+                        CONFIG.SQUARE_WIDTH
+                    ),
+                    Phaser.Geom.Rectangle.Contains
+                );
+
                 this.input.setDraggable(slotContainer);
                 slotContainer.on('pointerdown', () => {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
