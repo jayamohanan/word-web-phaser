@@ -155,7 +155,7 @@ class LevelEditorScene extends Phaser.Scene {
             // anchorCol = 0 means center column, negative anchorRow means above origin
             let anchorX = originX + ((slot.anchorCol-0.5) * CONFIG.GRID_SIZE);
             let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow)*1) * CONFIG.GRID_SIZE);
-            let square = this.add.rectangle(anchorX, anchorY, 2, 2, 0xff0000).setStrokeStyle(2, 0x000000);
+            // let square = this.add.rectangle(anchorX, anchorY, 2, 2, 0xff0000).setStrokeStyle(2, 0x000000);
 
             // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
