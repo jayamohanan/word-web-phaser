@@ -35,22 +35,23 @@ class WordWebGame extends Phaser.Scene {
 
     renderSlots() {
         const slotSize = CONFIG.SQUARE_WIDTH;
+
         const gap = CONFIG.SQUARE_GAP;
         this.slotSprites = [];
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
-        
+        const gridSize = CONFIG.GRID_SIZE;
+        const originX = slotAreaWidth / 2;
+        const originY = slotAreaHeight;
+
         this.level.slots.forEach((slot, slotIdx) => {
             let slotGroup = this.add.group();
-            // Interpret x and y as percentages of slot area width/height
-            let baseX = (slot.x / 100) * slotAreaWidth;
-            let baseY = (slot.y / 100) * slotAreaHeight;
-            // Center the slot horizontally at baseX
-            let slotTotalWidth = slot.length * slotSize + (slot.length - 1) * gap;
-            let startX = baseX - slotTotalWidth / 2;
+            // Calculate anchor cell top-left (same as editor)
+            let anchorX = originX + ((slot.anchorCol - 0.5) * gridSize);
+            let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow) * 1) * gridSize);
             for (let i = 0; i < slot.length; i++) {
-                let x = startX + i * (slotSize + gap);
-                let y = baseY;
+                let x = anchorX + i * gridSize + gridSize / 2;
+                let y = anchorY + gridSize / 2;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
                 slotGroup.add(square);
@@ -64,12 +65,6 @@ class WordWebGame extends Phaser.Scene {
         const gap = 8;
         const startY = this.bankAreaY + 40;
         const verticalGap = slotSize + 24;
-        if(this.level==null)
-            console.log('level null');
-        if(this.level.words == null)
-            {
-                console.log('words null');
-            }
         this.level.words.forEach((word, wordIdx) => {
             let startX = this.sys.game.canvas.width / 2 - (word.length * (slotSize + gap)) / 2;
             let baseY = startY + wordIdx * verticalGap;
@@ -153,7 +148,7 @@ class WordWebGame extends Phaser.Scene {
             const toSquare = this.slotSprites[toInfo.slotIdx].getChildren()[toInfo.squareIdx];
             const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
             const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
-            let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setLineWidth(3);
+            let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setOrigin(0, 0).setLineWidth(3);
             this.connectionLines.push(line);
         });
     }
@@ -167,34 +162,20 @@ class WordWebGame extends Phaser.Scene {
     }
 
     getSquareSideMidpoint(square, sideIdx) {
-        // Get global position of square center
-        const world = square.getWorldTransformMatrix();
-        const { width, height } = square;
-        let localX = 0, localY = 0;
+        // Squares are rendered at absolute positions, so use square.x/y directly
+        const { x, y, width, height } = square;
         switch (sideIdx) {
             case 0: // top
-                localX = 0;
-                localY = -height / 2;
-                break;
+                return { x: x, y: y - height / 2 };
             case 1: // right
-                localX = width / 2;
-                localY = 0;
-                break;
+                return { x: x + width / 2, y: y };
             case 2: // bottom
-                localX = 0;
-                localY = height / 2;
-                break;
+                return { x: x, y: y + height / 2 };
             case 3: // left
-                localX = -width / 2;
-                localY = 0;
-                break;
+                return { x: x - width / 2, y: y };
             default:
-                localX = 0;
-                localY = 0;
+                return { x, y };
         }
-        // Transform local offset to global coordinates
-        const global = world.transformPoint(localX, localY);
-        return { x: global.x, y: global.y };
     }
 }
 
