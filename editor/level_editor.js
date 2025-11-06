@@ -194,7 +194,7 @@ class LevelEditorScene extends Phaser.Scene {
                     let snappedCol = Math.round(offsetFromOriginX / CONFIG.GRID_SIZE);
                     let snappedRow = Math.round(offsetFromOriginY / CONFIG.GRID_SIZE);
                     let snappedX = originX + snappedCol * CONFIG.GRID_SIZE;
-                    let snappedY = originY + snappedRow * CONFIG.GRID_SIZE;
+                    let snappedY = originY + snappedRow * CONFIG.GRID_SIZE - (CONFIG.GRID_SIZE / 2);
                     
                     slotContainer.x = snappedX;
                     slotContainer.y = snappedY;
