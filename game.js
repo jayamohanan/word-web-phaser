@@ -1,5 +1,5 @@
 // Main Phaser game logic for Word Web
-// Loads level data, renders slots, bank, and handles drag-drop
+// Loads level data, renders slots, words, and handles drag-drop
 
 class WordWebGame extends Phaser.Scene {
     constructor() {
@@ -34,11 +34,12 @@ class WordWebGame extends Phaser.Scene {
     }
 
     renderSlots() {
-        const slotSize = 50;
-        const gap = 8;
+        const slotSize = CONFIG.SQUARE_WIDTH;
+        const gap = CONFIG.SQUARE_GAP;
         this.slotSprites = [];
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
+        
         this.level.slots.forEach((slot, slotIdx) => {
             let slotGroup = this.add.group();
             // Interpret x and y as percentages of slot area width/height
@@ -63,7 +64,13 @@ class WordWebGame extends Phaser.Scene {
         const gap = 8;
         const startY = this.bankAreaY + 40;
         const verticalGap = slotSize + 24;
-        this.level.bank.forEach((word, wordIdx) => {
+        if(this.level==null)
+            console.log('level null');
+        if(this.level.words == null)
+            {
+                console.log('words null');
+            }
+        this.level.words.forEach((word, wordIdx) => {
             let startX = this.sys.game.canvas.width / 2 - (word.length * (slotSize + gap)) / 2;
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(0, 0);

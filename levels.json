@@ -2,11 +2,45 @@
   "levels": [
     {
       "slots": [
-        {"length": 3, "x": 50, "y": 29.43430962343096},
-        {"length": 3, "x": 50, "y": 44.858577405857744}
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -4
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
       ],
-      "bank": ["TAP", "ACT"],
-      "connections": ["022-100"]
+      "words": [
+        "FAST",
+        "SOFT"
+      ],
+      "connections": [
+        "022-100"
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "x": 50,
+          "y": 29.43430962343096
+        },
+        {
+          "length": 3,
+          "x": 50,
+          "y": 44.858577405857744
+        }
+      ],
+      "bank": [
+        "TAP",
+        "ACT"
+      ],
+      "connections": [
+        "022-100"
+      ]
     }
   ]
 }
