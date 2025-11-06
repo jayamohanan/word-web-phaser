@@ -29,7 +29,7 @@ class LevelEditorScene extends Phaser.Scene {
         const gridLineWidth = 1;
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
-        const gridSize = 50;
+        const gridSize = CONFIG.GRID_SIZE;
         const originX = slotAreaWidth / 2;
         const originY = slotAreaHeight;
         // Draw slot area background first (for contrast)
