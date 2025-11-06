@@ -189,13 +189,13 @@ class LevelEditorScene extends Phaser.Scene {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
-                    // Snap to grid cells relative to origin
+                    // Snap slot's top-left to nearest grid cell corner
                     let offsetFromOriginX = dragX - originX;
                     let offsetFromOriginY = dragY - originY;
                     let snappedCol = Math.round(offsetFromOriginX / CONFIG.GRID_SIZE);
                     let snappedRow = Math.round(offsetFromOriginY / CONFIG.GRID_SIZE);
-                    let snappedX = originX + snappedCol * CONFIG.GRID_SIZE;
-                    let snappedY = originY + snappedRow * CONFIG.GRID_SIZE - (CONFIG.GRID_SIZE / 2);
+                    let snappedX = originX + (snappedCol * CONFIG.GRID_SIZE) - (CONFIG.GRID_SIZE / 2);
+                    let snappedY = originY + (snappedRow * CONFIG.GRID_SIZE) - CONFIG.GRID_SIZE;
                     
                     slotContainer.x = snappedX;
                     slotContainer.y = snappedY;
