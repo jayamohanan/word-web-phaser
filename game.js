@@ -23,6 +23,61 @@ class WordWebGame extends Phaser.Scene {
         this.renderSlots();
         this.renderBank();
         this.renderConnections();
+        // Global drop handler for slots
+        this.input.on('drop', (pointer, gameObject, dropZone) => {
+            console.log('Drop event:', { gameObject, dropZone });
+            // Only handle if dropZone is a slot square
+            if (!dropZone || !dropZone.getData('slotIdx')) return;
+            const slotIdx = dropZone.getData('slotIdx');
+            const slotGroup = this.slotSprites[slotIdx];
+            const slotSquares = slotGroup.getChildren();
+            // Only allow drop if slot is not filled and word length matches slot length
+            if (!gameObject || !gameObject.getData('word')) return;
+            const word = gameObject.getData('word');
+            if (slotSquares.length !== word.length) {
+                // Animate back to original position
+                this.tweens.add({
+                    targets: gameObject,
+                    x: 0,
+                    y: 0,
+                    duration: 300,
+                    ease: 'Power2'
+                });
+                return;
+            }
+            // Check if slot is already filled
+            let slotFilled = slotSquares.some(sq => sq.getData('filled'));
+            if (slotFilled) {
+                // Animate back to original position
+                this.tweens.add({
+                    targets: gameObject,
+                    x: 0,
+                    y: 0,
+                    duration: 300,
+                    ease: 'Power2'
+                });
+                return;
+            }
+            // TODO: Add constraint violation check here if needed
+            // If all checks pass, place the word over the slot
+            const firstSquare = slotSquares[0];
+            const targetX = firstSquare.x - gameObject.width / 2 + firstSquare.width / 2;
+            const targetY = firstSquare.y - gameObject.height / 2 + firstSquare.height / 2;
+            this.tweens.add({
+                targets: gameObject,
+                x: targetX,
+                y: targetY,
+                duration: 200,
+                ease: 'Power2'
+            });
+            gameObject.setData('placed', true);
+            gameObject.setData('slotIdx', slotIdx);
+            // Mark slot squares as filled
+            slotSquares.forEach((sq, i) => {
+                sq.setData('filled', true);
+                sq.setData('letter', word[i]);
+            });
+        });
     }
 
     createAreas() {
@@ -54,6 +109,7 @@ class WordWebGame extends Phaser.Scene {
                 let y = anchorY + gridSize / 2;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
+                square.setInteractive({ dropZone: true });
                 slotGroup.add(square);
             }
             this.slotSprites.push(slotGroup);
