@@ -10,7 +10,7 @@ class LevelEditorScene extends Phaser.Scene {
         this.connections = [];
         this.selectedSquares = [];
         this.connectMode = false;
-        // Camera offset for panning
+        // Camera offset for panning - start centered at origin (0,0)
         this.cameraOffset = { x: 0, y: 0 };
         this.isPanning = false;
         this.panStart = { x: 0, y: 0 };
@@ -22,11 +22,23 @@ class LevelEditorScene extends Phaser.Scene {
 
     create() {
         this.setupLayout();
+        
+        // Center camera at origin (0,0)
+        // Grid origin should be at center of canvas
+        const slotAreaWidth = this.sys.game.canvas.width;
+        const slotAreaHeight = this.sys.game.canvas.height;
+        this.cameraOffset.x = slotAreaWidth / 2;
+        this.cameraOffset.y = slotAreaHeight / 2;
+        
         this.setupUIHooks();
         
         // Create container for pannable content (grid + slots)
         this.pannableContainer = this.add.container(0, 0);
         this.pannableContainer.setDepth(-20);
+        
+        // Set initial position to center the grid
+        this.pannableContainer.x = this.cameraOffset.x;
+        this.pannableContainer.y = this.cameraOffset.y;
         
         // Setup panning controls
         this.setupPanning();
@@ -36,6 +48,9 @@ class LevelEditorScene extends Phaser.Scene {
         
         // Create pan lock/unlock button
         this.createPanLockButton();
+        
+        // Create recenter button
+        this.createRecenterButton();
         
         this.renderSlots();
         this.renderWords();
@@ -87,12 +102,15 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     redrawGrid() {
-        // Remove previous grid graphics
+        // Remove previous grid graphics and background only
         if (this.gridGraphics) {
             this.gridGraphics.destroy();
         }
         if (this.backgroundRect) {
             this.backgroundRect.destroy();
+        }
+        if (this.originMarker) {
+            this.originMarker.destroy();
         }
         
         const gridColor = 0xcfd8dc;
@@ -100,10 +118,6 @@ class LevelEditorScene extends Phaser.Scene {
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
         const gridSize = CONFIG.GRID_SIZE;
-        
-        // Create graphics for grid (part of pannable container)
-        this.gridGraphics = this.add.graphics();
-        this.gridGraphics.setDepth(-11);
         
         // Draw background - much larger to cover any panning
         const bgSize = 10000; // Very large background
@@ -117,6 +131,10 @@ class LevelEditorScene extends Phaser.Scene {
         this.backgroundRect.setOrigin(0.5);
         this.backgroundRect.setDepth(-12);
         this.pannableContainer.add(this.backgroundRect);
+        
+        // Create graphics for grid (part of pannable container)
+        this.gridGraphics = this.add.graphics();
+        this.gridGraphics.setDepth(-11);
         this.pannableContainer.add(this.gridGraphics);
         
         // Calculate visible range in world coordinates (not screen coordinates)
@@ -147,27 +165,42 @@ class LevelEditorScene extends Phaser.Scene {
             this.gridGraphics.lineBetween(startX, y, endX, y);
         }
         
-        // Debug: highlight cell (0,1) in green
-        const i = 0, j = 1;
-        const centerX = (i + 0.5) * gridSize;
-        const centerY = (j + 0.5) * gridSize;
-        if (this.debugCell) {
-            this.debugCell.destroy();
+        // Mark origin with a small yellow circle
+        this.originMarker = this.add.circle(0, 0, 4, 0xffff00); // Yellow circle at origin
+        this.originMarker.setStrokeStyle(1, 0xff8800);
+        this.originMarker.setDepth(100); // Above grid, below slots
+        this.pannableContainer.add(this.originMarker);
+        
+        // Ensure slots stay on top after redrawing grid
+        if (this.slotSprites) {
+            this.slotSprites.forEach(slot => {
+                this.pannableContainer.bringToTop(slot);
+            });
         }
-        this.debugCell = this.add.rectangle(centerX, centerY, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0x66bb6a);
-        this.debugCell.setDepth(-10);
-        this.pannableContainer.add(this.debugCell);
     }
 
     setupPanning() {
         // Handle panning with mouse drag (only when unlocked)
         this.input.on('pointerdown', (pointer) => {
-            // Only allow panning if pan is unlocked and not over a slot
+            // Only allow panning if pan is unlocked AND not dragging a slot
             if (!this.panLocked && !this.isDraggingSlot) {
-                this.isPanning = true;
-                this.panStart.x = pointer.x;
-                this.panStart.y = pointer.y;
-                this.panStartOffset = { ...this.cameraOffset };
+                // Check if we're clicking on a slot container
+                let clickedOnSlot = false;
+                if (this.slotSprites) {
+                    for (let slot of this.slotSprites) {
+                        if (slot.getBounds().contains(pointer.x - this.cameraOffset.x, pointer.y - this.cameraOffset.y)) {
+                            clickedOnSlot = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!clickedOnSlot) {
+                    this.isPanning = true;
+                    this.panStart.x = pointer.x;
+                    this.panStart.y = pointer.y;
+                    this.panStartOffset = { ...this.cameraOffset };
+                }
             }
         });
         
@@ -177,7 +210,7 @@ class LevelEditorScene extends Phaser.Scene {
         });
         
         this.input.on('pointermove', (pointer) => {
-            if (this.isPanning && !this.isDraggingSlot) {
+            if (this.isPanning && !this.isDraggingSlot && !this.panLocked) {
                 const deltaX = pointer.x - this.panStart.x;
                 const deltaY = pointer.y - this.panStart.y;
                 
@@ -188,18 +221,15 @@ class LevelEditorScene extends Phaser.Scene {
                 this.pannableContainer.x = this.cameraOffset.x;
                 this.pannableContainer.y = this.cameraOffset.y;
                 
-                // Redraw grid for new visible area
+                // Redraw grid for new visible area (this doesn't destroy slots anymore)
                 this.redrawGrid();
-                
-                // Update slot positions
-                this.updateSlotPositions();
             }
         });
     }
 
     createPanLockButton() {
         // Create lock/unlock button in top-right corner
-        const buttonSize = 20; // Half of previous size (was 40)
+        const buttonSize = 20;
         const buttonMargin = 16;
         const slotAreaWidth = this.sys.game.canvas.width;
         const buttonX = slotAreaWidth - buttonMargin - buttonSize / 2;
@@ -222,7 +252,7 @@ class LevelEditorScene extends Phaser.Scene {
             buttonX,
             buttonY,
             this.panLocked ? '🔒' : '🔓',
-            { fontSize: '12px', color: '#ffffff' } // Smaller font
+            { fontSize: '12px', color: '#ffffff' }
         );
         this.panLockIcon.setOrigin(0.5);
         this.panLockIcon.setDepth(2001);
@@ -240,6 +270,69 @@ class LevelEditorScene extends Phaser.Scene {
         this.panLockButton.on('pointerout', () => {
             this.panLockButton.setScale(1.0);
         });
+    }
+
+    createRecenterButton() {
+        // Create recenter button to the left of lock button
+        const buttonSize = 20;
+        const buttonMargin = 16;
+        const buttonGap = 8;
+        const slotAreaWidth = this.sys.game.canvas.width;
+        const buttonX = slotAreaWidth - buttonMargin - buttonSize / 2 - buttonSize - buttonGap;
+        const buttonY = buttonMargin + buttonSize / 2;
+        
+        // Create button background
+        this.recenterButton = this.add.rectangle(
+            buttonX,
+            buttonY,
+            buttonSize,
+            buttonSize,
+            0x4488ff // Blue color
+        );
+        this.recenterButton.setStrokeStyle(2, 0x333333);
+        this.recenterButton.setDepth(2000);
+        this.recenterButton.setInteractive();
+        
+        // Create icon (target/crosshair symbol)
+        this.recenterIcon = this.add.text(
+            buttonX,
+            buttonY,
+            '⌖', // Crosshair/target symbol
+            { fontSize: '14px', color: '#ffffff' }
+        );
+        this.recenterIcon.setOrigin(0.5);
+        this.recenterIcon.setDepth(2001);
+        
+        // Handle button click
+        this.recenterButton.on('pointerdown', () => {
+            this.recenterCamera();
+        });
+        
+        // Add hover effect
+        this.recenterButton.on('pointerover', () => {
+            this.recenterButton.setScale(1.1);
+        });
+        
+        this.recenterButton.on('pointerout', () => {
+            this.recenterButton.setScale(1.0);
+        });
+    }
+
+    recenterCamera() {
+        // Reset camera to center at origin (0,0)
+        const slotAreaWidth = this.sys.game.canvas.width;
+        const slotAreaHeight = this.sys.game.canvas.height;
+        this.cameraOffset.x = slotAreaWidth / 2;
+        this.cameraOffset.y = slotAreaHeight / 2;
+        
+        // Update pannable container position
+        this.pannableContainer.x = this.cameraOffset.x;
+        this.pannableContainer.y = this.cameraOffset.y;
+        
+        // Redraw grid
+        this.redrawGrid();
+        
+        console.log('Camera recentered at origin (0,0)');
     }
 
     togglePanLock() {
@@ -292,12 +385,12 @@ class LevelEditorScene extends Phaser.Scene {
 
     addSlot(length) {
     // Spawn slot so first square is at center of a grid cell
-    // Grid origin (0,0) is at top-left corner (intersection of grid lines)
+    // Grid origin (0,0) is at center of canvas (intersection of grid lines)
     const gridSize = CONFIG.GRID_SIZE;
     
-    // Spawn slot at grid cell: column 2, row increases with each slot
-    const anchorCol = 2;
-    const anchorRow = 2 + this.slots.length;
+    // Spawn first slot at grid cell: (-2, -2) - top-left of origin
+    const anchorCol = -2;
+    const anchorRow = -2 - this.slots.length; // Spawn above, stacking upwards
     console.log(`Adding slot: length=${length}, anchorCol=${anchorCol}, anchorRow=${anchorRow}`);
 
     // Store anchor cell for slot (i, j coordinates)
@@ -322,80 +415,104 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     renderSlots() {
-        if (this.slotSprites) {
-            this.slotSprites.forEach(g => g.destroy());
+        // Don't destroy existing slots, just update if needed
+        // Only create new slots for newly added ones
+        if (!this.slotSprites) {
+            this.slotSprites = [];
         }
-        this.slotSprites = [];
+        
         const gridSize = CONFIG.GRID_SIZE;
         
+        // Remove slots that no longer exist
+        while (this.slotSprites.length > this.slots.length) {
+            const removedSlot = this.slotSprites.pop();
+            removedSlot.destroy();
+        }
+        
+        // Update existing slots and create new ones
         this.slots.forEach((slot, slotIdx) => {
-            let slotContainer = this.add.container(0, 0);
+            let slotContainer = this.slotSprites[slotIdx];
+            
+            // Create new slot container if it doesn't exist
+            if (!slotContainer) {
+                slotContainer = this.add.container(0, 0);
+                
+                // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
+                for (let i = 0; i < slot.length; i++) {
+                    let x = i * gridSize;
+                    let y = 0;
+                    let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
+                    square.setData({ slotIdx, squareIdx: i });
+                    if (this.connectMode) {
+                        square.setInteractive();
+                        square.on('pointerdown', () => this.squareClicked(slotIdx, i, square));
+                    }
+                    slotContainer.add(square);
+                }
+                
+                // Add to pannable container FIRST, then set depth
+                this.pannableContainer.add(slotContainer);
+                
+                // Set interactive and draggable
+                if (!this.connectMode) {
+                    slotContainer.setInteractive(
+                        new Phaser.Geom.Rectangle(
+                            0,
+                            0,
+                            slot.length * gridSize,
+                            CONFIG.SQUARE_WIDTH
+                        ),
+                        Phaser.Geom.Rectangle.Contains
+                    );
+
+                    this.input.setDraggable(slotContainer);
+                    
+                    slotContainer.on('pointerdown', (pointer) => {
+                        // Prevent panning when dragging slots - slot has priority
+                        this.isPanning = false;
+                        this.isDraggingSlot = true;
+                        console.log(`Slot container clicked: slotIdx=${slotIdx}`);
+                    });
+                    
+                    slotContainer.on('drag', (pointer, dragX, dragY) => {
+                        // Snap to nearest grid cell using new coordinate system
+                        // Cell center is at (i+0.5)*gridSize, (j+0.5)*gridSize
+                        // Account for camera offset
+                        const worldX = dragX - this.cameraOffset.x;
+                        const worldY = dragY - this.cameraOffset.y;
+                        
+                        let snappedCol = Math.round(worldX / gridSize - 0.5);
+                        let snappedRow = Math.round(worldY / gridSize - 0.5);
+                        let snappedX = (snappedCol + 0.5) * gridSize;
+                        let snappedY = (snappedRow + 0.5) * gridSize;
+                        
+                        slotContainer.x = snappedX;
+                        slotContainer.y = snappedY;
+                        slot.anchorCol = snappedCol;
+                        slot.anchorRow = snappedRow;
+                    });
+                    
+                    slotContainer.on('dragend', () => {
+                        this.isDraggingSlot = false;
+                    });
+                }
+                
+                this.slotSprites.push(slotContainer);
+            }
             
             // Calculate anchor cell center using (i+0.5)*cellSize, (j+0.5)*cellSize
-            // where origin (0,0) is at top-left corner (grid line intersection)
+            // where origin (0,0) is at center of canvas (grid line intersection)
             let anchorX = (slot.anchorCol + 0.5) * gridSize;
             let anchorY = (slot.anchorRow + 0.5) * gridSize;
-
-            // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
-            for (let i = 0; i < slot.length; i++) {
-                let x = i * gridSize;
-                let y = 0;
-                let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
-                square.setData({ slotIdx, squareIdx: i });
-                if (this.connectMode) {
-                    square.setInteractive();
-                    square.on('pointerdown', () => this.squareClicked(slotIdx, i, square));
-                }
-                slotContainer.add(square);
-            }
             
-            // Place container so first square is centered at anchor grid cell
+            // Update position
             slotContainer.x = anchorX;
             slotContainer.y = anchorY;
-            
-            // Add to pannable container
-            this.pannableContainer.add(slotContainer);
-            
-            if (!this.connectMode) {
-                slotContainer.setInteractive(
-                    new Phaser.Geom.Rectangle(
-                        0,
-                        0,
-                        slot.length * CONFIG.GRID_SIZE,
-                        CONFIG.SQUARE_WIDTH
-                    ),
-                    Phaser.Geom.Rectangle.Contains
-                );
-
-                this.input.setDraggable(slotContainer);
-                slotContainer.on('pointerdown', (pointer) => {
-                    // Prevent panning when dragging slots - slot has priority
-                    this.isPanning = false;
-                    this.isDraggingSlot = true;
-                    console.log(`Slot container clicked: slotIdx=${slotIdx}`);
-                });
-                slotContainer.on('drag', (pointer, dragX, dragY) => {
-                    // Snap to nearest grid cell using new coordinate system
-                    // Cell center is at (i+0.5)*gridSize, (j+0.5)*gridSize
-                    // Account for camera offset
-                    const worldX = dragX - this.cameraOffset.x;
-                    const worldY = dragY - this.cameraOffset.y;
-                    
-                    let snappedCol = Math.round(worldX / gridSize - 0.5);
-                    let snappedRow = Math.round(worldY / gridSize - 0.5);
-                    let snappedX = (snappedCol + 0.5) * gridSize;
-                    let snappedY = (snappedRow + 0.5) * gridSize;
-                    
-                    slotContainer.x = snappedX;
-                    slotContainer.y = snappedY;
-                    slot.anchorCol = snappedCol;
-                    slot.anchorRow = snappedRow;
-                });
-                slotContainer.on('dragend', () => {
-                    this.isDraggingSlot = false;
-                });
-            }
-            this.slotSprites.push(slotContainer);
+        });
+        
+        // Ensure slots are always on top by bringing to top
+        this.slotSprites.forEach(slot => {
+            this.pannableContainer.bringToTop(slot);
         });
     }
 
