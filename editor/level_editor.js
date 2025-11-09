@@ -10,6 +10,10 @@ class LevelEditorScene extends Phaser.Scene {
         this.connections = [];
         this.selectedSquares = [];
         this.connectMode = false;
+        // Camera offset for panning
+        this.cameraOffset = { x: 0, y: 0 };
+        this.isPanning = false;
+        this.panStart = { x: 0, y: 0 };
     }
 
     preload() {}
@@ -17,6 +21,14 @@ class LevelEditorScene extends Phaser.Scene {
     create() {
         this.setupLayout();
         this.setupUIHooks();
+        
+        // Create container for pannable content (grid + slots)
+        this.pannableContainer = this.add.container(0, 0);
+        this.pannableContainer.setDepth(-20);
+        
+        // Setup panning controls
+        this.setupPanning();
+        
         // Draw background for slot and bank areas
         this.drawAreaBackgrounds();
         this.renderSlots();
@@ -24,74 +36,152 @@ class LevelEditorScene extends Phaser.Scene {
         this.renderConnections();
     }
     drawAreaBackgrounds() {
-        // Draw grid for slot area with origin at world 0,0 (corner of 4 cells)
+        // Draw grid with panning support - only render visible portion
+        this.redrawGrid();
+        
+        // Word bank area overlay as an island with padding and rounded corners (FIXED position)
+        const slotAreaWidth = this.sys.game.canvas.width;
+        const slotAreaHeight = this.slotAreaHeight;
+        const overlayPad = 16;
+        const overlayWidth = slotAreaWidth - overlayPad * 2;
+        const overlayHeight = Math.floor(slotAreaHeight * 0.4) - overlayPad;
+        const overlayX = slotAreaWidth / 2;
+        const overlayY = slotAreaHeight - overlayHeight / 2 - overlayPad;
+        const overlayRadius = 24;
+        
+        // Create overlay graphics (stays fixed on screen)
+        this.overlayGraphics = this.add.graphics();
+        this.overlayGraphics.setDepth(1000);
+        // Fill rounded rect
+        this.overlayGraphics.fillStyle(0xe8f5e9, 1); // light green soft
+        this.overlayGraphics.fillRoundedRect(
+            overlayX - overlayWidth / 2,
+            overlayY - overlayHeight / 2,
+            overlayWidth,
+            overlayHeight,
+            overlayRadius
+        );
+        // Stroke rounded rect
+        this.overlayGraphics.lineStyle(3, 0x66bb6a, 1); // slightly darker green
+        this.overlayGraphics.strokeRoundedRect(
+            overlayX - overlayWidth / 2,
+            overlayY - overlayHeight / 2,
+            overlayWidth,
+            overlayHeight,
+            overlayRadius
+        );
+        // Store overlay rect info for use in renderWords
+        this.wordBankOverlayRect = {
+            x: overlayX,
+            y: overlayY,
+            width: overlayWidth,
+            height: overlayHeight,
+            radius: overlayRadius
+        };
+    }
+
+    redrawGrid() {
+        // Remove previous grid graphics
+        if (this.gridGraphics) {
+            this.gridGraphics.destroy();
+        }
+        if (this.backgroundRect) {
+            this.backgroundRect.destroy();
+        }
+        
         const gridColor = 0xcfd8dc;
         const gridLineWidth = 1;
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
         const gridSize = CONFIG.GRID_SIZE;
-        // Draw slot area background first (for contrast)
-        this.add.rectangle(
+        
+        // Create graphics for grid (part of pannable container)
+        this.gridGraphics = this.add.graphics();
+        this.gridGraphics.setDepth(-11);
+        
+        // Draw background
+        this.backgroundRect = this.add.rectangle(
             slotAreaWidth / 2,
             slotAreaHeight / 2,
-            slotAreaWidth,
-            slotAreaHeight,
+            slotAreaWidth * 3, // Extend beyond visible area
+            slotAreaHeight * 3,
             0xe3f2fd
-        ).setDepth(-12);
-        // Draw vertical grid lines (x = 0, gridSize, 2*gridSize, ...)
-        for (let x = 0; x <= slotAreaWidth; x += gridSize) {
-            this.add.line(0, 0, x, 0, x, slotAreaHeight, gridColor)
-                .setOrigin(0)
-                .setLineWidth(gridLineWidth)
-                .setDepth(-11);
+        );
+        this.backgroundRect.setDepth(-12);
+        this.pannableContainer.add(this.backgroundRect);
+        this.pannableContainer.add(this.gridGraphics);
+        
+        // Calculate visible grid range based on camera offset
+        const offsetX = this.cameraOffset.x;
+        const offsetY = this.cameraOffset.y;
+        
+        // Find first visible grid line (considering offset)
+        const startX = Math.floor(-offsetX / gridSize) * gridSize;
+        const endX = startX + slotAreaWidth + gridSize * 2;
+        const startY = Math.floor(-offsetY / gridSize) * gridSize;
+        const endY = startY + slotAreaHeight + gridSize * 2;
+        
+        this.gridGraphics.lineStyle(gridLineWidth, gridColor, 1);
+        
+        // Draw vertical grid lines
+        for (let x = startX; x <= endX; x += gridSize) {
+            const screenX = x + offsetX;
+            this.gridGraphics.lineBetween(screenX, -offsetY - slotAreaHeight, screenX, -offsetY + slotAreaHeight * 2);
         }
-        // Draw horizontal grid lines (y = 0, gridSize, 2*gridSize, ...)
-        for (let y = 0; y <= slotAreaHeight; y += gridSize) {
-            this.add.line(0, 0, 0, y, slotAreaWidth, y, gridColor)
-                .setOrigin(0)
-                .setLineWidth(gridLineWidth)
-                .setDepth(-11);
+        
+        // Draw horizontal grid lines
+        for (let y = startY; y <= endY; y += gridSize) {
+            const screenY = y + offsetY;
+            this.gridGraphics.lineBetween(-offsetX - slotAreaWidth, screenY, -offsetX + slotAreaWidth * 2, screenY);
         }
-        // Example: highlight cell (i=0, j=1) using new center calculation
+        
+        // Debug: highlight cell (0,1) in green
         const i = 0, j = 1;
-        const centerX = (i + 0.5) * gridSize;
-        const centerY = (j + 0.5) * gridSize;
-        this.add.rectangle(centerX, centerY, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0x66bb6a).setDepth(-10);
-            // Word bank area overlay as an island with padding and rounded corners
-            const overlayPad = 16;
-            const overlayWidth = slotAreaWidth - overlayPad * 2;
-            const overlayHeight = Math.floor(slotAreaHeight * 0.4) - overlayPad;
-            const overlayX = slotAreaWidth / 2;
-            const overlayY = slotAreaHeight - overlayHeight / 2 - overlayPad;
-            const overlayRadius = 24;
-            const overlayGraphics = this.add.graphics();
-            overlayGraphics.setDepth(1000);
-            // Fill rounded rect
-            overlayGraphics.fillStyle(0xe8f5e9, 1); // light green soft
-            overlayGraphics.fillRoundedRect(
-                overlayX - overlayWidth / 2,
-                overlayY - overlayHeight / 2,
-                overlayWidth,
-                overlayHeight,
-                overlayRadius
-            );
-            // Stroke rounded rect
-            overlayGraphics.lineStyle(3, 0x66bb6a, 1); // slightly darker green
-            overlayGraphics.strokeRoundedRect(
-                overlayX - overlayWidth / 2,
-                overlayY - overlayHeight / 2,
-                overlayWidth,
-                overlayHeight,
-                overlayRadius
-            );
-            // Store overlay rect info for use in renderWords
-            this.wordBankOverlayRect = {
-                x: overlayX,
-                y: overlayY,
-                width: overlayWidth,
-                height: overlayHeight,
-                radius: overlayRadius
-            };
+        const centerX = (i + 0.5) * gridSize + offsetX;
+        const centerY = (j + 0.5) * gridSize + offsetY;
+        if (this.debugCell) {
+            this.debugCell.destroy();
+        }
+        this.debugCell = this.add.rectangle(centerX, centerY, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0x66bb6a);
+        this.debugCell.setDepth(-10);
+        this.pannableContainer.add(this.debugCell);
+    }
+
+    setupPanning() {
+        // Handle panning with mouse drag
+        this.input.on('pointerdown', (pointer) => {
+            // Start panning only with middle button or right button, or left button when not over slots
+            if (pointer.middleButtonDown() || pointer.rightButtonDown()) {
+                this.isPanning = true;
+                this.panStart.x = pointer.x;
+                this.panStart.y = pointer.y;
+                this.panStartOffset = { ...this.cameraOffset };
+            }
+        });
+        
+        this.input.on('pointerup', () => {
+            this.isPanning = false;
+        });
+        
+        this.input.on('pointermove', (pointer) => {
+            if (this.isPanning) {
+                const deltaX = pointer.x - this.panStart.x;
+                const deltaY = pointer.y - this.panStart.y;
+                
+                this.cameraOffset.x = this.panStartOffset.x + deltaX;
+                this.cameraOffset.y = this.panStartOffset.y + deltaY;
+                
+                // Update pannable container position
+                this.pannableContainer.x = this.cameraOffset.x;
+                this.pannableContainer.y = this.cameraOffset.y;
+                
+                // Redraw grid for new visible area
+                this.redrawGrid();
+                
+                // Update slot positions
+                this.updateSlotPositions();
+            }
+        });
     }
 
     setupLayout() {
@@ -189,6 +279,10 @@ class LevelEditorScene extends Phaser.Scene {
             // Place container so first square is centered at anchor grid cell
             slotContainer.x = anchorX;
             slotContainer.y = anchorY;
+            
+            // Add to pannable container
+            this.pannableContainer.add(slotContainer);
+            
             if (!this.connectMode) {
                 slotContainer.setInteractive(
                     new Phaser.Geom.Rectangle(
@@ -201,15 +295,20 @@ class LevelEditorScene extends Phaser.Scene {
                 );
 
                 this.input.setDraggable(slotContainer);
-                slotContainer.on('pointerdown', () => {
+                slotContainer.on('pointerdown', (pointer) => {
+                    // Prevent panning when dragging slots
+                    this.isPanning = false;
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
                     // Snap to nearest grid cell using new coordinate system
                     // Cell center is at (i+0.5)*gridSize, (j+0.5)*gridSize
-                    const gridSize = CONFIG.GRID_SIZE;
-                    let snappedCol = Math.round(dragX / gridSize - 0.5);
-                    let snappedRow = Math.round(dragY / gridSize - 0.5);
+                    // Account for camera offset
+                    const worldX = dragX - this.cameraOffset.x;
+                    const worldY = dragY - this.cameraOffset.y;
+                    
+                    let snappedCol = Math.round(worldX / gridSize - 0.5);
+                    let snappedRow = Math.round(worldY / gridSize - 0.5);
                     let snappedX = (snappedCol + 0.5) * gridSize;
                     let snappedY = (snappedRow + 0.5) * gridSize;
                     
@@ -221,6 +320,15 @@ class LevelEditorScene extends Phaser.Scene {
             }
             this.slotSprites.push(slotContainer);
         });
+    }
+
+    updateSlotPositions() {
+        // This is called during panning to keep slots in their world positions
+        // Slots are already in the pannable container, so they move automatically
+        // We just need to redraw connections if any
+        if (this.connections.length > 0) {
+            this.renderConnections();
+        }
     }
 
     renderWords() {
@@ -385,6 +493,8 @@ class LevelEditorScene extends Phaser.Scene {
             const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
             const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setLineWidth(3);
+            // Add connection lines to pannable container so they move with slots
+            this.pannableContainer.add(line);
             this.connectionLines.push(line);
         });
     }
