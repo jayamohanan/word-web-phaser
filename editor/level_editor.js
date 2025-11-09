@@ -475,25 +475,17 @@ class LevelEditorScene extends Phaser.Scene {
                     });
                     
                     slotContainer.on('drag', (pointer, dragX, dragY) => {
-                        // dragX and dragY are in SCREEN coordinates
-                        // Slot is in the pannableContainer which has its own coordinate system
-                        // Convert screen coords to world coords by subtracting container offset
-                        const worldX = dragX - this.pannableContainer.x;
-                        const worldY = dragY - this.pannableContainer.y;
-                        
+                        // dragX and dragY are already in pannableContainer's coordinate system
                         // Snap to nearest grid cell
                         // Cell center is at (i+0.5)*gridSize, (j+0.5)*gridSize
-                        let snappedCol = Math.round(worldX / gridSize - 0.5);
-                        let snappedRow = Math.round(worldY / gridSize - 0.5);
+                        let snappedCol = Math.round(dragX / gridSize - 0.5);
+                        let snappedRow = Math.round(dragY / gridSize - 0.5);
                         let snappedX = (snappedCol + 0.5) * gridSize;
                         let snappedY = (snappedRow + 0.5) * gridSize;
-                        
-                        // Update slot position in world coordinates
                         slotContainer.x = snappedX;
                         slotContainer.y = snappedY;
                         slot.anchorCol = snappedCol;
                         slot.anchorRow = snappedRow;
-                        
                         console.log(`Dragging slot to grid cell (${snappedCol}, ${snappedRow})`);
                     });
                     
