@@ -14,6 +14,8 @@ class LevelEditorScene extends Phaser.Scene {
         this.cameraOffset = { x: 0, y: 0 };
         this.isPanning = false;
         this.panStart = { x: 0, y: 0 };
+        // Pan lock state (locked by default)
+        this.panLocked = true;
     }
 
     preload() {}
@@ -31,6 +33,10 @@ class LevelEditorScene extends Phaser.Scene {
         
         // Draw background for slot and bank areas
         this.drawAreaBackgrounds();
+        
+        // Create pan lock/unlock button
+        this.createPanLockButton();
+        
         this.renderSlots();
         this.renderWords();
         this.renderConnections();
@@ -99,46 +105,52 @@ class LevelEditorScene extends Phaser.Scene {
         this.gridGraphics = this.add.graphics();
         this.gridGraphics.setDepth(-11);
         
-        // Draw background
+        // Draw background - much larger to cover any panning
+        const bgSize = 10000; // Very large background
         this.backgroundRect = this.add.rectangle(
-            slotAreaWidth / 2,
-            slotAreaHeight / 2,
-            slotAreaWidth * 3, // Extend beyond visible area
-            slotAreaHeight * 3,
+            0,
+            0,
+            bgSize * 2,
+            bgSize * 2,
             0xe3f2fd
         );
+        this.backgroundRect.setOrigin(0.5);
         this.backgroundRect.setDepth(-12);
         this.pannableContainer.add(this.backgroundRect);
         this.pannableContainer.add(this.gridGraphics);
         
-        // Calculate visible grid range based on camera offset
-        const offsetX = this.cameraOffset.x;
-        const offsetY = this.cameraOffset.y;
+        // Calculate visible range in world coordinates (not screen coordinates)
+        // We need to account for the camera offset to determine what's visible
+        const worldMinX = -this.cameraOffset.x;
+        const worldMaxX = worldMinX + slotAreaWidth;
+        const worldMinY = -this.cameraOffset.y;
+        const worldMaxY = worldMinY + slotAreaHeight;
         
-        // Find first visible grid line (considering offset)
-        const startX = Math.floor(-offsetX / gridSize) * gridSize;
-        const endX = startX + slotAreaWidth + gridSize * 2;
-        const startY = Math.floor(-offsetY / gridSize) * gridSize;
-        const endY = startY + slotAreaHeight + gridSize * 2;
+        // Add padding to draw lines slightly beyond visible area for smooth panning
+        const padding = gridSize * 3;
+        
+        // Find first grid line before visible area
+        const startX = Math.floor((worldMinX - padding) / gridSize) * gridSize;
+        const endX = Math.ceil((worldMaxX + padding) / gridSize) * gridSize;
+        const startY = Math.floor((worldMinY - padding) / gridSize) * gridSize;
+        const endY = Math.ceil((worldMaxY + padding) / gridSize) * gridSize;
         
         this.gridGraphics.lineStyle(gridLineWidth, gridColor, 1);
         
         // Draw vertical grid lines
         for (let x = startX; x <= endX; x += gridSize) {
-            const screenX = x + offsetX;
-            this.gridGraphics.lineBetween(screenX, -offsetY - slotAreaHeight, screenX, -offsetY + slotAreaHeight * 2);
+            this.gridGraphics.lineBetween(x, startY, x, endY);
         }
         
         // Draw horizontal grid lines
         for (let y = startY; y <= endY; y += gridSize) {
-            const screenY = y + offsetY;
-            this.gridGraphics.lineBetween(-offsetX - slotAreaWidth, screenY, -offsetX + slotAreaWidth * 2, screenY);
+            this.gridGraphics.lineBetween(startX, y, endX, y);
         }
         
         // Debug: highlight cell (0,1) in green
         const i = 0, j = 1;
-        const centerX = (i + 0.5) * gridSize + offsetX;
-        const centerY = (j + 0.5) * gridSize + offsetY;
+        const centerX = (i + 0.5) * gridSize;
+        const centerY = (j + 0.5) * gridSize;
         if (this.debugCell) {
             this.debugCell.destroy();
         }
@@ -148,10 +160,10 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     setupPanning() {
-        // Handle panning with mouse drag
+        // Handle panning with mouse drag (only when unlocked)
         this.input.on('pointerdown', (pointer) => {
-            // Start panning only with middle button or right button, or left button when not over slots
-            if (pointer.middleButtonDown() || pointer.rightButtonDown()) {
+            // Only allow panning if pan is unlocked and not over a slot
+            if (!this.panLocked && !this.isDraggingSlot) {
                 this.isPanning = true;
                 this.panStart.x = pointer.x;
                 this.panStart.y = pointer.y;
@@ -161,10 +173,11 @@ class LevelEditorScene extends Phaser.Scene {
         
         this.input.on('pointerup', () => {
             this.isPanning = false;
+            this.isDraggingSlot = false;
         });
         
         this.input.on('pointermove', (pointer) => {
-            if (this.isPanning) {
+            if (this.isPanning && !this.isDraggingSlot) {
                 const deltaX = pointer.x - this.panStart.x;
                 const deltaY = pointer.y - this.panStart.y;
                 
@@ -182,6 +195,66 @@ class LevelEditorScene extends Phaser.Scene {
                 this.updateSlotPositions();
             }
         });
+    }
+
+    createPanLockButton() {
+        // Create lock/unlock button in top-right corner
+        const buttonSize = 20; // Half of previous size (was 40)
+        const buttonMargin = 16;
+        const slotAreaWidth = this.sys.game.canvas.width;
+        const buttonX = slotAreaWidth - buttonMargin - buttonSize / 2;
+        const buttonY = buttonMargin + buttonSize / 2;
+        
+        // Create button background
+        this.panLockButton = this.add.rectangle(
+            buttonX,
+            buttonY,
+            buttonSize,
+            buttonSize,
+            this.panLocked ? 0xff4444 : 0x44ff44 // Red if locked, green if unlocked
+        );
+        this.panLockButton.setStrokeStyle(2, 0x333333);
+        this.panLockButton.setDepth(2000); // Above everything
+        this.panLockButton.setInteractive();
+        
+        // Create lock icon (simple text for now)
+        this.panLockIcon = this.add.text(
+            buttonX,
+            buttonY,
+            this.panLocked ? '🔒' : '🔓',
+            { fontSize: '12px', color: '#ffffff' } // Smaller font
+        );
+        this.panLockIcon.setOrigin(0.5);
+        this.panLockIcon.setDepth(2001);
+        
+        // Handle button click
+        this.panLockButton.on('pointerdown', () => {
+            this.togglePanLock();
+        });
+        
+        // Add hover effect
+        this.panLockButton.on('pointerover', () => {
+            this.panLockButton.setScale(1.1);
+        });
+        
+        this.panLockButton.on('pointerout', () => {
+            this.panLockButton.setScale(1.0);
+        });
+    }
+
+    togglePanLock() {
+        this.panLocked = !this.panLocked;
+        
+        // Update button appearance
+        this.panLockButton.setFillStyle(this.panLocked ? 0xff4444 : 0x44ff44);
+        this.panLockIcon.setText(this.panLocked ? '🔒' : '🔓');
+        
+        // Stop panning if locking
+        if (this.panLocked) {
+            this.isPanning = false;
+        }
+        
+        console.log(`Pan ${this.panLocked ? 'LOCKED' : 'UNLOCKED'}`);
     }
 
     setupLayout() {
@@ -296,8 +369,9 @@ class LevelEditorScene extends Phaser.Scene {
 
                 this.input.setDraggable(slotContainer);
                 slotContainer.on('pointerdown', (pointer) => {
-                    // Prevent panning when dragging slots
+                    // Prevent panning when dragging slots - slot has priority
                     this.isPanning = false;
+                    this.isDraggingSlot = true;
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
@@ -316,6 +390,9 @@ class LevelEditorScene extends Phaser.Scene {
                     slotContainer.y = snappedY;
                     slot.anchorCol = snappedCol;
                     slot.anchorRow = snappedRow;
+                });
+                slotContainer.on('dragend', () => {
+                    this.isDraggingSlot = false;
                 });
             }
             this.slotSprites.push(slotContainer);
