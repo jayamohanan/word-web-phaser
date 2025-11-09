@@ -24,14 +24,12 @@ class LevelEditorScene extends Phaser.Scene {
         this.renderConnections();
     }
     drawAreaBackgrounds() {
-        // Draw grid for slot area with origin at bottom midpoint
+        // Draw grid for slot area with origin at world 0,0 (corner of 4 cells)
         const gridColor = 0xcfd8dc;
         const gridLineWidth = 1;
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
         const gridSize = CONFIG.GRID_SIZE;
-        const originX = slotAreaWidth / 2;
-        const originY = slotAreaHeight;
         // Draw slot area background first (for contrast)
         this.add.rectangle(
             slotAreaWidth / 2,
@@ -40,40 +38,66 @@ class LevelEditorScene extends Phaser.Scene {
             slotAreaHeight,
             0xe3f2fd
         ).setDepth(-12);
-        // Vertical grid lines (offset so column 0 center is at origin)
-        for (let x = originX - gridSize / 2; x <= slotAreaWidth; x += gridSize) {
-            this.add.line(0, 0, x, originY, x, 0, gridColor)
+        // Draw vertical grid lines (x = 0, gridSize, 2*gridSize, ...)
+        for (let x = 0; x <= slotAreaWidth; x += gridSize) {
+            this.add.line(0, 0, x, 0, x, slotAreaHeight, gridColor)
                 .setOrigin(0)
                 .setLineWidth(gridLineWidth)
                 .setDepth(-11);
         }
-        for (let x = originX - gridSize / 2; x >= 0; x -= gridSize) {
-            this.add.line(0, 0, x, originY, x, 0, gridColor)
-                .setOrigin(0)
-                .setLineWidth(gridLineWidth)
-                .setDepth(-11);
-        }
-        // Horizontal grid lines
-        for (let y = originY; y >= 0; y -= gridSize) {
+        // Draw horizontal grid lines (y = 0, gridSize, 2*gridSize, ...)
+        for (let y = 0; y <= slotAreaHeight; y += gridSize) {
             this.add.line(0, 0, 0, y, slotAreaWidth, y, gridColor)
                 .setOrigin(0)
                 .setLineWidth(gridLineWidth)
                 .setDepth(-11);
         }
-        // Bottom word bank area
-        this.add.rectangle(
-            this.sys.game.canvas.width / 2,
-            this.bankAreaY + this.bankAreaHeight / 2,
-            this.sys.game.canvas.width,
-            this.bankAreaHeight,
-            0xfce4ec
-        ).setDepth(-10);
+        // Example: highlight cell (i=0, j=1) using new center calculation
+        const i = 0, j = 1;
+        const centerX = (i + 0.5) * gridSize;
+        const centerY = (j + 0.5) * gridSize;
+        this.add.rectangle(centerX, centerY, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0x66bb6a).setDepth(-10);
+            // Word bank area overlay as an island with padding and rounded corners
+            const overlayPad = 16;
+            const overlayWidth = slotAreaWidth - overlayPad * 2;
+            const overlayHeight = Math.floor(slotAreaHeight * 0.4) - overlayPad;
+            const overlayX = slotAreaWidth / 2;
+            const overlayY = slotAreaHeight - overlayHeight / 2 - overlayPad;
+            const overlayRadius = 24;
+            const overlayGraphics = this.add.graphics();
+            overlayGraphics.setDepth(1000);
+            // Fill rounded rect
+            overlayGraphics.fillStyle(0xe8f5e9, 1); // light green soft
+            overlayGraphics.fillRoundedRect(
+                overlayX - overlayWidth / 2,
+                overlayY - overlayHeight / 2,
+                overlayWidth,
+                overlayHeight,
+                overlayRadius
+            );
+            // Stroke rounded rect
+            overlayGraphics.lineStyle(3, 0x66bb6a, 1); // slightly darker green
+            overlayGraphics.strokeRoundedRect(
+                overlayX - overlayWidth / 2,
+                overlayY - overlayHeight / 2,
+                overlayWidth,
+                overlayHeight,
+                overlayRadius
+            );
+            // Store overlay rect info for use in renderWords
+            this.wordBankOverlayRect = {
+                x: overlayX,
+                y: overlayY,
+                width: overlayWidth,
+                height: overlayHeight,
+                radius: overlayRadius
+            };
     }
 
     setupLayout() {
-    this.slotAreaHeight = this.sys.game.canvas.height * CONFIG.SLOT_AREA_HEIGHT_FACTOR;
+    this.slotAreaHeight = this.sys.game.canvas.height; // Use full height
     this.bankAreaY = this.slotAreaHeight;
-    this.bankAreaHeight = this.sys.game.canvas.height * (1 - CONFIG.SLOT_AREA_HEIGHT_FACTOR);
+    this.bankAreaHeight = 0; // No separate bank area
     }
 
     setupUIHooks() {
@@ -105,20 +129,15 @@ class LevelEditorScene extends Phaser.Scene {
 
     addSlot(length) {
     // Spawn slot so first square is at center of a grid cell
-    // Grid origin is at bottom midpoint of slot area
-    const slotAreaWidth = this.sys.game.canvas.width;
-    const slotAreaHeight = this.slotAreaHeight;
+    // Grid origin (0,0) is at top-left corner (intersection of grid lines)
     const gridSize = CONFIG.GRID_SIZE;
-    const originX = slotAreaWidth / 2;
-    const originY = slotAreaHeight;
     
-    // Spawn slot at grid cell: column 0 (center), a few rows up from bottom
-    const anchorCol = 0; // Center column
-    const rowFromBottom = 2 + this.slots.length;
-    const anchorRow = -rowFromBottom; // Negative row = above origin
+    // Spawn slot at grid cell: column 2, row increases with each slot
+    const anchorCol = 2;
+    const anchorRow = 2 + this.slots.length;
     console.log(`Adding slot: length=${length}, anchorCol=${anchorCol}, anchorRow=${anchorRow}`);
 
-    // Store anchor cell for slot (relative to grid origin)
+    // Store anchor cell for slot (i, j coordinates)
     this.slots.push({ length, anchorCol, anchorRow });
     this.renderSlots();
     this.renderConnections();
@@ -144,24 +163,20 @@ class LevelEditorScene extends Phaser.Scene {
             this.slotSprites.forEach(g => g.destroy());
         }
         this.slotSprites = [];
-        const slotAreaWidth = this.sys.game.canvas.width;
-        const slotAreaHeight = this.slotAreaHeight;
-        const originX = slotAreaWidth / 2;
-        const originY = slotAreaHeight;
+        const gridSize = CONFIG.GRID_SIZE;
         
         this.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container(0, 0);
             
-            // Calculate anchor cell center relative to grid origin (bottom midpoint)
-            // anchorCol = 0 means center column, negative anchorRow means above origin
-            let anchorX = originX + ((slot.anchorCol-0.5) * CONFIG.GRID_SIZE);
-            let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow)*1) * CONFIG.GRID_SIZE);
-            // let square = this.add.rectangle(anchorX, anchorY, 2, 2, 0xff0000).setStrokeStyle(2, 0x000000);
+            // Calculate anchor cell center using (i+0.5)*cellSize, (j+0.5)*cellSize
+            // where origin (0,0) is at top-left corner (grid line intersection)
+            let anchorX = (slot.anchorCol + 0.5) * gridSize;
+            let anchorY = (slot.anchorRow + 0.5) * gridSize;
 
             // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
             for (let i = 0; i < slot.length; i++) {
-                let x = i * CONFIG.GRID_SIZE + CONFIG.GRID_SIZE/2;
-                let y = 0+ CONFIG.GRID_SIZE/2;
+                let x = i * gridSize;
+                let y = 0;
                 let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i });
                 if (this.connectMode) {
@@ -190,13 +205,13 @@ class LevelEditorScene extends Phaser.Scene {
                     console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                 });
                 slotContainer.on('drag', (pointer, dragX, dragY) => {
-                    // Snap slot's top-left to nearest grid cell corner
-                    let offsetFromOriginX = dragX - originX;
-                    let offsetFromOriginY = dragY - originY;
-                    let snappedCol = Math.round(offsetFromOriginX / CONFIG.GRID_SIZE);
-                    let snappedRow = Math.round(offsetFromOriginY / CONFIG.GRID_SIZE);
-                    let snappedX = originX + (snappedCol * CONFIG.GRID_SIZE) - (CONFIG.GRID_SIZE / 2);
-                    let snappedY = originY + (snappedRow * CONFIG.GRID_SIZE) - CONFIG.GRID_SIZE;
+                    // Snap to nearest grid cell using new coordinate system
+                    // Cell center is at (i+0.5)*gridSize, (j+0.5)*gridSize
+                    const gridSize = CONFIG.GRID_SIZE;
+                    let snappedCol = Math.round(dragX / gridSize - 0.5);
+                    let snappedRow = Math.round(dragY / gridSize - 0.5);
+                    let snappedX = (snappedCol + 0.5) * gridSize;
+                    let snappedY = (snappedRow + 0.5) * gridSize;
                     
                     slotContainer.x = snappedX;
                     slotContainer.y = snappedY;
