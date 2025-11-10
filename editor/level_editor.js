@@ -492,6 +492,7 @@
         }
 
         renderWords() {
+            const gridSize = CONFIG.GRID_SIZE;
             if (this.wordSprites) {
                 this.wordSprites.forEach(c => c.destroy());
             }
@@ -507,13 +508,15 @@
                 wordContainer.setScrollFactor(0); // Fixed to camera
                 wordContainer.setDepth(2100);
                 for (let i = 0; i < word.length; i++) {
-                    let x = startX + i * (CONFIG.SQUARE_WIDTH + CONFIG.SQUARE_GAP);
-                    let y = baseY;
+                    let x = i * gridSize;
+                    let y = 0;
                     let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xeeeeee).setStrokeStyle(2, 0x333333);
                     let letter = this.add.text(x, y, word[i], { font: '32px Arial', color: '#222' }).setOrigin(0.5);
                     wordContainer.add(square);
                     wordContainer.add(letter);
                 }
+                wordContainer.x = startX;
+                wordContainer.y = baseY;
                 this.wordSprites.push(wordContainer);
             });
         }
