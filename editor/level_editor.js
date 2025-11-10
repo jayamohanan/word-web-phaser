@@ -77,7 +77,7 @@
             
             // Create overlay graphics (stays fixed on screen)
             this.overlayGraphics = this.add.graphics();
-            this.overlayGraphics.setDepth(1000);
+            this.overlayGraphics.setDepth(2000); // Ensure overlay is above all grid, slots, and connections
             this.overlayGraphics.setScrollFactor(0); // Fixed to camera
             // Fill rounded rect
             this.overlayGraphics.fillStyle(0xe8f5e9, 1); // light green soft
@@ -655,7 +655,7 @@
                 }
                 const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
                 const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
-                let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setLineWidth(3);
+                let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setLineWidth(3).setDepth(900);
                 this.connectionLines.push(line);
             });
         }
