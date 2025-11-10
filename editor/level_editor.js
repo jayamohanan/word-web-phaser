@@ -446,10 +446,10 @@
                     if (!this.connectMode) {
                         slotContainer.setInteractive(
                             new Phaser.Geom.Rectangle(
-                                0,
-                                0,
-                                slot.length * gridSize,
-                                CONFIG.SQUARE_WIDTH
+                                -CONFIG.GRID_SIZE / 2,
+                                -CONFIG.GRID_SIZE / 2,
+                                slot.length * CONFIG.GRID_SIZE,
+                                CONFIG.GRID_SIZE
                             ),
                             Phaser.Geom.Rectangle.Contains
                         );
