@@ -3,11 +3,11 @@
     updateSquareInteractivity() {
         if (!this.slotSprites) return;
         this.slotSprites.forEach((slotContainer, slotIdx) => {
-            slotContainer.iterate((square, squareIdx) => {
+            slotContainer.iterate((square) => {
                 if (square.removeAllListeners) square.removeAllListeners('pointerdown');
                 if (this.connectMode) {
                     square.setInteractive();
-                    square.on('pointerdown', () => this.squareClicked(slotIdx, squareIdx, square));
+                    square.on('pointerdown', () => this.squareClicked(slotIdx, square.getData('squareIdx'), square));
                 } else {
                     if (square.disableInteractive) square.disableInteractive();
                     if (square.setFillStyle) square.setFillStyle(0xffffff); // Remove highlight
