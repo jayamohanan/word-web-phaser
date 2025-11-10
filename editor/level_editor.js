@@ -1,5 +1,20 @@
     // Phaser Level Editor Scene for Word Web
     class LevelEditorScene extends Phaser.Scene {
+    updateSquareInteractivity() {
+        if (!this.slotSprites) return;
+        this.slotSprites.forEach((slotContainer, slotIdx) => {
+            slotContainer.iterate((square, squareIdx) => {
+                if (square.removeAllListeners) square.removeAllListeners('pointerdown');
+                if (this.connectMode) {
+                    square.setInteractive();
+                    square.on('pointerdown', () => this.squareClicked(slotIdx, squareIdx, square));
+                } else {
+                    if (square.disableInteractive) square.disableInteractive();
+                    if (square.setFillStyle) square.setFillStyle(0xffffff); // Remove highlight
+                }
+            });
+        });
+    }
         constructor() {
             super('LevelEditorScene');
         }
@@ -361,8 +376,8 @@
             document.getElementById('connect-mode').onchange = (e) => {
                 this.connectMode = e.target.checked;
                 this.selectedSquares = [];
-                // Re-render slots to update interactivity
                 this.renderSlots();
+                this.updateSquareInteractivity();
             };
             document.getElementById('connect-btn').onclick = () => {
                 this.tryConnect();
@@ -407,42 +422,25 @@
         }
 
         renderSlots() {
-            // Don't destroy existing slots, just update if needed
-            // Only create new slots for newly added ones
             if (!this.slotSprites) {
                 this.slotSprites = [];
             }
-            
             const gridSize = CONFIG.GRID_SIZE;
-            
-            // Remove slots that no longer exist
             while (this.slotSprites.length > this.slots.length) {
                 const removedSlot = this.slotSprites.pop();
                 removedSlot.destroy();
             }
-            
-            // Update existing slots and create new ones
             this.slots.forEach((slot, slotIdx) => {
                 let slotContainer = this.slotSprites[slotIdx];
-                
-                // Create new slot container if it doesn't exist
                 if (!slotContainer) {
                     slotContainer = this.add.container(0, 0);
-                    
-                    // Place squares: first square at (0,0) of container, others offset by GRID_SIZE
                     for (let i = 0; i < slot.length; i++) {
                         let x = i * gridSize;
                         let y = 0;
                         let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
                         square.setData({ slotIdx, squareIdx: i });
-                        if (this.connectMode) {
-                            square.setInteractive();
-                            square.on('pointerdown', () => this.squareClicked(slotIdx, i, square));
-                        }
                         slotContainer.add(square);
                     }
-                    
-                    // Set interactive and draggable
                     if (!this.connectMode) {
                         slotContainer.setInteractive(
                             new Phaser.Geom.Rectangle(
@@ -453,20 +451,13 @@
                             ),
                             Phaser.Geom.Rectangle.Contains
                         );
-
                         this.input.setDraggable(slotContainer);
-                        
                         slotContainer.on('pointerdown', (pointer) => {
-                            // Prevent panning when dragging slots - slot has priority
                             this.isPanning = false;
                             this.isDraggingSlot = true;
                             console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                         });
-                        
                         slotContainer.on('drag', (pointer, dragX, dragY) => {
-                            // dragX and dragY are in world coordinates
-                            // Snap to nearest grid cell
-                            // Cell center is at (i+0.5)*gridSize, (j+0.5)*gridSize
                             let snappedCol = Math.round(dragX / gridSize - 0.5);
                             let snappedRow = Math.round(dragY / gridSize - 0.5);
                             let snappedX = (snappedCol + 0.5) * gridSize;
@@ -477,24 +468,18 @@
                             slot.anchorRow = snappedRow;
                             console.log(`Dragging slot to grid cell (${snappedCol}, ${snappedRow})`);
                         });
-                        
                         slotContainer.on('dragend', () => {
                             this.isDraggingSlot = false;
                         });
                     }
-                    
                     this.slotSprites.push(slotContainer);
                 }
-                
-                // Calculate anchor cell center using (i+0.5)*cellSize, (j+0.5)*cellSize
-                // Grid origin (0,0) is at world (0,0)
                 let anchorX = (slot.anchorCol + 0.5) * gridSize;
                 let anchorY = (slot.anchorRow + 0.5) * gridSize;
-                
-                // Update position
                 slotContainer.x = anchorX;
                 slotContainer.y = anchorY;
             });
+            this.updateSquareInteractivity();
         }
 
         updateSlotPositions() {
@@ -533,12 +518,10 @@
         }
 
         squareClicked(slotIdx, squareIdx, square) {
-            // Only allow selection in connect mode, never draggable
             if (this.connectMode) {
                 // Remove previous selection from same slot, if any
                 let prevIdx = this.selectedSquares.findIndex(s => s.slotIdx === slotIdx);
                 if (prevIdx !== -1) {
-                    // Unhighlight previous square from this slot
                     this.selectedSquares[prevIdx].square.setFillStyle(0xffffff);
                     this.selectedSquares.splice(prevIdx, 1);
                 }
@@ -547,9 +530,13 @@
                     this.selectedSquares[0].square.setFillStyle(0xffffff);
                     this.selectedSquares.shift();
                 }
-                // Add new selection and highlight
+                // Only allow one square per slot and two total
                 this.selectedSquares.push({ slotIdx, squareIdx, square });
                 square.setFillStyle(0xffe066);
+                // If two squares are selected and from different slots, allow connection (optional)
+                // if (this.selectedSquares.length === 2 && this.selectedSquares[0].slotIdx !== this.selectedSquares[1].slotIdx) {
+                //     this.tryConnect();
+                // }
             }
         }
 
