@@ -498,7 +498,7 @@
             this.wordSprites = [];
             if (!this.wordBankOverlayRect) return;
             const overlay = this.wordBankOverlayRect;
-            const startY = overlay.y - overlay.height / 2 + 24;
+            const startY = overlay.y - overlay.height / 2 + 40; // Add extra gap at the top
             const verticalGap = CONFIG.SQUARE_WIDTH + 16;
             this.words.forEach((word, wordIdx) => {
                 let startX = this.sys.game.canvas.width / 2 - (word.length * (CONFIG.SQUARE_WIDTH + CONFIG.SQUARE_GAP)) / 2;
