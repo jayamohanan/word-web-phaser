@@ -60,6 +60,9 @@ import * as MyUtils from '../utils.js';
             // Create recenter button
             this.createRecenterButton();
             
+            // Create center screen marker
+            this.createCenterMarker();
+            
             this.renderSlots();
             this.renderWords();
             this.renderConnections();
@@ -329,6 +332,23 @@ import * as MyUtils from '../utils.js';
             this.recenterButton.on('pointerout', () => {
                 this.recenterButton.setScale(1.0);
             });
+        }
+
+        createCenterMarker() {
+            // Create a small non-intrusive dot at the center of the screen
+            const centerX = this.sys.game.canvas.width / 2;
+            const centerY = this.sys.game.canvas.height / 2;
+            const dotRadius = 3;
+            
+            // Outer circle (slightly larger, semi-transparent for visibility)
+            this.centerMarkerOuter = this.add.circle(centerX, centerY, dotRadius + 1, 0x000000, 0.3);
+            this.centerMarkerOuter.setDepth(1500);
+            this.centerMarkerOuter.setScrollFactor(0); // Fixed to camera
+            
+            // Inner dot (bright color)
+            this.centerMarkerInner = this.add.circle(centerX, centerY, dotRadius, 0xff4444, 0.7);
+            this.centerMarkerInner.setDepth(1501);
+            this.centerMarkerInner.setScrollFactor(0); // Fixed to camera
         }
 
         recenterCamera() {
