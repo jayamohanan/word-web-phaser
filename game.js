@@ -137,11 +137,17 @@ class WordWebGame extends Phaser.Scene {
                 wordContainer.add(square);
                 wordContainer.add(letter);
             }
-            wordContainer.x = startX;
-            wordContainer.y = baseY;
+            wordContainer.setPosition(startX, baseY);
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
-            wordContainer.setSize(word.length * (slotSize + gap), slotSize);
-            wordContainer.setInteractive(new Phaser.Geom.Rectangle(startX, baseY, word.length * (slotSize + gap), slotSize), Phaser.Geom.Rectangle.Contains);
+            // wordContainer.setSize(word.length * (slotSize + gap), slotSize);
+            wordContainer.setInteractive(
+                new Phaser.Geom.Rectangle(
+                    -CONFIG.GRID_SIZE/2,
+                    -CONFIG.GRID_SIZE/2,
+                     CONFIG.GRID_SIZE * word.length,
+                     CONFIG.GRID_SIZE
+                    ),
+                    Phaser.Geom.Rectangle.Contains);
             this.input.setDraggable(wordContainer);
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
@@ -157,8 +163,8 @@ class WordWebGame extends Phaser.Scene {
                     // Animate back to original position
                     this.tweens.add({
                         targets: wordContainer,
-                        x: 0,
-                        y: 0,
+                        x: startX,
+                        y: baseY,
                         duration: 300,
                         ease: 'Power2'
                     });
