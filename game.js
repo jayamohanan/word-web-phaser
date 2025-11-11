@@ -98,23 +98,24 @@ class WordWebGame extends Phaser.Scene {
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
         const gridSize = CONFIG.GRID_SIZE;
-        const originX = slotAreaWidth / 2;
-        const originY = slotAreaHeight;
 
         this.level.slots.forEach((slot, slotIdx) => {
-            let slotGroup = this.add.group();
+            let slotContainer = this.add.container();
             // Calculate anchor cell top-left (same as editor)
-            let anchorX = originX + ((slot.anchorCol - 0.5) * gridSize);
-            let anchorY = originY + ((slot.anchorRow + Math.sign(slot.anchorRow) * 1) * gridSize);
+            const anchorCellPoints = Utils.getCellPoints(slot.anchorCol, slot.anchorRow);
+            let anchorX = anchorCellPoints.centre.x;
+            let anchorY = anchorCellPoints.centre.y;
             for (let i = 0; i < slot.length; i++) {
-                let x = anchorX + i * gridSize + gridSize / 2;
-                let y = anchorY + gridSize / 2;
+                let x = i * gridSize;
+                let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
-                square.setInteractive({ dropZone: true });
-                slotGroup.add(square);
+                
+                slotContainer.add(square);
             }
-            this.slotSprites.push(slotGroup);
+            slotContainer.x = anchorX;
+            slotContainer.y = anchorY;
+            this.slotSprites.push(slotContainer);
         });
     }
 
@@ -202,8 +203,8 @@ class WordWebGame extends Phaser.Scene {
             const [from, to] = connStr.split('-');
             const fromInfo = this.decodeConn(from);
             const toInfo = this.decodeConn(to);
-            const fromSquare = this.slotSprites[fromInfo.slotIdx].getChildren()[fromInfo.squareIdx];
-            const toSquare = this.slotSprites[toInfo.slotIdx].getChildren()[toInfo.squareIdx];
+            const fromSquare = this.slotSprites[fromInfo.slotIdx].list[fromInfo.squareIdx];
+            const toSquare = this.slotSprites[toInfo.slotIdx].list[toInfo.squareIdx];
             const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
             const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setOrigin(0, 0).setLineWidth(3);

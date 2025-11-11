@@ -1,6 +1,6 @@
 // Utility function to get key points of a grid cell at (i, j)
 // Returns Phaser.Math.Vector2 objects for centre, corners
-function getCellPoints(i, j) {
+export function getCellPoints(i, j) {
   const x0 = i * CONFIG.SQUARE_WIDTH;     // top-left x
   const y0 = j * CONFIG.SQUARE_WIDTH;     // top-left y (Phaser Y+ is down)
   const x1 = x0 + CONFIG.SQUARE_WIDTH;
@@ -16,9 +16,4 @@ function getCellPoints(i, j) {
     bottomLeft:  new Phaser.Math.Vector2(x0, y1),
     bottomRight: new Phaser.Math.Vector2(x1, y1)
   };
-}
-
-// Export for use in other files (if using modules)
-if (typeof module !== 'undefined') {
-  module.exports = { getCellPoints };
 }
