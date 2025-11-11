@@ -1,3 +1,5 @@
+import * as Utils from './utils.js';
+
 // Main Phaser game logic for Word Web
 // Loads level data, renders slots, words, and handles drag-drop
 
