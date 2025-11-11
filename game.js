@@ -223,20 +223,33 @@ class WordWebGame extends Phaser.Scene {
     }
 
     getSquareSideMidpoint(square, sideIdx) {
-        // Squares are rendered at absolute positions, so use square.x/y directly
-        const { x, y, width, height } = square;
+        const { width, height } = square;
+        let localX = 0, localY = 0;
         switch (sideIdx) {
             case 0: // top
-                return { x: x, y: y - height / 2 };
+                localX = 0;
+                localY = -height / 2;
+                break;
             case 1: // right
-                return { x: x + width / 2, y: y };
+                localX = width / 2;
+                localY = 0;
+                break;
             case 2: // bottom
-                return { x: x, y: y + height / 2 };
+                localX = 0;
+                localY = height / 2;
+                break;
             case 3: // left
-                return { x: x - width / 2, y: y };
+                localX = -width / 2;
+                localY = 0;
+                break;
             default:
-                return { x, y };
+                localX = 0;
+                localY = 0;
         }
+        // Use the square's transform matrix to get world coordinates
+        const matrix = square.getWorldTransformMatrix();
+        const worldPoint = matrix.transformPoint(localX, localY);
+        return { x: worldPoint.x, y: worldPoint.y };
     }
 }
 
