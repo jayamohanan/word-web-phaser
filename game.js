@@ -120,8 +120,8 @@ class WordWebGame extends Phaser.Scene {
     }
 
     renderBank() {
-        const slotSize = 50;
-        const gap = 8;
+        const slotSize = CONFIG.SQUARE_WIDTH;
+        const gap = CONFIG.SQUARE_GAP;
         const startY = this.bankAreaY + 40;
         const verticalGap = slotSize + 24;
         this.level.words.forEach((word, wordIdx) => {
