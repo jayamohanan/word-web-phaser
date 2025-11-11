@@ -479,8 +479,12 @@ import * as MyUtils from '../utils.js';
                 }
                 let anchorX = (slot.anchorCol + 0.5) * gridSize;
                 let anchorY = (slot.anchorRow + 0.5) * gridSize;
-                slotContainer.x = anchorX;
-                slotContainer.y = anchorY;
+                const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow);
+                console.log('points center ', points.center);
+                // slotContainer.x = anchorX;
+                // slotContainer.y = anchorY;
+                slotContainer.x = points.center.x;
+                slotContainer.y = points.center.y;
             });
             this.updateSquareInteractivity();
         }

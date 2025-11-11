@@ -102,9 +102,9 @@ class WordWebGame extends Phaser.Scene {
         this.level.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container();
             // Calculate anchor cell top-left (same as editor)
-            const anchorCellPoints = Utils.getCellPoints(slot.anchorCol, slot.anchorRow);
-            let anchorX = anchorCellPoints.centre.x;
-            let anchorY = anchorCellPoints.centre.y;
+            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow);
+            let anchorX = anchorCellPoints.center.x;
+            let anchorY = anchorCellPoints.center.y;
             for (let i = 0; i < slot.length; i++) {
                 let x = i * gridSize;
                 let y = 0;
