@@ -124,7 +124,8 @@ class WordWebGame extends Phaser.Scene {
         const startY = this.bankAreaY + 40;
         const verticalGap = slotSize + 24;
         this.level.words.forEach((word, wordIdx) => {
-            let startX = this.sys.game.canvas.width / 2 - (word.length * (slotSize + gap)) / 2;
+            // let startX = this.sys.game.canvas.width / 2 - (word.length * (slotSize + gap)) / 2;
+            let startX = this.sys.game.canvas.width / 2 - Utils.getFrameWidth(word.length) / 2;
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(0, 0);
             for (let i = 0; i < word.length; i++) {
