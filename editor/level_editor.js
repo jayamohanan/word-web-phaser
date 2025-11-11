@@ -714,7 +714,7 @@ import * as MyUtils from '../utils.js';
 
     const config = {
         type: Phaser.AUTO,
-        width: window.innerWidth - 320,
+        width: window.innerWidth,
         height: window.innerHeight,
         backgroundColor: '#f0f8ff',
         parent: 'editor-game',
@@ -723,5 +723,5 @@ import * as MyUtils from '../utils.js';
 
     const game = new Phaser.Game(config);
     window.addEventListener('resize', () => {
-        game.scale.resize(window.innerWidth - 320, window.innerHeight);
+        game.scale.resize(window.innerWidth, window.innerHeight);
     });
