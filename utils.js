@@ -16,4 +16,11 @@ export function getCellPoints(i, j) {
     bottomLeft:  new Phaser.Math.Vector2(x0, y1),
     bottomRight: new Phaser.Math.Vector2(x1, y1)
   };
+  
+}
+export function getFrameWidth(length) {
+    const width = CONFIG.SQUARE_WIDTH;
+    const gap = CONFIG.SQUARE_GAP;
+    const totalWidth = length * width + (length - 1) * gap;
+    return totalWidth;
 }

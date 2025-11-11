@@ -7,5 +7,6 @@ var CONFIG = {
     BANK_AREA_BG: 0xfce4ec,
     GRID_COLOR: 0xcfd8dc,
     GRID_LINE_WIDTH: 1,
-    SLOT_AREA_HEIGHT_FACTOR: 0.6 // Fraction of canvas height for slot area
+    SLOT_AREA_HEIGHT_FACTOR: 0.6, // Fraction of canvas height for slot area
+    WORD_GAP: 16
 };

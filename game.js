@@ -129,14 +129,16 @@ class WordWebGame extends Phaser.Scene {
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(0, 0);
             for (let i = 0; i < word.length; i++) {
-                let x = startX + i * (slotSize + gap);
-                let y = baseY;
+                let x = i * CONFIG.GRID_SIZE;
+                let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xeeeeee).setStrokeStyle(2, 0x333333);
                 let letter = this.add.text(x, y, word[i], { font: '32px Arial', color: '#222' }).setOrigin(0.5);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
                 wordContainer.add(letter);
             }
+            wordContainer.x = startX;
+            wordContainer.y = baseY;
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
             wordContainer.setSize(word.length * (slotSize + gap), slotSize);
             wordContainer.setInteractive(new Phaser.Geom.Rectangle(startX, baseY, word.length * (slotSize + gap), slotSize), Phaser.Geom.Rectangle.Contains);

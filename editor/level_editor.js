@@ -1,3 +1,6 @@
+// import { Utils } from "phaser";
+import * as MyUtils from '../utils.js';
+
     // Phaser Level Editor Scene for Word Web
     class LevelEditorScene extends Phaser.Scene {
     updateSquareInteractivity() {
@@ -500,9 +503,10 @@
             if (!this.wordBankOverlayRect) return;
             const overlay = this.wordBankOverlayRect;
             const startY = overlay.y - overlay.height / 2 + 40; // Add extra gap at the top
-            const verticalGap = CONFIG.SQUARE_WIDTH + 16;
+            const verticalGap = CONFIG.SQUARE_WIDTH + CONFIG.WORD_GAP;
             this.words.forEach((word, wordIdx) => {
-                let startX = this.sys.game.canvas.width / 2 - (word.length * (CONFIG.SQUARE_WIDTH + CONFIG.SQUARE_GAP)) / 2;
+                // let startX = this.sys.game.canvas.width / 2 - (word.length * (CONFIG.SQUARE_WIDTH + CONFIG.SQUARE_GAP)) / 2;
+                let startX = this.sys.game.canvas.width / 2 - MyUtils.getFrameWidth(word.length)/2;
                 let baseY = startY + wordIdx * verticalGap;
                 let wordContainer = this.add.container(0, 0);
                 wordContainer.setScrollFactor(0); // Fixed to camera
