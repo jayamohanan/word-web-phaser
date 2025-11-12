@@ -421,8 +421,8 @@ class LevelEditorScene extends Phaser.Scene {
         const centerX = cam.worldView.centerX;
         const centerY = cam.worldView.centerY;
         // Convert to grid coordinates
-        let anchorCol = Math.floor(centerX / gridSize) - 2;
-        let anchorRow = Math.floor(centerY / gridSize) - 2;
+        let anchorCol = Math.floor((centerX - this.originX) / gridSize) - 2;
+        let anchorRow = Math.floor((centerY - this.originY) / gridSize) - 2;
         console.log(`Adding slot: length=${length}, anchorCol=${anchorCol}, anchorRow=${anchorRow}`);
 
         // Store anchor cell for slot (i, j coordinates)
@@ -499,6 +499,7 @@ class LevelEditorScene extends Phaser.Scene {
                 }
                 this.slotSprites.push(slotContainer);
             }
+            console.log('slot.anchorCol, slot.anchorRow ',slot.anchorCol, slot.anchorRow);
             const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow);
             // slotContainer.x = anchorX;
             // slotContainer.y = anchorY;
