@@ -1,10 +1,10 @@
 // Utility function to get key points of a grid cell at (i, j)
 // Returns Phaser.Math.Vector2 objects for center, corners
-export function getGridCellPoints(i, j) {//based on origin (0,0)
-  const x0 = i * CONFIG.GRID_SIZE;     // top-left x
-  const y0 = j * CONFIG.GRID_SIZE;     // top-left y (Phaser Y+ is down)
-  const x1 = x0 + CONFIG.GRID_SIZE;
-  const y1 = y0 + CONFIG.GRID_SIZE;
+export function getGridCellPoints(i, j, originX, originY, gridSize) {//based on origin (0,0)
+  const x0 = originX + i * gridSize;     // top-left x
+  const y0 = originY + j * gridSize;     // top-left y (Phaser Y+ is down)
+  const x1 = x0 + gridSize;
+  const y1 = y0 + gridSize;
 
   const cx = (x0 + x1) / 2;
   const cy = (y0 + y1) / 2;
@@ -23,4 +23,9 @@ export function getFrameWidth(length) {
     const gap = CONFIG.SQUARE_GAP;
     const totalWidth = length * width + (length - 1) * gap;
     return totalWidth;
+}
+export function getCellIndex(x, y, xCenter, yCenter, cellSize) {
+  const i = Math.floor((x - xCenter) / cellSize);
+  const j = Math.floor((y - yCenter) / cellSize);
+  return { i, j };
 }

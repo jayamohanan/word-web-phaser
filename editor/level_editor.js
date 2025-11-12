@@ -483,10 +483,11 @@ class LevelEditorScene extends Phaser.Scene {
                         console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                     });
                     slotContainer.on('drag', (pointer, dragX, dragY) => {
-                        let snappedCol = Math.round(dragX / gridSize - 0.5);
-                        let snappedRow = Math.round(dragY / gridSize - 0.5);
+                        let snappedCol = Math.round((dragX - this.originX) / gridSize - 0.5);
+                        let snappedRow = Math.round((dragY - this.originY) / gridSize - 0.5);
                         let snappedX = (snappedCol + 0.5) * gridSize;
                         let snappedY = (snappedRow + 0.5) * gridSize;
+                        console.log('snappedCol, snappedRow ',snappedCol, snappedRow);
                         slotContainer.x = snappedX;
                         slotContainer.y = snappedY;
                         slot.anchorCol = snappedCol;
@@ -499,12 +500,13 @@ class LevelEditorScene extends Phaser.Scene {
                 }
                 this.slotSprites.push(slotContainer);
             }
-            console.log('slot.anchorCol, slot.anchorRow ',slot.anchorCol, slot.anchorRow);
-            const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow);
+            console.log('qqqqslot.anchorCol, slot.anchorRow ',slot.anchorCol, slot.anchorRow);
+            const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
             // slotContainer.x = anchorX;
             // slotContainer.y = anchorY;
-            slotContainer.x = points.center.x + this.originX;
-            slotContainer.y = points.center.y + this.originY;
+            slotContainer.x = points.center.x;
+            slotContainer.y = points.center.y;
+
         });
         this.updateSquareInteractivity();
     }
