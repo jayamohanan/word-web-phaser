@@ -483,27 +483,21 @@ class LevelEditorScene extends Phaser.Scene {
                         console.log(`Slot container clicked: slotIdx=${slotIdx}`);
                     });
                     slotContainer.on('drag', (pointer, dragX, dragY) => {
-                        let snappedCol = Math.round((dragX - this.originX) / gridSize - 0.5);
-                        let snappedRow = Math.round((dragY - this.originY) / gridSize - 0.5);
-                        let snappedX = (snappedCol + 0.5) * gridSize;
-                        let snappedY = (snappedRow + 0.5) * gridSize;
-                        console.log('snappedCol, snappedRow ',snappedCol, snappedRow);
+
+                        const { i, j } = MyUtils.getCellIndex(dragX, dragY, this.originX, this.originY, gridSize);
+                        let snappedX = (i + 0.5) * gridSize + this.originX;
+                        let snappedY = (j + 0.5) * gridSize + this.originY;
                         slotContainer.x = snappedX;
                         slotContainer.y = snappedY;
-                        slot.anchorCol = snappedCol;
-                        slot.anchorRow = snappedRow;
-                        console.log(`Dragging slot to grid cell (${snappedCol}, ${snappedRow})`);
+                        slot.anchorCol = i;
+                        slot.anchorRow = j;
                     });
                     slotContainer.on('dragend', () => {
                         this.isDraggingSlot = false;
                     });
                 }
                 this.slotSprites.push(slotContainer);
-            }
-            console.log('qqqqslot.anchorCol, slot.anchorRow ',slot.anchorCol, slot.anchorRow);
-            const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
-            // slotContainer.x = anchorX;
-            // slotContainer.y = anchorY;
+            }            const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
             slotContainer.x = points.center.x;
             slotContainer.y = points.center.y;
 
