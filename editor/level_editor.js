@@ -499,14 +499,11 @@ class LevelEditorScene extends Phaser.Scene {
                 }
                 this.slotSprites.push(slotContainer);
             }
-            let anchorX = (slot.anchorCol + 0.5) * gridSize;
-            let anchorY = (slot.anchorRow + 0.5) * gridSize;
             const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow);
-            console.log('points center ', points.center);
             // slotContainer.x = anchorX;
             // slotContainer.y = anchorY;
-            slotContainer.x = points.center.x;
-            slotContainer.y = points.center.y;
+            slotContainer.x = points.center.x + this.originX;
+            slotContainer.y = points.center.y + this.originY;
         });
         this.updateSquareInteractivity();
     }
