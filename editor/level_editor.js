@@ -33,6 +33,8 @@ class LevelEditorScene extends Phaser.Scene {
         this.cameraStart = { x: 0, y: 0 };
         // Pan lock state (locked by default)
         this.panLocked = true;
+        this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
+        this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
     }
 
     preload() { }
@@ -168,13 +170,13 @@ class LevelEditorScene extends Phaser.Scene {
         const padding = gridSize * 10;
 
         // Find first grid line before visible area
-        const startX = Math.floor((worldMinX - padding) / gridSize) * gridSize;
-        const endX = Math.ceil((worldMaxX + padding) / gridSize) * gridSize;
-        const startY = Math.floor((worldMinY - padding) / gridSize) * gridSize;
-        const endY = Math.ceil((worldMaxY + padding) / gridSize) * gridSize;
+        const startX = Math.floor((worldMinX - padding) / gridSize) * gridSize + this.originX;
+        const endX = Math.ceil((worldMaxX + padding) / gridSize) * gridSize + this.originX;
+        const startY = Math.floor((worldMinY - padding) / gridSize) * gridSize + this.originY;
+        const endY = Math.ceil((worldMaxY + padding) / gridSize) * gridSize + this.originY;
+
 
         console.log(`Drawing grid from (${startX}, ${startY}) to (${endX}, ${endY})`);
-        cam.worl
         this.gridGraphics.lineStyle(gridLineWidth, gridColor, 1);
 
         // Draw vertical grid lines
@@ -188,7 +190,7 @@ class LevelEditorScene extends Phaser.Scene {
         }
 
         // Mark origin with a small yellow circle
-        this.originMarker = this.add.circle(0, 0, 4, 0xffff00); // Yellow circle at origin
+        this.originMarker = this.add.circle(this.originX, this.originY, 4, 0xffff00); // Yellow circle at origin
         this.originMarker.setStrokeStyle(1, 0xff8800);
         this.originMarker.setDepth(100); // Above grid, below slots
     }
