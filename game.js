@@ -33,13 +33,11 @@ class WordWebGame extends Phaser.Scene {
        
         // Global drop handler for slots
         this.input.on('drop', (pointer, gameObject, dropZone) => {
-            console.log('dropped');
-            console.log('Drop event:', { gameObject, dropZone });
-            // Only handle if dropZone is a slot square
-            if (!dropZone || !dropZone.getData('slotIdx')) return;
+            // Only handle if dropZone is   a slot square
+            if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
             const slotIdx = dropZone.getData('slotIdx');
             const slotGroup = this.slotSprites[slotIdx];
-            const slotSquares = slotGroup.getChildren();
+            const slotSquares = slotGroup.list;
             // Only allow drop if slot is not filled and word length matches slot length
             if (!gameObject || !gameObject.getData('word')) return;
             const word = gameObject.getData('word');
@@ -52,6 +50,7 @@ class WordWebGame extends Phaser.Scene {
                     duration: 300,
                     ease: 'Power2'
                 });
+                console.log('return 55');
                 return;
             }
             // Check if slot is already filled
@@ -65,6 +64,7 @@ class WordWebGame extends Phaser.Scene {
                     duration: 300,
                     ease: 'Power2'
                 });
+                console.log('return 1');
                 return;
             }
             // TODO: Add constraint violation check here if needed
