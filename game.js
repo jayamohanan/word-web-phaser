@@ -7,6 +7,10 @@ class WordWebGame extends Phaser.Scene {
     constructor() {
         super('WordWebGame');
     }
+    init(){
+        this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
+        this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
+    }
 
     preload() {
         this.load.json('levels', 'levels.json');
@@ -25,6 +29,8 @@ class WordWebGame extends Phaser.Scene {
         this.renderSlots();
         this.renderBank();
         this.renderConnections();
+
+       
         // Global drop handler for slots
         this.input.on('drop', (pointer, gameObject, dropZone) => {
             console.log('Drop event:', { gameObject, dropZone });
@@ -102,9 +108,8 @@ class WordWebGame extends Phaser.Scene {
         this.level.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container();
             // Calculate anchor cell top-left (same as editor)
-            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow);
+            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
             let containerPos = anchorCellPoints.center;
-            
             for (let i = 0; i < slot.length; i++) {
                 let x = i * gridSize;
                 let y = 0;
