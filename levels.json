@@ -1,25 +1,25 @@
 {
   "levels": [
-   {
-  "slots": [
     {
-      "length": 4,
-      "anchorCol": 14,
-      "anchorRow": 3
-    },
-    {
-      "length": 4,
-      "anchorCol": 14,
-      "anchorRow": 6
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "SOFT",
+        "FAST"
+      ],
+      "connections": [
+        "022-100"
+      ]
     }
-  ],
-  "words": [
-    "SOFT",
-    "FAST"
-  ],
-  "connections": [
-    "022-100"
-  ]
-}
   ]
 }
