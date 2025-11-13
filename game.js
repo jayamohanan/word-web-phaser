@@ -33,6 +33,7 @@ class WordWebGame extends Phaser.Scene {
        
         // Global drop handler for slots
         this.input.on('drop', (pointer, gameObject, dropZone) => {
+            console.log('dropped');
             console.log('Drop event:', { gameObject, dropZone });
             // Only handle if dropZone is a slot square
             if (!dropZone || !dropZone.getData('slotIdx')) return;
@@ -69,8 +70,10 @@ class WordWebGame extends Phaser.Scene {
             // TODO: Add constraint violation check here if needed
             // If all checks pass, place the word over the slot
             const firstSquare = slotSquares[0];
-            const targetX = firstSquare.x - gameObject.width / 2 + firstSquare.width / 2;
-            const targetY = firstSquare.y - gameObject.height / 2 + firstSquare.height / 2;
+            // const targetX = firstSquare.x - gameObject.width / 2 + firstSquare.width / 2;
+            // const targetY = firstSquare.y - gameObject.height / 2 + firstSquare.height / 2;
+            const targetX = firstSquare.x;
+            const targetY = firstSquare.y;
             this.tweens.add({
                 targets: gameObject,
                 x: targetX,
@@ -107,18 +110,23 @@ class WordWebGame extends Phaser.Scene {
 
         this.level.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container();
-            // Calculate anchor cell top-left (same as editor)
-            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
-            let containerPos = anchorCellPoints.center;
             for (let i = 0; i < slot.length; i++) {
                 let x = i * gridSize;
                 let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
-                
                 slotContainer.add(square);
             }
-            slotContainer.setPosition(containerPos.x, containerPos.y);
+            // Position slot at anchor cell center, relative to grid origin
+            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
+            slotContainer.setPosition(anchorCellPoints.center.x, anchorCellPoints.center.y);
+            // Make the entire slot container a dropzone
+            slotContainer.setSize(slot.length * gridSize, gridSize);
+            slotContainer.setInteractive(new Phaser.Geom.Rectangle(
+                0, 0, slot.length * gridSize, gridSize
+            ), Phaser.Geom.Rectangle.Contains);
+            slotContainer.input.dropZone = true;
+            slotContainer.setData('slotIdx', slotIdx);
             this.slotSprites.push(slotContainer);
         });
     }
