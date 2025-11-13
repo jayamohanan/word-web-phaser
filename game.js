@@ -191,6 +191,7 @@ class WordWebGame extends Phaser.Scene {
                 wordContainer.add(letter);
             }
             wordContainer.setPosition(startX, baseY);
+            wordContainer.setDepth(100);
             wordContainer.setData('initPosition', { x: startX, y: baseY });
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
             // wordContainer.setSize(word.length * (slotSize + gap), slotSize);
@@ -270,6 +271,7 @@ class WordWebGame extends Phaser.Scene {
             const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
             const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setOrigin(0, 0).setLineWidth(3);
+            line.setDepth(-100);
             this.connectionLines.push(line);
         });
     }
