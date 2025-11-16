@@ -145,6 +145,10 @@ class WordWebGame extends Phaser.Scene {
                 let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
                 square.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
+                let letterText = this.add.text(x, y, '', { font: '32px Arial' }).setOrigin(0.5);
+                letterText.setText('A'); // Placeholder letter
+                // slotContainer.add(letterText);
+                slotContainer.add(letterText);
                 slotContainer.add(square);
             }
             // Position slot at anchor cell center, relative to grid origin
