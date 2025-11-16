@@ -729,12 +729,27 @@ class LevelEditorScene extends Phaser.Scene {
 }
 
 const config = {
-    type: Phaser.AUTO,
+    type: Phaser.WEBGL, // Use WebGL for better rendering quality
     width: window.innerWidth,
     height: window.innerHeight,
     backgroundColor: '#f0f8ff',
     parent: 'editor-game',
-    scene: [LevelEditorScene]
+    scene: [LevelEditorScene],
+    
+    // Crisp rendering settings
+    roundPixels: true, // Round positions to whole pixels for crisp rendering
+    antialias: true, // Enable anti-aliasing for smooth edges
+    
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        resolution: window.devicePixelRatio || 1, // Handle high DPI screens (Retina, 4K)
+    },
+    
+    render: {
+        antialiasGL: true, // WebGL anti-aliasing
+        pixelArt: false, // Set to true only for retro pixel art games
+    }
 };
 
 const game = new Phaser.Game(config);

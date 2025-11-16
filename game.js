@@ -30,6 +30,32 @@ class WordWebGame extends Phaser.Scene {
         this.renderBank();
         this.renderConnections();
 
+        // Add right-click handler to remove words from slots
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.rightButtonDown()) {
+                // Check if clicking on a filled slot to remove the word
+                this.slotSprites.forEach((slotContainer, slotIdx) => {
+                    if (slotContainer.getData('filled')) {
+                        const bounds = slotContainer.getBounds();
+                        if (bounds.contains(pointer.worldX, pointer.worldY)) {
+                            console.log(`Removing word from slot ${slotIdx}`);
+                            // Find the word container that was placed here
+                            this.bankSprites.forEach(wordContainer => {
+                                if (wordContainer.getData('placed') && wordContainer.getData('slotIdx') === slotIdx) {
+                                    // Animate word back to its original position
+                                    this.tweenBackToBottom(wordContainer);
+                                    wordContainer.setData('placed', false);
+                                    wordContainer.setData('slotIdx', null);
+                                }
+                            });
+                            // Remove word from slot and update hints
+                            this.removeWordFromSlot(slotIdx);
+                        }
+                    }
+                });
+            }
+        });
+
        
         // Global drop handler for slots
         this.input.on('drop', (pointer, gameObject, dropZone) => {
@@ -64,7 +90,7 @@ class WordWebGame extends Phaser.Scene {
                 return;
             }
             // Check if slot is already filled
-            let slotFilled = slotSquares.some(sq => sq.getData('filled'));
+            let slotFilled = slotSquares.some(squareContainer => squareContainer.getData('filled'));
             if (slotFilled) {
                 console.log('slot is already filled, going back');
                 this.tweenBackToBottom(gameObject);
@@ -82,11 +108,9 @@ class WordWebGame extends Phaser.Scene {
             }
             // TODO: Add constraint violation check here if needed
             // If all checks pass, place the word over the slot
-            const firstSquare = slotSquares[0];
-            // const targetX = firstSquare.x - gameObject.width / 2 + firstSquare.width / 2;
-            // const targetY = firstSquare.y - gameObject.height / 2 + firstSquare.height / 2;
-            const targetX = firstSquare.x;
-            const targetY = firstSquare.y;
+            const firstSquareContainer = slotSquares[0];
+            const targetX = firstSquareContainer.x;
+            const targetY = firstSquareContainer.y;
             console.log(`Placing word "${word}" at slot ${slotIdx} position (${targetX}, ${targetY})`);
             this.tweens.add({
                 targets: gameObject,
@@ -95,20 +119,20 @@ class WordWebGame extends Phaser.Scene {
                 duration: 200,
                 ease: 'Power2'
             });
-            // this.tweens.add({
-            //     targets: gameObject,
-            //     x: targetX,
-            //     y: targetY,
-            //     duration: 200,
-            //     ease: 'Power2'
-            // });
+            
             gameObject.setData('placed', true);
             gameObject.setData('slotIdx', slotIdx);
-            // Mark slot squares as filled
-            slotSquares.forEach((sq, i) => {
-                sq.setData('filled', true);
-                sq.setData('letter', word[i]);
+            
+            // Mark slot as filled (store the word on the slot)
+            slotContainer.setData('filled', true);
+            slotContainer.setData('word', word);
+            slotSquares.forEach((squareContainer, i) => {
+                squareContainer.setData('filled', true);
+                squareContainer.setData('letter', word[i]);
             });
+            
+            // Update constraint hints for all connected slots
+            this.updateAllConstraintHints();
         });
     }
     tweenBackToBottom(gameObject){
@@ -140,35 +164,50 @@ class WordWebGame extends Phaser.Scene {
 
         this.level.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container();
+            slotContainer.setDepth(10); // Slots at depth 10
+            
             for (let i = 0; i < slot.length; i++) {
                 let x = i * gridSize;
                 let y = 0;
-                let square = this.add.rectangle(x, y, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
-                square.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
-                let letterText = this.add.text(x, y, '', { font: '32px Arial' }).setOrigin(0.5);
-                letterText.setText('A'); // Placeholder letter
-                // slotContainer.add(letterText);
-                slotContainer.add(letterText);
-                slotContainer.add(square);
+                
+                // Create a sub-container for each square to hold both rectangle and text
+                let squareContainer = this.add.container(x, y);
+                
+                // Create the rectangle (square) centered at (0, 0) within the squareContainer
+                let square = this.add.rectangle(0, 0, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
+                
+                // Create the text centered at (0, 0) within the squareContainer
+                let letterText = this.add.text(0, 0, '', { 
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '32px',
+                    color: '#222',
+                    resolution: window.devicePixelRatio || 2 // High resolution for crisp text
+                }).setOrigin(0.5);
+                
+                // Add both to the squareContainer
+                squareContainer.add(square);
+                squareContainer.add(letterText);
+                
+                // Store data on the squareContainer (not the rectangle)
+                squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
+                
+                // Store references to the children for easy access
+                squareContainer.setData('square', square);
+                squareContainer.setData('letterText', letterText);
+                
+                // Add squareContainer to the slotContainer
+                slotContainer.add(squareContainer);
             }
+            
             // Position slot at anchor cell center, relative to grid origin
             const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
             slotContainer.setPosition(anchorCellPoints.center.x, anchorCellPoints.center.y);
+            
             // Make the entire slot container a dropzone
-            // slotContainer.setSize(slot.length * gridSize, gridSize);
             slotContainer.setInteractive(new Phaser.Geom.Rectangle(
                 -gridSize/2, -gridSize/2, slot.length * gridSize, gridSize
             ), Phaser.Geom.Rectangle.Contains);
             slotContainer.input.dropZone = true;
-
-            // const debugRect = this.add.rectangle(
-            //     0, 0,
-            //     slot.length * gridSize, gridSize,
-            //     0x00ff00, 0.2 // green, 20% opacity
-            // ).setOrigin(0, 0);
-            // slotContainer.add(debugRect);
-
-
 
             slotContainer.setData('slotIdx', slotIdx);
             this.slotSprites.push(slotContainer);
@@ -189,7 +228,12 @@ class WordWebGame extends Phaser.Scene {
                 let x = i * CONFIG.GRID_SIZE;
                 let y = 0;
                 let square = this.add.rectangle(x, y, slotSize, slotSize, 0xeeeeee).setStrokeStyle(2, 0x333333);
-                let letter = this.add.text(x, y, word[i], { font: '32px Arial', color: '#222' }).setOrigin(0.5);
+                let letter = this.add.text(x, y, word[i], { 
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '32px',
+                    color: '#222',
+                    resolution: window.devicePixelRatio || 2 // High resolution for crisp text
+                }).setOrigin(0.5);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
                 wordContainer.add(letter);
@@ -212,6 +256,13 @@ class WordWebGame extends Phaser.Scene {
             wordContainer.on('dragstart', (pointer) => {
                 dragOffset.x = pointer.x - wordContainer.x;
                 dragOffset.y = pointer.y - wordContainer.y;
+                
+                // If this word was placed on a slot, remove it from that slot temporarily
+                if (wordContainer.getData('placed')) {
+                    const slotIdx = wordContainer.getData('slotIdx');
+                    console.log(`Dragging word from slot ${slotIdx}, removing temporarily`);
+                    this.removeWordFromSlot(slotIdx);
+                }
             });
             wordContainer.on('drag', (pointer, dragX, dragY) => {
                 wordContainer.x = pointer.x - dragOffset.x;
@@ -270,10 +321,11 @@ class WordWebGame extends Phaser.Scene {
             const [from, to] = connStr.split('-');
             const fromInfo = this.decodeConn(from);
             const toInfo = this.decodeConn(to);
-            const fromSquare = this.slotSprites[fromInfo.slotIdx].list[fromInfo.squareIdx];
-            const toSquare = this.slotSprites[toInfo.slotIdx].list[toInfo.squareIdx];
-            const fromPt = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
-            const toPt = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
+            // Get the squareContainer from the slot
+            const fromSquareContainer = this.slotSprites[fromInfo.slotIdx].list[fromInfo.squareIdx];
+            const toSquareContainer = this.slotSprites[toInfo.slotIdx].list[toInfo.squareIdx];
+            const fromPt = this.getSquareSideMidpoint(fromSquareContainer, fromInfo.sideIdx);
+            const toPt = this.getSquareSideMidpoint(toSquareContainer, toInfo.sideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setOrigin(0, 0).setLineWidth(3);
             line.setDepth(-100);
             this.connectionLines.push(line);
@@ -288,7 +340,9 @@ class WordWebGame extends Phaser.Scene {
         };
     }
 
-    getSquareSideMidpoint(square, sideIdx) {
+    getSquareSideMidpoint(squareContainer, sideIdx) {
+        // Get the actual square rectangle from the container
+        const square = squareContainer.getData('square');
         const { width, height } = square;
         let localX = 0, localY = 0;
         switch (sideIdx) {
@@ -312,10 +366,85 @@ class WordWebGame extends Phaser.Scene {
                 localX = 0;
                 localY = 0;
         }
-        // Use the square's transform matrix to get world coordinates
-        const matrix = square.getWorldTransformMatrix();
+        // Use the squareContainer's transform matrix to get world coordinates
+        const matrix = squareContainer.getWorldTransformMatrix();
         const worldPoint = matrix.transformPoint(localX, localY);
         return { x: worldPoint.x, y: worldPoint.y };
+    }
+
+    // Update constraint hints for all slots based on connections
+    updateAllConstraintHints() {
+        // First, clear all hint texts
+        this.slotSprites.forEach(slotContainer => {
+            const slotSquares = slotContainer.list;
+            slotSquares.forEach(squareContainer => {
+                const letterText = squareContainer.getData('letterText');
+                if (letterText) {
+                    letterText.setText('');
+                }
+            });
+        });
+
+        // Now update hints based on connections
+        if (!this.level.connections) return;
+        
+        this.level.connections.forEach(connStr => {
+            const [from, to] = connStr.split('-');
+            const fromInfo = this.decodeConn(from);
+            const toInfo = this.decodeConn(to);
+            
+            const fromSlot = this.slotSprites[fromInfo.slotIdx];
+            const toSlot = this.slotSprites[toInfo.slotIdx];
+            
+            // Check if fromSlot has a word placed
+            if (fromSlot.getData('filled')) {
+                const fromSquares = fromSlot.list;
+                const fromSquareContainer = fromSquares[fromInfo.squareIdx];
+                const letter = fromSquareContainer.getData('letter');
+                
+                // Set hint in the connected square of toSlot
+                const toSquares = toSlot.list;
+                const toSquareContainer = toSquares[toInfo.squareIdx];
+                const toLetterText = toSquareContainer.getData('letterText');
+                if (toLetterText && letter) {
+                    toLetterText.setText(letter);
+                }
+            }
+            
+            // Check if toSlot has a word placed (connection works both ways)
+            if (toSlot.getData('filled')) {
+                const toSquares = toSlot.list;
+                const toSquareContainer = toSquares[toInfo.squareIdx];
+                const letter = toSquareContainer.getData('letter');
+                
+                // Set hint in the connected square of fromSlot
+                const fromSquares = fromSlot.list;
+                const fromSquareContainer = fromSquares[fromInfo.squareIdx];
+                const fromLetterText = fromSquareContainer.getData('letterText');
+                if (fromLetterText && letter) {
+                    fromLetterText.setText(letter);
+                }
+            }
+        });
+    }
+
+    // Remove a word from a slot
+    removeWordFromSlot(slotIdx) {
+        const slotContainer = this.slotSprites[slotIdx];
+        if (!slotContainer) return;
+        
+        // Mark slot as empty
+        slotContainer.setData('filled', false);
+        slotContainer.setData('word', null);
+        
+        const slotSquares = slotContainer.list;
+        slotSquares.forEach(squareContainer => {
+            squareContainer.setData('filled', false);
+            squareContainer.setData('letter', null);
+        });
+        
+        // Recalculate all constraint hints
+        this.updateAllConstraintHints();
     }
 }
 
@@ -327,12 +456,27 @@ function resizeGame() {
 }
 
 const config = {
-    type: Phaser.AUTO,
+    type: Phaser.WEBGL, // Use WebGL for better rendering quality
     width: window.innerWidth,
     height: window.innerHeight,
     backgroundColor: '#f0f8ff',
     parent: 'game-container',
-    scene: [WordWebGame]
+    scene: [WordWebGame],
+    
+    // Crisp rendering settings
+    roundPixels: true, // Round positions to whole pixels for crisp rendering
+    antialias: true, // Enable anti-aliasing for smooth edges
+    
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        resolution: window.devicePixelRatio || 1, // Handle high DPI screens (Retina, 4K)
+    },
+    
+    render: {
+        antialiasGL: true, // WebGL anti-aliasing
+        pixelArt: false, // Set to true only for retro pixel art games
+    }
 };
 
 const game = new Phaser.Game(config);
