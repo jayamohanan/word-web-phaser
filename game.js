@@ -95,18 +95,17 @@ class WordWebGame extends Phaser.Scene {
                 console.log('slot is already filled, going back');
                 this.tweenBackToBottom(gameObject);
                 return;
-                // Animate back to original position
-                this.tweens.add({
-                    targets: gameObject,
-                    x: 0,
-                    y: 0,
-                    duration: 300,
-                    ease: 'Power2'
-                });
-                console.log('return 1');
+            }
+            
+            // Check constraint violations
+            const violationResult = this.checkConstraintViolation(slotIdx, word);
+            if (violationResult.violated) {
+                console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
+                this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
+                this.tweenBackToBottom(gameObject);
                 return;
             }
-            // TODO: Add constraint violation check here if needed
+            
             // If all checks pass, place the word over the slot
             const firstSquareContainer = slotSquares[0];
             const targetX = firstSquareContainer.x;
@@ -370,6 +369,81 @@ class WordWebGame extends Phaser.Scene {
         const matrix = squareContainer.getWorldTransformMatrix();
         const worldPoint = matrix.transformPoint(localX, localY);
         return { x: worldPoint.x, y: worldPoint.y };
+    }
+
+    // Check if placing a word would violate any constraint hints
+    checkConstraintViolation(slotIdx, word) {
+        const slotContainer = this.slotSprites[slotIdx];
+        const slotSquares = slotContainer.list;
+        
+        // Check each square for hint violations
+        for (let i = 0; i < slotSquares.length; i++) {
+            const squareContainer = slotSquares[i];
+            const letterText = squareContainer.getData('letterText');
+            
+            if (letterText) {
+                const hintLetter = letterText.text.trim().toUpperCase();
+                const wordLetter = word[i].toUpperCase();
+                
+                // If there's a hint and it doesn't match the word letter, it's a violation
+                if (hintLetter && hintLetter !== wordLetter) {
+                    return {
+                        violated: true,
+                        squareIdx: i,
+                        expectedLetter: hintLetter,
+                        actualLetter: wordLetter
+                    };
+                }
+            }
+        }
+        
+        // No violations found
+        return { violated: false };
+    }
+
+    // Show visual feedback when a constraint is violated
+    showConstraintViolationFeedback(slotIdx, squareIdx) {
+        const slotContainer = this.slotSprites[slotIdx];
+        const squareContainer = slotContainer.list[squareIdx];
+        const square = squareContainer.getData('square');
+        const letterText = squareContainer.getData('letterText');
+        
+        // Get the world position of the square container
+        const matrix = squareContainer.getWorldTransformMatrix();
+        const worldPos = matrix.transformPoint(0, 0);
+        
+        // Shake animation: move up and down quickly
+        this.tweens.add({
+            targets: squareContainer,
+            y: squareContainer.y - 8, // Move up
+            duration: 80,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            repeat: 2, // Shake 3 times total (up-down-up-down-up-down)
+            onComplete: () => {
+                // Reset to original position
+                squareContainer.y = squareIdx * 0; // Should be 0 for all squares in horizontal slots
+            }
+        });
+        
+        // Flash the square red briefly
+        const originalColor = square.fillColor;
+        square.setFillStyle(0xff6b6b); // Red color
+        
+        this.time.delayedCall(500, () => {
+            square.setFillStyle(0xffffff); // Back to white
+        });
+        
+        // Make the hint text pulse/scale up briefly
+        const originalScale = letterText.scale;
+        this.tweens.add({
+            targets: letterText,
+            scale: 1.5,
+            duration: 100,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            repeat: 1
+        });
     }
 
     // Update constraint hints for all slots based on connections
