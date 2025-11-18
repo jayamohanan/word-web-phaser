@@ -461,11 +461,12 @@ class WordWebGame extends Phaser.Scene {
                 const letterText = squareContainer.getData('letterText');
                 if (letterText) {
                     letterText.setText('');
+                    letterText.setScale(1); // Reset scale
                 }
             });
         });
 
-        // Now update hints based on connections
+        // Now update hints based on connections with animation
         if (!this.level.connections) return;
         
         this.level.connections.forEach(connStr => {
@@ -477,35 +478,135 @@ class WordWebGame extends Phaser.Scene {
             const toSlot = this.slotSprites[toInfo.slotIdx];
             
             // Check if fromSlot has a word placed
-            if (fromSlot.getData('filled')) {
+            if (fromSlot.getData('filled') && !toSlot.getData('filled')) {
                 const fromSquares = fromSlot.list;
                 const fromSquareContainer = fromSquares[fromInfo.squareIdx];
                 const letter = fromSquareContainer.getData('letter');
                 
-                // Set hint in the connected square of toSlot
+                // Get positions for animation
                 const toSquares = toSlot.list;
                 const toSquareContainer = toSquares[toInfo.squareIdx];
                 const toLetterText = toSquareContainer.getData('letterText');
+                
                 if (toLetterText && letter) {
-                    toLetterText.setText(letter);
+                    // Animate hint creation
+                    this.animateHintCreation(fromSquareContainer, toSquareContainer, letter, fromInfo.sideIdx, toInfo.sideIdx);
                 }
             }
             
             // Check if toSlot has a word placed (connection works both ways)
-            if (toSlot.getData('filled')) {
+            if (toSlot.getData('filled') && !fromSlot.getData('filled')) {
                 const toSquares = toSlot.list;
                 const toSquareContainer = toSquares[toInfo.squareIdx];
                 const letter = toSquareContainer.getData('letter');
                 
-                // Set hint in the connected square of fromSlot
+                // Get positions for animation
                 const fromSquares = fromSlot.list;
                 const fromSquareContainer = fromSquares[fromInfo.squareIdx];
                 const fromLetterText = fromSquareContainer.getData('letterText');
+                
                 if (fromLetterText && letter) {
-                    fromLetterText.setText(letter);
+                    // Animate hint creation (reversed direction)
+                    this.animateHintCreation(toSquareContainer, fromSquareContainer, letter, toInfo.sideIdx, fromInfo.sideIdx);
                 }
             }
         });
+    }
+
+    // Animate hint creation: particle travels along connection, then hint bounces in
+    animateHintCreation(sourceSquareContainer, targetSquareContainer, letter, sourceSideIdx, targetSideIdx) {
+        // Get world positions
+        const sourcePos = this.getSquareSideMidpoint(sourceSquareContainer, sourceSideIdx);
+        const targetPos = this.getSquareSideMidpoint(targetSquareContainer, targetSideIdx);
+        
+        // Create a particle (small circle) that travels along the connection
+        const particle = this.add.circle(sourcePos.x, sourcePos.y, 8, 0x4CAF50, 1); // Green particle
+        particle.setStrokeStyle(2, 0xffffff);
+        particle.setDepth(1000); // Above everything
+        
+        // Create a glow effect
+        const glow = this.add.circle(sourcePos.x, sourcePos.y, 12, 0x4CAF50, 0.3);
+        glow.setDepth(999);
+        
+        // Calculate travel duration based on distance
+        const distance = Phaser.Math.Distance.Between(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
+        const duration = Math.max(300, Math.min(600, distance * 0.5)); // Between 300-600ms
+        
+        // Animate particle traveling along the connection line
+        this.tweens.add({
+            targets: [particle, glow],
+            x: targetPos.x,
+            y: targetPos.y,
+            duration: duration,
+            ease: 'Cubic.easeInOut',
+            onUpdate: () => {
+                // Pulse the particle while traveling
+                const progress = this.tweens.getTweensOf(particle)[0]?.progress || 0;
+                const scale = 1 + Math.sin(progress * Math.PI * 4) * 0.3; // Pulse 4 times during travel
+                particle.setScale(scale);
+                glow.setScale(scale * 1.2);
+            },
+            onComplete: () => {
+                // Particle reached destination - create burst effect
+                this.createBurstEffect(targetPos.x, targetPos.y);
+                
+                // Remove particle and glow
+                particle.destroy();
+                glow.destroy();
+                
+                // Now show the hint with bounce animation
+                const targetLetterText = targetSquareContainer.getData('letterText');
+                if (targetLetterText) {
+                    targetLetterText.setText(letter);
+                    targetLetterText.setScale(0); // Start invisible
+                    
+                    // Bounce in animation
+                    this.tweens.add({
+                        targets: targetLetterText,
+                        scale: 1.5,
+                        duration: 200,
+                        ease: 'Back.easeOut',
+                        onComplete: () => {
+                            // Settle to normal size
+                            this.tweens.add({
+                                targets: targetLetterText,
+                                scale: 1,
+                                duration: 150,
+                                ease: 'Quad.easeInOut'
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // Create a burst effect when particle reaches destination
+    createBurstEffect(x, y) {
+        const particleCount = 8;
+        const burstRadius = 20;
+        
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const burstParticle = this.add.circle(x, y, 3, 0x4CAF50, 1);
+            burstParticle.setDepth(1000);
+            
+            const targetX = x + Math.cos(angle) * burstRadius;
+            const targetY = y + Math.sin(angle) * burstRadius;
+            
+            this.tweens.add({
+                targets: burstParticle,
+                x: targetX,
+                y: targetY,
+                alpha: 0,
+                scale: 0.5,
+                duration: 300,
+                ease: 'Quad.easeOut',
+                onComplete: () => {
+                    burstParticle.destroy();
+                }
+            });
+        }
     }
 
     // Remove a word from a slot
