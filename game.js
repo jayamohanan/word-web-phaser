@@ -141,8 +141,14 @@ class WordWebGame extends Phaser.Scene {
                 squareContainer.setData('letter', word[i]);
             });
             
+            // Show satisfaction feedback for hints that were just satisfied
+            this.showHintSatisfactionFeedback(slotIdx, word);
+            
             // Update constraint hints for all connected slots
             this.updateAllConstraintHints();
+            
+            // Show connection validation feedback for satisfied connections
+            this.showConnectionValidationFeedback(slotIdx);
             
             // Check for win condition
             this.checkWinCondition();
@@ -628,6 +634,254 @@ class WordWebGame extends Phaser.Scene {
         this.updateAllConstraintHints();
     }
 
+    // Show feedback when hints are satisfied by placing a word
+    showHintSatisfactionFeedback(slotIdx, word) {
+        const slotContainer = this.slotSprites[slotIdx];
+        const slotSquares = slotContainer.list;
+        
+        // Check which squares had hints before this word was placed
+        // We need to find hints that match the placed word letters
+        if (!this.level.connections) return;
+        
+        // Track which squares in this slot had hints
+        const squaresWithSatisfiedHints = [];
+        
+        this.level.connections.forEach(connStr => {
+            const [from, to] = connStr.split('-');
+            const fromInfo = this.decodeConn(from);
+            const toInfo = this.decodeConn(to);
+            
+            // Check if this connection involves the slot we just filled
+            if (toInfo.slotIdx === slotIdx) {
+                // Check if the "from" slot is filled (meaning it created a hint in our slot)
+                const fromSlot = this.slotSprites[fromInfo.slotIdx];
+                if (fromSlot.getData('filled')) {
+                    // This square had a hint that is now satisfied
+                    squaresWithSatisfiedHints.push(toInfo.squareIdx);
+                }
+            } else if (fromInfo.slotIdx === slotIdx) {
+                // Check if the "to" slot is filled
+                const toSlot = this.slotSprites[toInfo.slotIdx];
+                if (toSlot.getData('filled')) {
+                    squaresWithSatisfiedHints.push(fromInfo.squareIdx);
+                }
+            }
+        });
+        
+        // Show satisfaction animation for each square with satisfied hints
+        squaresWithSatisfiedHints.forEach((squareIdx, index) => {
+            const squareContainer = slotSquares[squareIdx];
+            const square = squareContainer.getData('square');
+            
+            // Delay each animation slightly for staggered effect
+            this.time.delayedCall(index * 80, () => {
+                // Get world position
+                const matrix = squareContainer.getWorldTransformMatrix();
+                const worldPos = matrix.transformPoint(0, 0);
+                
+                // Green flash on the square
+                const originalColor = square.fillColor;
+                square.setFillStyle(0xC8E6C9); // Light green
+                
+                this.time.delayedCall(400, () => {
+                    square.setFillStyle(originalColor); // Back to original
+                });
+                
+                // Checkmark particle animation
+                const checkmark = this.add.text(worldPos.x, worldPos.y, '✓', {
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '24px',
+                    color: '#4CAF50',
+                    fontStyle: 'bold',
+                    resolution: window.devicePixelRatio || 2
+                }).setOrigin(0.5);
+                checkmark.setDepth(2000);
+                checkmark.setAlpha(0);
+                
+                // Animate checkmark: fade in, scale up, float up, fade out
+                this.tweens.add({
+                    targets: checkmark,
+                    alpha: 1,
+                    scale: { from: 0.5, to: 1.2 },
+                    y: worldPos.y - 30,
+                    duration: 600,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => {
+                        this.tweens.add({
+                            targets: checkmark,
+                            alpha: 0,
+                            duration: 200,
+                            onComplete: () => {
+                                checkmark.destroy();
+                            }
+                        });
+                    }
+                });
+                
+                // Ring pulse effect
+                const ring = this.add.circle(worldPos.x, worldPos.y, this.squareWidth / 2, 0x4CAF50, 0);
+                ring.setStrokeStyle(3, 0x4CAF50, 0.8);
+                ring.setDepth(1999);
+                
+                this.tweens.add({
+                    targets: ring,
+                    scale: { from: 0.8, to: 1.5 },
+                    alpha: { from: 0.8, to: 0 },
+                    duration: 500,
+                    ease: 'Quad.easeOut',
+                    onComplete: () => {
+                        ring.destroy();
+                    }
+                });
+            });
+        });
+    }
+
+    // Show feedback on connection lines when both connected slots are filled
+    showConnectionValidationFeedback(slotIdx) {
+        if (!this.level.connections) return;
+        
+        this.level.connections.forEach((connStr, connIndex) => {
+            const [from, to] = connStr.split('-');
+            const fromInfo = this.decodeConn(from);
+            const toInfo = this.decodeConn(to);
+            
+            // Check if this connection involves the slot we just filled
+            if (fromInfo.slotIdx === slotIdx || toInfo.slotIdx === slotIdx) {
+                const fromSlot = this.slotSprites[fromInfo.slotIdx];
+                const toSlot = this.slotSprites[toInfo.slotIdx];
+                
+                // Only show feedback if BOTH slots are now filled
+                if (fromSlot.getData('filled') && toSlot.getData('filled')) {
+                    // Verify the letters actually match (connection is valid)
+                    const fromSquare = fromSlot.list[fromInfo.squareIdx];
+                    const toSquare = toSlot.list[toInfo.squareIdx];
+                    const fromLetter = fromSquare.getData('letter');
+                    const toLetter = toSquare.getData('letter');
+                    
+                    if (fromLetter && toLetter && fromLetter === toLetter) {
+                        // Connection is valid! Show feedback on the line
+                        const connectionLine = this.connectionLines[connIndex];
+                        if (connectionLine) {
+                            // Add a slight delay for better timing
+                            this.time.delayedCall(300, () => {
+                                this.animateConnectionValidation(connectionLine, fromInfo, toInfo);
+                            });
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Animate a connection line to show it's validated
+    animateConnectionValidation(connectionLine, fromInfo, toInfo) {
+        // Get the original line properties
+        const fromSquare = this.slotSprites[fromInfo.slotIdx].list[fromInfo.squareIdx];
+        const toSquare = this.slotSprites[toInfo.slotIdx].list[toInfo.squareIdx];
+        const fromPos = this.getSquareSideMidpoint(fromSquare, fromInfo.sideIdx);
+        const toPos = this.getSquareSideMidpoint(toSquare, toInfo.sideIdx);
+        
+        // Create a green overlay line that pulses
+        const validationLine = this.add.line(0, 0, fromPos.x, fromPos.y, toPos.x, toPos.y, 0x4CAF50)
+            .setOrigin(0, 0)
+            .setLineWidth(5)
+            .setDepth(900)
+            .setAlpha(0);
+        
+        // Pulse animation on the line
+        this.tweens.add({
+            targets: validationLine,
+            alpha: 0.8,
+            lineWidth: 6,
+            duration: 300,
+            ease: 'Quad.easeOut',
+            yoyo: true,
+            repeat: 1,
+            onComplete: () => {
+                validationLine.destroy();
+            }
+        });
+        
+        // Create particles that travel along the line
+        const particleCount = 3;
+        for (let i = 0; i < particleCount; i++) {
+            this.time.delayedCall(i * 150, () => {
+                const particle = this.add.circle(fromPos.x, fromPos.y, 6, 0x4CAF50, 1);
+                particle.setStrokeStyle(2, 0xffffff);
+                particle.setDepth(1000);
+                
+                // Animate particle along the line
+                this.tweens.add({
+                    targets: particle,
+                    x: toPos.x,
+                    y: toPos.y,
+                    duration: 400,
+                    ease: 'Cubic.easeInOut',
+                    onUpdate: () => {
+                        // Pulse the particle
+                        const progress = this.tweens.getTweensOf(particle)[0]?.progress || 0;
+                        const scale = 1 + Math.sin(progress * Math.PI * 3) * 0.4;
+                        particle.setScale(scale);
+                    },
+                    onComplete: () => {
+                        // Small burst at the end
+                        for (let j = 0; j < 4; j++) {
+                            const angle = (Math.PI * 2 * j) / 4;
+                            const sparkle = this.add.circle(toPos.x, toPos.y, 3, 0x4CAF50, 1);
+                            sparkle.setDepth(1000);
+                            
+                            this.tweens.add({
+                                targets: sparkle,
+                                x: toPos.x + Math.cos(angle) * 15,
+                                y: toPos.y + Math.sin(angle) * 15,
+                                alpha: 0,
+                                scale: 0.3,
+                                duration: 300,
+                                ease: 'Quad.easeOut',
+                                onComplete: () => sparkle.destroy()
+                            });
+                        }
+                        particle.destroy();
+                    }
+                });
+            });
+        }
+        
+        // Add a satisfying "ding" effect with text
+        const midX = (fromPos.x + toPos.x) / 2;
+        const midY = (fromPos.y + toPos.y) / 2;
+        
+        const validText = this.add.text(midX, midY, '✓', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '20px',
+            color: '#4CAF50',
+            fontStyle: 'bold',
+            resolution: window.devicePixelRatio || 2
+        }).setOrigin(0.5);
+        validText.setDepth(2000);
+        validText.setAlpha(0);
+        validText.setScale(0.5);
+        
+        this.tweens.add({
+            targets: validText,
+            alpha: 1,
+            scale: 1.3,
+            duration: 300,
+            ease: 'Back.easeOut',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: validText,
+                    alpha: 0,
+                    y: midY - 20,
+                    duration: 400,
+                    ease: 'Quad.easeIn',
+                    onComplete: () => validText.destroy()
+                });
+            }
+        });
+    }
+
     // Check if all slots are filled (win condition)
     checkWinCondition() {
         const allSlotsFilled = this.slotSprites.every(slotContainer => {
@@ -636,8 +890,10 @@ class WordWebGame extends Phaser.Scene {
         
         if (allSlotsFilled) {
             console.log('🎉 All slots filled! You win!');
-            // Add a small delay before showing win scene for better UX
-            this.time.delayedCall(500, () => {
+            // Add delay to let connection validation animations complete
+            // Connection animations: 300ms delay + ~1000ms animation = ~1300ms total
+            // Add extra buffer for hint satisfaction animations
+            this.time.delayedCall(1800, () => {
                 this.scene.launch('WinScene', {
                     currentLevelIndex: this.currentLevelIndex,
                     totalLevels: this.totalLevels
