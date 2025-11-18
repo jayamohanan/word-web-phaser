@@ -1,4 +1,5 @@
 import * as Utils from './utils.js';
+import WinScene from './WinScene.js';
 
 // Main Phaser game logic for Word Web
 // Loads level data, renders slots, words, and handles drag-drop
@@ -7,9 +8,10 @@ class WordWebGame extends Phaser.Scene {
     constructor() {
         super('WordWebGame');
     }
-    init(){
+    init(data){
         this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
         this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
+        this.currentLevelIndex = data.levelIndex !== undefined ? data.levelIndex : 0;
     }
 
     preload() {
@@ -18,7 +20,9 @@ class WordWebGame extends Phaser.Scene {
 
     create() {
         const levels = this.cache.json.get('levels');
-        this.level = levels.levels[0];
+        this.totalLevels = levels.levels.length;
+        // Use modulo to loop levels
+        this.level = levels.levels[this.currentLevelIndex % this.totalLevels];
         this.slotSprites = [];
         this.bankSprites = [];
         this.connectionLines = [];
@@ -108,7 +112,7 @@ class WordWebGame extends Phaser.Scene {
             
             // If all checks pass, place the word over the slot
             const firstSquareContainer = slotSquares[0];
-            const offset = 3;
+            const offset = 0;
             this.tweens.add({
                 targets: gameObject,
                 x: dropZone.x + offset,
@@ -130,6 +134,9 @@ class WordWebGame extends Phaser.Scene {
             
             // Update constraint hints for all connected slots
             this.updateAllConstraintHints();
+            
+            // Check for win condition
+            this.checkWinCondition();
         });
     }
     tweenBackToBottom(gameObject){
@@ -518,6 +525,26 @@ class WordWebGame extends Phaser.Scene {
         // Recalculate all constraint hints
         this.updateAllConstraintHints();
     }
+
+    // Check if all slots are filled (win condition)
+    checkWinCondition() {
+        const allSlotsFilled = this.slotSprites.every(slotContainer => {
+            return slotContainer.getData('filled') === true;
+        });
+        
+        if (allSlotsFilled) {
+            console.log('🎉 All slots filled! You win!');
+            // Add a small delay before showing win scene for better UX
+            this.time.delayedCall(500, () => {
+                this.scene.launch('WinScene', {
+                    currentLevelIndex: this.currentLevelIndex,
+                    totalLevels: this.totalLevels
+                });
+                // Pause the game scene
+                this.scene.pause();
+            });
+        }
+    }
 }
 
 
@@ -533,7 +560,7 @@ const config = {
     height: window.innerHeight,
     backgroundColor: '#f0f8ff',
     parent: 'game-container',
-    scene: [WordWebGame],
+    scene: [WordWebGame, WinScene],
     
     // Crisp rendering settings
     roundPixels: true, // Round positions to whole pixels for crisp rendering
