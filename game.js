@@ -12,6 +12,15 @@ class WordWebGame extends Phaser.Scene {
         this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
         this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
         this.currentLevelIndex = data.levelIndex !== undefined ? data.levelIndex : 0;
+        
+        // Cache CONFIG variables for performance
+        this.squareWidth = CONFIG.SQUARE_WIDTH;
+        this.squareGap = CONFIG.SQUARE_GAP;
+        this.gridSize = CONFIG.GRID_SIZE;
+        this.slotStrokeWidth = CONFIG.SLOT_STROKE_WIDTH;
+        this.slotStrokeColor = CONFIG.SLOT_STROKE_COLOR;
+        this.wordStrokeWidth = CONFIG.WORD_STROKE_WIDTH;
+        this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
     }
 
     preload() {
@@ -158,27 +167,23 @@ class WordWebGame extends Phaser.Scene {
     }
 
     renderSlots() {
-        const slotSize = CONFIG.SQUARE_WIDTH;
-
-        const gap = CONFIG.SQUARE_GAP;
         this.slotSprites = [];
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
-        const gridSize = CONFIG.GRID_SIZE;
 
         this.level.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container();
             slotContainer.setDepth(10); // Slots at depth 10
             
             for (let i = 0; i < slot.length; i++) {
-                let x = i * gridSize;
+                let x = i * this.gridSize;
                 let y = 0;
                 
                 // Create a sub-container for each square to hold both rectangle and text
                 let squareContainer = this.add.container(x, y);
                 
                 // Create the rectangle (square) centered at (0, 0) within the squareContainer
-                let square = this.add.rectangle(0, 0, slotSize, slotSize, 0xffffff).setStrokeStyle(2, 0x000000);
+                let square = this.add.rectangle(0, 0, this.squareWidth, this.squareWidth, 0xffffff).setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor);
                 
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', { 
@@ -204,12 +209,12 @@ class WordWebGame extends Phaser.Scene {
             }
             
             // Position slot at anchor cell center, relative to grid origin
-            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
+            const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, this.gridSize);
             slotContainer.setPosition(anchorCellPoints.center.x, anchorCellPoints.center.y);
             
             // Make the entire slot container a dropzone
             slotContainer.setInteractive(new Phaser.Geom.Rectangle(
-                -gridSize/2, -gridSize/2, slot.length * gridSize, gridSize
+                -this.gridSize/2, -this.gridSize/2, slot.length * this.gridSize, this.gridSize
             ), Phaser.Geom.Rectangle.Contains);
             slotContainer.input.dropZone = true;
 
@@ -219,19 +224,16 @@ class WordWebGame extends Phaser.Scene {
     }
 
     renderBank() {
-        const slotSize = CONFIG.SQUARE_WIDTH;
-        const gap = CONFIG.SQUARE_GAP;
         const startY = this.bankAreaY + 40;
-        const verticalGap = slotSize + 24;
+        const verticalGap = this.squareWidth + 24;
         this.level.words.forEach((word, wordIdx) => {
-            // let startX = this.sys.game.canvas.width / 2 - (word.length * (slotSize + gap)) / 2;
             let startX = this.sys.game.canvas.width / 2 - Utils.getFrameWidth(word.length) / 2;
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(0, 0);
             for (let i = 0; i < word.length; i++) {
-                let x = i * CONFIG.GRID_SIZE;
+                let x = i * this.gridSize;
                 let y = 0;
-                let square = this.add.rectangle(x, y, slotSize, slotSize, 0xeeeeee).setStrokeStyle(2, 0x333333);
+                let square = this.add.rectangle(x, y, this.squareWidth, this.squareWidth, 0xeeeeee).setStrokeStyle(this.wordStrokeWidth, this.wordStrokeColor);
                 let letter = this.add.text(x, y, word[i], { 
                     fontFamily: 'Arial, sans-serif',
                     fontSize: '32px',
@@ -246,13 +248,12 @@ class WordWebGame extends Phaser.Scene {
             wordContainer.setDepth(100);
             wordContainer.setData('initPosition', { x: startX, y: baseY });
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
-            // wordContainer.setSize(word.length * (slotSize + gap), slotSize);
             wordContainer.setInteractive(
                 new Phaser.Geom.Rectangle(
-                    -CONFIG.GRID_SIZE/2,
-                    -CONFIG.GRID_SIZE/2,
-                     CONFIG.GRID_SIZE * word.length,
-                     CONFIG.GRID_SIZE
+                    -this.gridSize/2,
+                    -this.gridSize/2,
+                     this.gridSize * word.length,
+                     this.gridSize
                     ),
                     Phaser.Geom.Rectangle.Contains);
             this.input.setDraggable(wordContainer);

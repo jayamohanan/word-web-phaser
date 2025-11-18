@@ -35,6 +35,15 @@ class LevelEditorScene extends Phaser.Scene {
         this.panLocked = true;
         this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
         this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
+        
+        // Cache CONFIG variables for performance
+        this.squareWidth = CONFIG.SQUARE_WIDTH;
+        this.squareGap = CONFIG.SQUARE_GAP;
+        this.gridSize = CONFIG.GRID_SIZE;
+        this.slotStrokeWidth = CONFIG.SLOT_STROKE_WIDTH;
+        this.slotStrokeColor = CONFIG.SLOT_STROKE_COLOR;
+        this.wordStrokeWidth = CONFIG.WORD_STROKE_WIDTH;
+        this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
     }
 
     preload() { }
@@ -132,7 +141,6 @@ class LevelEditorScene extends Phaser.Scene {
         const gridLineWidth = 1;
         const slotAreaWidth = this.sys.game.canvas.width;
         const slotAreaHeight = this.slotAreaHeight;
-        const gridSize = CONFIG.GRID_SIZE;
 
         // Draw background - centered at (0,0), extends in all directions
         const bgSize = 50000; // Very large background to simulate infinite
@@ -152,40 +160,32 @@ class LevelEditorScene extends Phaser.Scene {
 
         // Calculate visible range in world coordinates using camera view
         const cam = this.cameras.main;
-        // const j = cam.worldView;
-        // const worldMinX = cam.worldView.x;
-        // const worldMaxX = worldMinX + cam.worldView.width;
-        // const worldMinY = cam.worldView.y;
-        // const worldMaxY = worldMinY + cam.worldView.height;
 
         const worldMinX = cam.scrollX;
         const worldMaxX = worldMinX + cam.width;
         const worldMinY = cam.scrollY;
         const worldMaxY = worldMinY + cam.height;
 
-
-
-
         // Add large padding to ensure grid is drawn beyond visible area for smooth panning
-        const padding = gridSize * 10;
+        const padding = this.gridSize * 10;
 
         // Find first grid line before visible area
-        const startX = Math.floor((worldMinX - padding) / gridSize) * gridSize + this.originX;
-        const endX = Math.ceil((worldMaxX + padding) / gridSize) * gridSize + this.originX;
-        const startY = Math.floor((worldMinY - padding) / gridSize) * gridSize + this.originY;
-        const endY = Math.ceil((worldMaxY + padding) / gridSize) * gridSize + this.originY;
+        const startX = Math.floor((worldMinX - padding) / this.gridSize) * this.gridSize + this.originX;
+        const endX = Math.ceil((worldMaxX + padding) / this.gridSize) * this.gridSize + this.originX;
+        const startY = Math.floor((worldMinY - padding) / this.gridSize) * this.gridSize + this.originY;
+        const endY = Math.ceil((worldMaxY + padding) / this.gridSize) * this.gridSize + this.originY;
 
 
         console.log(`Drawing grid from (${startX}, ${startY}) to (${endX}, ${endY})`);
         this.gridGraphics.lineStyle(gridLineWidth, gridColor, 1);
 
         // Draw vertical grid lines
-        for (let x = startX; x <= endX; x += gridSize) {
+        for (let x = startX; x <= endX; x += this.gridSize) {
             this.gridGraphics.lineBetween(x, startY, x, endY);
         }
 
         // Draw horizontal grid lines
-        for (let y = startY; y <= endY; y += gridSize) {
+        for (let y = startY; y <= endY; y += this.gridSize) {
             this.gridGraphics.lineBetween(startX, y, endX, y);
         }
 
@@ -415,14 +415,13 @@ class LevelEditorScene extends Phaser.Scene {
     addSlot(length) {
         // Spawn slot so first square is at center of a grid cell
         // Place anchor cell 2 rows above and 2 columns left of camera center
-        const gridSize = CONFIG.GRID_SIZE;
         const cam = this.cameras.main;
         // Get camera center in world coordinates
         const centerX = cam.worldView.centerX;
         const centerY = cam.worldView.centerY;
         // Convert to grid coordinates
-        let anchorCol = Math.floor((centerX - this.originX) / gridSize) - 2;
-        let anchorRow = Math.floor((centerY - this.originY) / gridSize) - 2;
+        let anchorCol = Math.floor((centerX - this.originX) / this.gridSize) - 2;
+        let anchorRow = Math.floor((centerY - this.originY) / this.gridSize) - 2;
         console.log(`Adding slot: length=${length}, anchorCol=${anchorCol}, anchorRow=${anchorRow}`);
 
         // Store anchor cell for slot (i, j coordinates)
@@ -450,7 +449,6 @@ class LevelEditorScene extends Phaser.Scene {
         if (!this.slotSprites) {
             this.slotSprites = [];
         }
-        const gridSize = CONFIG.GRID_SIZE;
         while (this.slotSprites.length > this.slots.length) {
             const removedSlot = this.slotSprites.pop();
             removedSlot.destroy();
@@ -460,19 +458,19 @@ class LevelEditorScene extends Phaser.Scene {
             if (!slotContainer) {
                 slotContainer = this.add.container(0, 0);
                 for (let i = 0; i < slot.length; i++) {
-                    let x = i * gridSize;
+                    let x = i * this.gridSize;
                     let y = 0;
-                    let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xffffff).setStrokeStyle(2, 0x000000);
+                    let square = this.add.rectangle(x, y, this.squareWidth, this.squareWidth, 0xffffff).setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor);
                     square.setData({ slotIdx, squareIdx: i });
                     slotContainer.add(square);
                 }
                 if (!this.connectMode) {
                     slotContainer.setInteractive(
                         new Phaser.Geom.Rectangle(
-                            -CONFIG.GRID_SIZE / 2,
-                            -CONFIG.GRID_SIZE / 2,
-                            slot.length * CONFIG.GRID_SIZE,
-                            CONFIG.GRID_SIZE
+                            -this.gridSize / 2,
+                            -this.gridSize / 2,
+                            slot.length * this.gridSize,
+                            this.gridSize
                         ),
                         Phaser.Geom.Rectangle.Contains
                     );
@@ -484,9 +482,9 @@ class LevelEditorScene extends Phaser.Scene {
                     });
                     slotContainer.on('drag', (pointer, dragX, dragY) => {
 
-                        const { i, j } = MyUtils.getCellIndex(dragX, dragY, this.originX, this.originY, gridSize);
-                        let snappedX = (i + 0.5) * gridSize + this.originX;
-                        let snappedY = (j + 0.5) * gridSize + this.originY;
+                        const { i, j } = MyUtils.getCellIndex(dragX, dragY, this.originX, this.originY, this.gridSize);
+                        let snappedX = (i + 0.5) * this.gridSize + this.originX;
+                        let snappedY = (j + 0.5) * this.gridSize + this.originY;
                         slotContainer.x = snappedX;
                         slotContainer.y = snappedY;
                         slot.anchorCol = i;
@@ -497,7 +495,7 @@ class LevelEditorScene extends Phaser.Scene {
                     });
                 }
                 this.slotSprites.push(slotContainer);
-            }            const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, gridSize);
+            }            const points = MyUtils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, this.gridSize);
             slotContainer.x = points.center.x;
             slotContainer.y = points.center.y;
 
@@ -515,7 +513,6 @@ class LevelEditorScene extends Phaser.Scene {
     }
 
     renderWords() {
-        const gridSize = CONFIG.GRID_SIZE;
         if (this.wordSprites) {
             this.wordSprites.forEach(c => c.destroy());
         }
@@ -523,18 +520,17 @@ class LevelEditorScene extends Phaser.Scene {
         if (!this.wordBankOverlayRect) return;
         const overlay = this.wordBankOverlayRect;
         const startY = overlay.y - overlay.height / 2 + 40; // Add extra gap at the top
-        const verticalGap = CONFIG.SQUARE_WIDTH + CONFIG.WORD_GAP;
+        const verticalGap = this.squareWidth + CONFIG.WORD_GAP;
         this.words.forEach((word, wordIdx) => {
-            // let startX = this.sys.game.canvas.width / 2 - (word.length * (CONFIG.SQUARE_WIDTH + CONFIG.SQUARE_GAP)) / 2;
             let startX = this.sys.game.canvas.width / 2 - MyUtils.getFrameWidth(word.length) / 2;
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(0, 0);
             wordContainer.setScrollFactor(0); // Fixed to camera
             wordContainer.setDepth(2100);
             for (let i = 0; i < word.length; i++) {
-                let x = i * gridSize;
+                let x = i * this.gridSize;
                 let y = 0;
-                let square = this.add.rectangle(x, y, CONFIG.SQUARE_WIDTH, CONFIG.SQUARE_WIDTH, 0xeeeeee).setStrokeStyle(2, 0x333333);
+                let square = this.add.rectangle(x, y, this.squareWidth, this.squareWidth, 0xeeeeee).setStrokeStyle(this.wordStrokeWidth, this.wordStrokeColor);
                 let letter = this.add.text(x, y, word[i], { font: '32px Arial', color: '#222' }).setOrigin(0.5);
                 wordContainer.add(square);
                 wordContainer.add(letter);

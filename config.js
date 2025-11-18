@@ -10,5 +10,11 @@ var CONFIG = {
     SLOT_AREA_HEIGHT_FACTOR: 0.6, // Fraction of canvas height for slot area
     WORD_GAP: 16,
     ORIGIN_X_FACTOR: 0.5,  // 50% of canvas width (horizontal center)
-    ORIGIN_Y_FACTOR: 0.55  // 55% of canvas height (55% above word bank area at 60%)
+    ORIGIN_Y_FACTOR: 0.55,  // 55% of canvas height (55% above word bank area at 60%)
+    
+    // Stroke styles for slots and words
+    SLOT_STROKE_WIDTH: 2,
+    SLOT_STROKE_COLOR: 0x000000,  // Black
+    WORD_STROKE_WIDTH: 2,
+    WORD_STROKE_COLOR: 0x333333   // Dark gray
 };
