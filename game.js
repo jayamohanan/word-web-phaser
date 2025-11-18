@@ -108,13 +108,11 @@ class WordWebGame extends Phaser.Scene {
             
             // If all checks pass, place the word over the slot
             const firstSquareContainer = slotSquares[0];
-            const targetX = firstSquareContainer.x;
-            const targetY = firstSquareContainer.y;
-            console.log(`Placing word "${word}" at slot ${slotIdx} position (${targetX}, ${targetY})`);
+            const offset = 3;
             this.tweens.add({
                 targets: gameObject,
-                x: dropZone.x,
-                y: dropZone.y,
+                x: dropZone.x + offset,
+                y: dropZone.y - offset,
                 duration: 200,
                 ease: 'Power2'
             });
