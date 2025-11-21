@@ -18,7 +18,28 @@
         "FATE"
       ],
       "connections": [
-        "022-100"
+        "022-100-1-plus1"
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "CAT",
+        "DOG"
+      ],
+      "connections": [
+        "022-100-1-plus1"
       ]
     }
   ]
