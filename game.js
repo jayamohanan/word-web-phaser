@@ -328,26 +328,30 @@ class WordWebGame extends Phaser.Scene {
     renderConnections() {
         // Use the same color as slot square outline: black (0x000000)
         const connectionColor = 0x000000;
-        this.level.connections.forEach(connStr => {
-            const [from, to] = connStr.split('-');
-            const connInfo = this.decodeConn(connStr);
+        
+        // Support both 'rules' (new) and 'connections' (legacy)
+        const rules = this.level.rules || this.level.connections || [];
+        
+        rules.forEach(rule => {
+            const ruleInfo = this.parseRule(rule);
+            if (!ruleInfo) return; // Skip invalid rules
             
             // Get the squareContainer from the slot
-            const fromSquareContainer = this.slotSprites[connInfo.slotIdx].list[connInfo.squareIdx];
-            const toSquareContainer = this.slotSprites[connInfo.toSlotIdx].list[connInfo.toSquareIdx];
-            const fromPt = this.getSquareSideMidpoint(fromSquareContainer, connInfo.sideIdx);
-            const toPt = this.getSquareSideMidpoint(toSquareContainer, connInfo.toSideIdx);
+            const fromSquareContainer = this.slotSprites[ruleInfo.slotIdx].list[ruleInfo.squareIdx];
+            const toSquareContainer = this.slotSprites[ruleInfo.toSlotIdx].list[ruleInfo.toSquareIdx];
+            const fromPt = this.getSquareSideMidpoint(fromSquareContainer, ruleInfo.sideIdx);
+            const toPt = this.getSquareSideMidpoint(toSquareContainer, ruleInfo.toSideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setOrigin(0, 0).setLineWidth(3);
             line.setDepth(-100);
             this.connectionLines.push(line);
             
             // If type 1 connection, add increment label
-            if (connInfo.type === 1 && connInfo.increment !== 0) {
+            if (ruleInfo.type === 1 && ruleInfo.increment !== 0) {
                 const midX = (fromPt.x + toPt.x) / 2;
                 const midY = (fromPt.y + toPt.y) / 2;
                 
                 // Format increment as +1, -2, etc.
-                const incrementText = connInfo.increment > 0 ? `+${connInfo.increment}` : `${connInfo.increment}`;
+                const incrementText = ruleInfo.increment > 0 ? `+${ruleInfo.increment}` : `${ruleInfo.increment}`;
                 
                 // Create label with background
                 const label = this.add.text(midX, midY, incrementText, {
@@ -364,8 +368,49 @@ class WordWebGame extends Phaser.Scene {
         });
     }
 
+    parseRule(rule) {
+        // Parse rule - can be either old string format or new object format
+        if (typeof rule === 'string') {
+            // Legacy format: "022-100" or "022-100-1-plus2"
+            return this.decodeConn(rule);
+        }
+        
+        // New object format
+        if (rule.type === 'cell') {
+            const result = {
+                slotIdx: rule.a.slot,
+                squareIdx: rule.a.cell,
+                sideIdx: rule.a.side,
+                toSlotIdx: rule.b.slot,
+                toSquareIdx: rule.b.cell,
+                toSideIdx: rule.b.side,
+                type: 0,
+                increment: 0
+            };
+            
+            // Parse operation
+            if (rule.op === 'same' || rule.op === '=') {
+                result.type = 0;
+                result.increment = 0;
+            } else if (rule.op.startsWith('+')) {
+                result.type = 1;
+                result.increment = parseInt(rule.op.substring(1));
+            } else if (rule.op.startsWith('-')) {
+                result.type = 1;
+                result.increment = parseInt(rule.op);
+            }
+            
+            return result;
+        }
+        
+        // Fallback for unknown format
+        console.error('Unknown rule format:', rule);
+        return null;
+    }
+
     decodeConn(str) {
         // Parse connection string: "022-100" (type 0) or "022-100-1-plus2" (type 1 with +2)
+        // This is kept for backward compatibility
         const parts = str.split('-');
         
         const result = {
@@ -537,52 +582,54 @@ class WordWebGame extends Phaser.Scene {
             });
         });
 
-        // Now update hints based on connections with animation
-        if (!this.level.connections) return;
+        // Now update hints based on rules with animation
+        const rules = this.level.rules || this.level.connections || [];
+        if (!rules || rules.length === 0) return;
         
-        this.level.connections.forEach(connStr => {
-            const connInfo = this.decodeConn(connStr);
+        rules.forEach(rule => {
+            const ruleInfo = this.parseRule(rule);
+            if (!ruleInfo) return; // Skip invalid rules
             
-            const fromSlot = this.slotSprites[connInfo.slotIdx];
-            const toSlot = this.slotSprites[connInfo.toSlotIdx];
+            const fromSlot = this.slotSprites[ruleInfo.slotIdx];
+            const toSlot = this.slotSprites[ruleInfo.toSlotIdx];
             
             // Check if fromSlot has a word placed
             if (fromSlot.getData('filled') && !toSlot.getData('filled')) {
                 const fromSquares = fromSlot.list;
-                const fromSquareContainer = fromSquares[connInfo.squareIdx];
+                const fromSquareContainer = fromSquares[ruleInfo.squareIdx];
                 const sourceLetter = fromSquareContainer.getData('letter');
                 
                 // Calculate the hint letter based on connection type
-                const hintLetter = this.calculateHintLetter(sourceLetter, connInfo.increment);
+                const hintLetter = this.calculateHintLetter(sourceLetter, ruleInfo.increment);
                 
                 // Get positions for animation
                 const toSquares = toSlot.list;
-                const toSquareContainer = toSquares[connInfo.toSquareIdx];
+                const toSquareContainer = toSquares[ruleInfo.toSquareIdx];
                 const toLetterText = toSquareContainer.getData('letterText');
                 
                 if (toLetterText && hintLetter) {
                     // Animate hint creation
-                    this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, connInfo.sideIdx, connInfo.toSideIdx);
+                    this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
                 }
             }
             
             // Check if toSlot has a word placed (connection works both ways)
             if (toSlot.getData('filled') && !fromSlot.getData('filled')) {
                 const toSquares = toSlot.list;
-                const toSquareContainer = toSquares[connInfo.toSquareIdx];
+                const toSquareContainer = toSquares[ruleInfo.toSquareIdx];
                 const sourceLetter = toSquareContainer.getData('letter');
                 
                 // Calculate the hint letter based on connection type (reversed direction, so negate increment)
-                const hintLetter = this.calculateHintLetter(sourceLetter, -connInfo.increment);
+                const hintLetter = this.calculateHintLetter(sourceLetter, -ruleInfo.increment);
                 
                 // Get positions for animation
                 const fromSquares = fromSlot.list;
-                const fromSquareContainer = fromSquares[connInfo.squareIdx];
+                const fromSquareContainer = fromSquares[ruleInfo.squareIdx];
                 const fromLetterText = fromSquareContainer.getData('letterText');
                 
                 if (fromLetterText && hintLetter) {
                     // Animate hint creation (reversed direction)
-                    this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, connInfo.toSideIdx, connInfo.sideIdx);
+                    this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
                 }
             }
         });
@@ -710,27 +757,29 @@ class WordWebGame extends Phaser.Scene {
         
         // Check which squares had hints before this word was placed
         // We need to find hints that match the placed word letters
-        if (!this.level.connections) return;
+        const rules = this.level.rules || this.level.connections || [];
+        if (!rules || rules.length === 0) return;
         
         // Track which squares in this slot had hints
         const squaresWithSatisfiedHints = [];
         
-        this.level.connections.forEach(connStr => {
-            const connInfo = this.decodeConn(connStr);
+        rules.forEach(rule => {
+            const ruleInfo = this.parseRule(rule);
+            if (!ruleInfo) return;
             
             // Check if this connection involves the slot we just filled
-            if (connInfo.toSlotIdx === slotIdx) {
+            if (ruleInfo.toSlotIdx === slotIdx) {
                 // Check if the "from" slot is filled (meaning it created a hint in our slot)
-                const fromSlot = this.slotSprites[connInfo.slotIdx];
+                const fromSlot = this.slotSprites[ruleInfo.slotIdx];
                 if (fromSlot.getData('filled')) {
                     // This square had a hint that is now satisfied
-                    squaresWithSatisfiedHints.push(connInfo.toSquareIdx);
+                    squaresWithSatisfiedHints.push(ruleInfo.toSquareIdx);
                 }
-            } else if (connInfo.slotIdx === slotIdx) {
+            } else if (ruleInfo.slotIdx === slotIdx) {
                 // Check if the "to" slot is filled
-                const toSlot = this.slotSprites[connInfo.toSlotIdx];
+                const toSlot = this.slotSprites[ruleInfo.toSlotIdx];
                 if (toSlot.getData('filled')) {
-                    squaresWithSatisfiedHints.push(connInfo.squareIdx);
+                    squaresWithSatisfiedHints.push(ruleInfo.squareIdx);
                 }
             }
         });
@@ -806,34 +855,36 @@ class WordWebGame extends Phaser.Scene {
 
     // Show feedback on connection lines when both connected slots are filled
     showConnectionValidationFeedback(slotIdx) {
-        if (!this.level.connections) return;
+        const rules = this.level.rules || this.level.connections || [];
+        if (!rules || rules.length === 0) return;
         
-        this.level.connections.forEach((connStr, connIndex) => {
-            const connInfo = this.decodeConn(connStr);
+        rules.forEach((rule, ruleIndex) => {
+            const ruleInfo = this.parseRule(rule);
+            if (!ruleInfo) return;
             
             // Check if this connection involves the slot we just filled
-            if (connInfo.slotIdx === slotIdx || connInfo.toSlotIdx === slotIdx) {
-                const fromSlot = this.slotSprites[connInfo.slotIdx];
-                const toSlot = this.slotSprites[connInfo.toSlotIdx];
+            if (ruleInfo.slotIdx === slotIdx || ruleInfo.toSlotIdx === slotIdx) {
+                const fromSlot = this.slotSprites[ruleInfo.slotIdx];
+                const toSlot = this.slotSprites[ruleInfo.toSlotIdx];
                 
                 // Only show feedback if BOTH slots are now filled
                 if (fromSlot.getData('filled') && toSlot.getData('filled')) {
                     // Verify the letters match according to connection type
-                    const fromSquare = fromSlot.list[connInfo.squareIdx];
-                    const toSquare = toSlot.list[connInfo.toSquareIdx];
+                    const fromSquare = fromSlot.list[ruleInfo.squareIdx];
+                    const toSquare = toSlot.list[ruleInfo.toSquareIdx];
                     const fromLetter = fromSquare.getData('letter');
                     const toLetter = toSquare.getData('letter');
                     
                     // Calculate expected letter based on connection type
-                    const expectedToLetter = this.calculateHintLetter(fromLetter, connInfo.increment);
+                    const expectedToLetter = this.calculateHintLetter(fromLetter, ruleInfo.increment);
                     
                     if (fromLetter && toLetter && toLetter === expectedToLetter) {
                         // Connection is valid! Show feedback on the line
-                        const connectionLine = this.connectionLines[connIndex];
+                        const connectionLine = this.connectionLines[ruleIndex];
                         if (connectionLine) {
                             // Add a slight delay for better timing
                             this.time.delayedCall(300, () => {
-                                this.animateConnectionValidation(connectionLine, connInfo);
+                                this.animateConnectionValidation(connectionLine, ruleInfo);
                             });
                         }
                     }

@@ -17,8 +17,13 @@
         "SOFT",
         "FATE"
       ],
-      "connections": [
-        "022-100-1-plus1"
+      "rules": [
+        {
+          "type": "cell",
+          "a": { "slot": 0, "cell": 2, "side": 2 },
+          "b": { "slot": 1, "cell": 0, "side": 0 },
+          "op": "same"
+        }
       ]
     },
     {
@@ -39,7 +44,12 @@
         "DOG"
       ],
       "connections": [
-        "022-100-1-plus1"
+        {
+          "type": "cell",
+          "a": { "slot": 0, "cell": 2, "side": 2 },
+          "b": { "slot": 1, "cell": 0, "side": 0 },
+          "op": "+2"
+        }
       ]
     }
   ]

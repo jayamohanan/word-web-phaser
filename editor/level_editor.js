@@ -718,8 +718,30 @@ class LevelEditorScene extends Phaser.Scene {
             anchorRow: s.anchorRow
         }));
         const words = this.words.slice();
-        const connections = this.connections.slice();
-        const json = JSON.stringify({ slots, words, connections }, null, 2);
+        
+        // Convert connections to new rules format
+        const rules = this.connections.map(connStr => {
+            const [from, to] = connStr.split('-');
+            const fromInfo = this.decodeConn(from);
+            const toInfo = this.decodeConn(to);
+            
+            return {
+                type: "cell",
+                a: {
+                    slot: fromInfo.slotIdx,
+                    cell: fromInfo.squareIdx,
+                    side: fromInfo.sideIdx
+                },
+                b: {
+                    slot: toInfo.slotIdx,
+                    cell: toInfo.squareIdx,
+                    side: toInfo.sideIdx
+                },
+                op: "same"
+            };
+        });
+        
+        const json = JSON.stringify({ slots, words, rules }, null, 2);
         document.getElementById('json-output').value = json;
     }
 }
