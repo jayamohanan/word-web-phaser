@@ -570,7 +570,19 @@ class WordWebGame extends Phaser.Scene {
 
     // Update constraint hints for all slots based on connections
     updateAllConstraintHints() {
-        // First, clear all hint texts
+        // Store current hints before clearing
+        const previousHints = new Map();
+        this.slotSprites.forEach((slotContainer, slotIdx) => {
+            const slotSquares = slotContainer.list;
+            slotSquares.forEach((squareContainer, squareIdx) => {
+                const letterText = squareContainer.getData('letterText');
+                if (letterText && letterText.text) {
+                    previousHints.set(`${slotIdx}-${squareIdx}`, letterText.text);
+                }
+            });
+        });
+
+        // Clear all hint texts
         this.slotSprites.forEach(slotContainer => {
             const slotSquares = slotContainer.list;
             slotSquares.forEach(squareContainer => {
@@ -608,8 +620,17 @@ class WordWebGame extends Phaser.Scene {
                 const toLetterText = toSquareContainer.getData('letterText');
                 
                 if (toLetterText && hintLetter) {
-                    // Animate hint creation
-                    this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
+                    // Check if this hint already existed
+                    const hintKey = `${ruleInfo.toSlotIdx}-${ruleInfo.toSquareIdx}`;
+                    const wasAlreadyVisible = previousHints.get(hintKey) === hintLetter;
+                    
+                    if (wasAlreadyVisible) {
+                        // Hint already existed, just set it without animation
+                        toLetterText.setText(hintLetter);
+                    } else {
+                        // New hint - animate it
+                        this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
+                    }
                 }
             }
             
@@ -628,8 +649,17 @@ class WordWebGame extends Phaser.Scene {
                 const fromLetterText = fromSquareContainer.getData('letterText');
                 
                 if (fromLetterText && hintLetter) {
-                    // Animate hint creation (reversed direction)
-                    this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
+                    // Check if this hint already existed
+                    const hintKey = `${ruleInfo.slotIdx}-${ruleInfo.squareIdx}`;
+                    const wasAlreadyVisible = previousHints.get(hintKey) === hintLetter;
+                    
+                    if (wasAlreadyVisible) {
+                        // Hint already existed, just set it without animation
+                        fromLetterText.setText(hintLetter);
+                    } else {
+                        // New hint - animate it
+                        this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
+                    }
                 }
             }
         });
@@ -641,40 +671,54 @@ class WordWebGame extends Phaser.Scene {
         const sourcePos = this.getSquareSideMidpoint(sourceSquareContainer, sourceSideIdx);
         const targetPos = this.getSquareSideMidpoint(targetSquareContainer, targetSideIdx);
         
-        // Create a particle (small circle) that travels along the connection
-        const particle = this.add.circle(sourcePos.x, sourcePos.y, 8, 0x000000, 1); // Black particle (matches line color)
-        particle.setStrokeStyle(2, 0xffffff);
-        particle.setDepth(1000); // Above everything
+        // Calculate angle for arrow direction
+        const angle = Math.atan2(targetPos.y - sourcePos.y, targetPos.x - sourcePos.x);
         
-        // Create a glow effect
-        const glow = this.add.circle(sourcePos.x, sourcePos.y, 12, 0x000000, 0.3);
-        glow.setDepth(999);
+        // Create an arrow (triangle) that travels along the connection
+        const arrow = this.add.graphics();
+        arrow.fillStyle(0x000000, 1);
+        arrow.setDepth(1000);
+        
+        // Draw triangle pointing in the direction of travel
+        const arrowSize = 12;
+        arrow.beginPath();
+        arrow.moveTo(arrowSize, 0); // Point
+        arrow.lineTo(-arrowSize/2, -arrowSize/2); // Top corner
+        arrow.lineTo(-arrowSize/2, arrowSize/2); // Bottom corner
+        arrow.closePath();
+        arrow.fillPath();
+        
+        // Add white stroke
+        arrow.lineStyle(2, 0xffffff, 1);
+        arrow.strokePath();
+        
+        // Position and rotate arrow
+        arrow.setPosition(sourcePos.x, sourcePos.y);
+        arrow.setRotation(angle);
         
         // Calculate travel duration based on distance
         const distance = Phaser.Math.Distance.Between(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
         const duration = Math.max(300, Math.min(600, distance * 0.5)); // Between 300-600ms
         
-        // Animate particle traveling along the connection line
+        // Animate arrow traveling along the connection line
         this.tweens.add({
-            targets: [particle, glow],
+            targets: arrow,
             x: targetPos.x,
             y: targetPos.y,
             duration: duration,
             ease: 'Cubic.easeInOut',
             onUpdate: () => {
-                // Pulse the particle while traveling
-                const progress = this.tweens.getTweensOf(particle)[0]?.progress || 0;
-                const scale = 1 + Math.sin(progress * Math.PI * 4) * 0.3; // Pulse 4 times during travel
-                particle.setScale(scale);
-                glow.setScale(scale * 1.2);
+                // Pulse the arrow while traveling
+                const progress = this.tweens.getTweensOf(arrow)[0]?.progress || 0;
+                const scale = 1 + Math.sin(progress * Math.PI * 4) * 0.2; // Subtle pulse
+                arrow.setScale(scale);
             },
             onComplete: () => {
-                // Particle reached destination - create burst effect
+                // Arrow reached destination - create burst effect
                 this.createBurstEffect(targetPos.x, targetPos.y);
                 
-                // Remove particle and glow
-                particle.destroy();
-                glow.destroy();
+                // Remove arrow
+                arrow.destroy();
                 
                 // Now show the hint with bounce animation
                 const targetLetterText = targetSquareContainer.getData('letterText');
