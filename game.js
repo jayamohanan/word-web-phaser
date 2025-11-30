@@ -642,12 +642,12 @@ class WordWebGame extends Phaser.Scene {
         const targetPos = this.getSquareSideMidpoint(targetSquareContainer, targetSideIdx);
         
         // Create a particle (small circle) that travels along the connection
-        const particle = this.add.circle(sourcePos.x, sourcePos.y, 8, 0x4CAF50, 1); // Green particle
+        const particle = this.add.circle(sourcePos.x, sourcePos.y, 8, 0x000000, 1); // Black particle (matches line color)
         particle.setStrokeStyle(2, 0xffffff);
         particle.setDepth(1000); // Above everything
         
         // Create a glow effect
-        const glow = this.add.circle(sourcePos.x, sourcePos.y, 12, 0x4CAF50, 0.3);
+        const glow = this.add.circle(sourcePos.x, sourcePos.y, 12, 0x000000, 0.3);
         glow.setDepth(999);
         
         // Calculate travel duration based on distance
@@ -710,7 +710,7 @@ class WordWebGame extends Phaser.Scene {
         
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount;
-            const burstParticle = this.add.circle(x, y, 3, 0x4CAF50, 1);
+            const burstParticle = this.add.circle(x, y, 3, 0x000000, 1);
             burstParticle.setDepth(1000);
             
             const targetX = x + Math.cos(angle) * burstRadius;
