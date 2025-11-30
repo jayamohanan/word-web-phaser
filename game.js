@@ -681,7 +681,7 @@ class WordWebGame extends Phaser.Scene {
         // Create an arrow (triangle) that travels along the connection
         const arrow = this.add.graphics();
         arrow.fillStyle(0x000000, 1);
-        arrow.setDepth(1000);
+        arrow.setDepth(1000); // Above everything
         
         // Draw triangle pointing in the direction of travel
         const arrowSize = 12;
@@ -759,7 +759,7 @@ class WordWebGame extends Phaser.Scene {
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount;
             const burstParticle = this.add.circle(x, y, 3, 0x000000, 1);
-            burstParticle.setDepth(1000);
+            burstParticle.setDepth(1000); // Above everything
             
             const targetX = x + Math.cos(angle) * burstRadius;
             const targetY = y + Math.sin(angle) * burstRadius;
