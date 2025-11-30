@@ -25,6 +25,7 @@ class WordWebGame extends Phaser.Scene {
 
     preload() {
         this.load.json('levels', 'levels.json');
+        this.load.audio('fillSound', 'sounds/fill_sound4.wav');
     }
 
     create() {
@@ -140,6 +141,9 @@ class WordWebGame extends Phaser.Scene {
                 squareContainer.setData('filled', true);
                 squareContainer.setData('letter', word[i]);
             });
+            
+            // Play fill sound
+            this.sound.play('fillSound');
             
             // Show satisfaction feedback for hints that were just satisfied
             // this.showHintSatisfactionFeedback(slotIdx, word);
