@@ -1027,16 +1027,23 @@ class WordWebGame extends Phaser.Scene {
 
 function resizeGame() {
     if (game && game.scale) {
-        game.scale.resize(window.innerWidth, window.innerHeight);
+        const canvas = game.canvas;
+        const parent = canvas.parentElement;
+        
+        if (parent) {
+            // In iframe (like Poki), use parent dimensions
+            game.scale.resize(parent.clientWidth, parent.clientHeight);
+        } else {
+            // Fallback to window dimensions
+            game.scale.resize(window.innerWidth, window.innerHeight);
+        }
     }
 }
 
 const config = {
     type: Phaser.WEBGL, // Use WebGL for better rendering quality
-    width: window.innerWidth,
-    height: window.innerHeight,
-    backgroundColor: '#f0f8ff',
     parent: 'game-container',
+    backgroundColor: '#f0f8ff',
     scene: [WordWebGame, WinScene],
     
     // Crisp rendering settings
@@ -1044,8 +1051,10 @@ const config = {
     antialias: true, // Enable anti-aliasing for smooth edges
     
     scale: {
-        mode: Phaser.Scale.RESIZE,
+        mode: Phaser.Scale.FIT, // FIT mode works better in iframes
         autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1920, // Base dimensions
+        height: 1080,
         resolution: window.devicePixelRatio || 1, // Handle high DPI screens (Retina, 4K)
     },
     
