@@ -142,7 +142,7 @@ class WordWebGame extends Phaser.Scene {
             });
             
             // Show satisfaction feedback for hints that were just satisfied
-            this.showHintSatisfactionFeedback(slotIdx, word);
+            // this.showHintSatisfactionFeedback(slotIdx, word);
             
             // Update constraint hints for all connected slots
             this.updateAllConstraintHints();
@@ -752,6 +752,7 @@ class WordWebGame extends Phaser.Scene {
 
     // Show feedback when hints are satisfied by placing a word
     showHintSatisfactionFeedback(slotIdx, word) {
+        return;
         const slotContainer = this.slotSprites[slotIdx];
         const slotSquares = slotContainer.list;
         
@@ -759,13 +760,14 @@ class WordWebGame extends Phaser.Scene {
         // We need to find hints that match the placed word letters
         const rules = this.level.rules || this.level.connections || [];
         if (!rules || rules.length === 0) return;
-        
+        console.log('passed');
         // Track which squares in this slot had hints
         const squaresWithSatisfiedHints = [];
         
         rules.forEach(rule => {
             const ruleInfo = this.parseRule(rule);
             if (!ruleInfo) return;
+            console.log('ppassed');
             
             // Check if this connection involves the slot we just filled
             if (ruleInfo.toSlotIdx === slotIdx) {
@@ -855,6 +857,7 @@ class WordWebGame extends Phaser.Scene {
 
     // Show feedback on connection lines when both connected slots are filled
     showConnectionValidationFeedback(slotIdx) {
+        return;
         const rules = this.level.rules || this.level.connections || [];
         if (!rules || rules.length === 0) return;
         
