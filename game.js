@@ -140,10 +140,10 @@ class WordWebGame extends Phaser.Scene {
             slotSquares.forEach((squareContainer, i) => {
                 squareContainer.setData('filled', true);
                 squareContainer.setData('letter', word[i]);
-                // Restore solid fill for placed words
+                // Restore full opacity for placed words
                 const letterText = squareContainer.getData('letterText');
                 if (letterText) {
-                    letterText.setColor('#222');
+                    letterText.setAlpha(1.0);
                 }
             });
             
@@ -154,7 +154,7 @@ class WordWebGame extends Phaser.Scene {
             // this.showHintSatisfactionFeedback(slotIdx, word);
             
             // Update constraint hints for all connected slots
-            this.updateAllConstraintHints();
+            this.updateAllConstraintHints(true); // Animate when placing word
             
             // Show connection validation feedback for satisfied connections
             this.showConnectionValidationFeedback(slotIdx);
@@ -207,9 +207,6 @@ class WordWebGame extends Phaser.Scene {
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
-                
-                // Set stroke style for hints (will be applied when text is set as hint)
-                letterText.setStroke('#222', 2);
                 
                 // Add both to the squareContainer
                 squareContainer.add(square);
@@ -280,6 +277,9 @@ class WordWebGame extends Phaser.Scene {
                 dragOffset.x = pointer.x - wordContainer.x;
                 dragOffset.y = pointer.y - wordContainer.y;
                 
+                // Bring to front while dragging
+                wordContainer.setDepth(2000);
+                
                 // If this word was placed on a slot, remove it from that slot temporarily
                 if (wordContainer.getData('placed')) {
                     const slotIdx = wordContainer.getData('slotIdx');
@@ -292,6 +292,9 @@ class WordWebGame extends Phaser.Scene {
                 wordContainer.y = pointer.y - dragOffset.y;
             });
             wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
+                // Restore normal depth
+                wordContainer.setDepth(100);
+                
                 if (!dropped) {
                     // Animate back to original position
                     this.tweens.add({
@@ -581,7 +584,7 @@ class WordWebGame extends Phaser.Scene {
     }
 
     // Update constraint hints for all slots based on connections
-    updateAllConstraintHints() {
+    updateAllConstraintHints(animate = true) {
         // Store current hints before clearing
         const previousHints = new Map();
         this.slotSprites.forEach((slotContainer, slotIdx) => {
@@ -639,10 +642,16 @@ class WordWebGame extends Phaser.Scene {
                     if (wasAlreadyVisible) {
                         // Hint already existed, just set it without animation
                         toLetterText.setText(hintLetter);
-                        toLetterText.setColor('transparent'); // Stroke-only for hints
+                        toLetterText.setAlpha(0.5); // Half transparent for hints
                     } else {
-                        // New hint - animate it
-                        this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
+                        // New hint - animate it only if animate is true
+                        if (animate) {
+                            this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
+                        } else {
+                            // Just show instantly without animation
+                            toLetterText.setText(hintLetter);
+                            toLetterText.setAlpha(0.5); // Half transparent for hints
+                        }
                     }
                 }
             }
@@ -669,10 +678,16 @@ class WordWebGame extends Phaser.Scene {
                     if (wasAlreadyVisible) {
                         // Hint already existed, just set it without animation
                         fromLetterText.setText(hintLetter);
-                        fromLetterText.setColor('transparent'); // Stroke-only for hints
+                        fromLetterText.setAlpha(0.5); // Half transparent for hints
                     } else {
-                        // New hint - animate it
-                        this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
+                        // New hint - animate it only if animate is true
+                        if (animate) {
+                            this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
+                        } else {
+                            // Just show instantly without animation
+                            fromLetterText.setText(hintLetter);
+                            fromLetterText.setAlpha(0.5); // Half transparent for hints
+                        }
                     }
                 }
             }
@@ -738,7 +753,7 @@ class WordWebGame extends Phaser.Scene {
                 const targetLetterText = targetSquareContainer.getData('letterText');
                 if (targetLetterText) {
                     targetLetterText.setText(letter);
-                    targetLetterText.setColor('transparent'); // Stroke-only for hints
+                    targetLetterText.setAlpha(0.5); // Half transparent for hints
                     targetLetterText.setScale(0); // Start invisible
                     
                     // Bounce in animation
@@ -805,8 +820,8 @@ class WordWebGame extends Phaser.Scene {
             squareContainer.setData('letter', null);
         });
         
-        // Recalculate all constraint hints
-        this.updateAllConstraintHints();
+        // Recalculate all constraint hints without animation
+        this.updateAllConstraintHints(false);
     }
 
     // Show feedback when hints are satisfied by placing a word
