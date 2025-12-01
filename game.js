@@ -804,9 +804,7 @@ class WordWebGame extends Phaser.Scene {
                 scale: 0.5,
                 duration: 300,
                 ease: 'Quad.easeOut',
-                onComplete: () => {
-                    burstParticle.destroy();
-                }
+                onComplete: () => burstParticle.destroy()
             });
         }
     }
@@ -1107,22 +1105,6 @@ class WordWebGame extends Phaser.Scene {
     }
 }
 
-
-function resizeGame() {
-    if (game && game.scale) {
-        const canvas = game.canvas;
-        const parent = canvas.parentElement;
-        
-        if (parent) {
-            // In iframe (like Poki), use parent dimensions
-            game.scale.resize(parent.clientWidth, parent.clientHeight);
-        } else {
-            // Fallback to window dimensions
-            game.scale.resize(window.innerWidth, window.innerHeight);
-        }
-    }
-}
-
 const config = {
     type: Phaser.WEBGL, // Use WebGL for better rendering quality
     parent: 'game-container',
@@ -1148,4 +1130,3 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-window.addEventListener('resize', resizeGame);
