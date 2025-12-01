@@ -140,6 +140,11 @@ class WordWebGame extends Phaser.Scene {
             slotSquares.forEach((squareContainer, i) => {
                 squareContainer.setData('filled', true);
                 squareContainer.setData('letter', word[i]);
+                // Restore solid fill for placed words
+                const letterText = squareContainer.getData('letterText');
+                if (letterText) {
+                    letterText.setColor('#222');
+                }
             });
             
             // Play fill sound
@@ -202,6 +207,9 @@ class WordWebGame extends Phaser.Scene {
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
+                
+                // Set stroke style for hints (will be applied when text is set as hint)
+                letterText.setStroke('#222', 2);
                 
                 // Add both to the squareContainer
                 squareContainer.add(square);
@@ -631,6 +639,7 @@ class WordWebGame extends Phaser.Scene {
                     if (wasAlreadyVisible) {
                         // Hint already existed, just set it without animation
                         toLetterText.setText(hintLetter);
+                        toLetterText.setColor('transparent'); // Stroke-only for hints
                     } else {
                         // New hint - animate it
                         this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
@@ -660,6 +669,7 @@ class WordWebGame extends Phaser.Scene {
                     if (wasAlreadyVisible) {
                         // Hint already existed, just set it without animation
                         fromLetterText.setText(hintLetter);
+                        fromLetterText.setColor('transparent'); // Stroke-only for hints
                     } else {
                         // New hint - animate it
                         this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
@@ -728,6 +738,7 @@ class WordWebGame extends Phaser.Scene {
                 const targetLetterText = targetSquareContainer.getData('letterText');
                 if (targetLetterText) {
                     targetLetterText.setText(letter);
+                    targetLetterText.setColor('transparent'); // Stroke-only for hints
                     targetLetterText.setScale(0); // Start invisible
                     
                     // Bounce in animation
