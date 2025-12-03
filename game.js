@@ -44,11 +44,7 @@ class WordWebGame extends Phaser.Scene {
         this.renderBank();
         this.renderConnections();
 
-        // Debug: Red square at canvas center
-        const centerX = this.sys.game.canvas.width / 2;
-        const centerY = this.sys.game.canvas.height / 2;
-        this.debugCenterMarker = this.add.rectangle(centerX, centerY, 20, 20, 0xff0000, 1);
-        this.debugCenterMarker.setDepth(10000);
+        // Removed debug red square at canvas center
 
         // Add right-click handler to remove words from slots
         this.input.on('pointerdown', (pointer) => {
