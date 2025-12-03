@@ -229,9 +229,10 @@ class WordWebGame extends Phaser.Scene {
             const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, this.gridSize);
             slotContainer.setPosition(anchorCellPoints.center.x, anchorCellPoints.center.y);
             
+            let extra = this.gridSize;
             // Make the entire slot container a dropzone
             slotContainer.setInteractive(new Phaser.Geom.Rectangle(
-                -this.gridSize/2, -this.gridSize/2, slot.length * this.gridSize, this.gridSize
+                -this.gridSize/2-extra/2, -this.gridSize/2-extra/2, slot.length * this.gridSize+extra, this.gridSize+extra
             ), Phaser.Geom.Rectangle.Contains);
             slotContainer.input.dropZone = true;
 
