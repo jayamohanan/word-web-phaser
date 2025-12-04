@@ -73,6 +73,74 @@ class WordWebGame extends Phaser.Scene {
         });
 
        
+        // Highlight slot squares when dragging over drop zone
+        this.input.on('dragenter', (pointer, gameObject, dropZone) => {
+            if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
+            if (!gameObject || !gameObject.getData('word')) return;
+            
+            const slotIdx = dropZone.getData('slotIdx');
+            const word = gameObject.getData('word');
+            const slotContainer = this.slotSprites[slotIdx];
+            const slotSquares = slotContainer.list;
+            
+            // Check if word length matches and slot is not filled
+            if (slotSquares.length !== word.length) return;
+            const slotFilled = slotSquares.some(sq => sq.getData('filled'));
+            if (slotFilled) return;
+            
+            // Check constraint violations
+            const violationResult = this.checkConstraintViolation(slotIdx, word);
+            if (violationResult.violated) return;
+            
+            // Highlight all squares in the slot with blue stroke
+            slotSquares.forEach(squareContainer => {
+                const square = squareContainer.getData('square');
+                if (square) {
+                    square.setStrokeStyle(this.slotStrokeWidth, 0x2196F3); // Blue stroke
+                }
+            });
+            
+            // Highlight connection lines connected to this slot
+            this.connectionLines.forEach(line => {
+                if (line.setStrokeStyle) { // Only for line objects, not text labels
+                    const lineSlotIdx = line.getData('slotIdx');
+                    const lineToSlotIdx = line.getData('toSlotIdx');
+                    if (lineSlotIdx === slotIdx || lineToSlotIdx === slotIdx) {
+                        line.setStrokeStyle(3, 0x2196F3); // Blue line
+                    }
+                }
+            });
+        });
+        
+        // Remove highlight when dragging out of drop zone
+        this.input.on('dragleave', (pointer, gameObject, dropZone) => {
+            if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
+            
+            const slotIdx = dropZone.getData('slotIdx');
+            const slotContainer = this.slotSprites[slotIdx];
+            const slotSquares = slotContainer.list;
+            
+            // Reset all squares to original stroke color
+            slotSquares.forEach(squareContainer => {
+                const square = squareContainer.getData('square');
+                if (square && !squareContainer.getData('filled')) {
+                    square.setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor); // Original stroke
+                }
+            });
+            
+            // Reset connection lines connected to this slot
+            this.connectionLines.forEach(line => {
+                if (line.setStrokeStyle) { // Only for line objects, not text labels
+                    const lineSlotIdx = line.getData('slotIdx');
+                    const lineToSlotIdx = line.getData('toSlotIdx');
+                    if (lineSlotIdx === slotIdx || lineToSlotIdx === slotIdx) {
+                        const originalColor = line.getData('originalColor');
+                        line.setStrokeStyle(3, originalColor); // Original color
+                    }
+                }
+            });
+        });
+       
         // Global drop handler for slots
         this.input.on('drop', (pointer, gameObject, dropZone) => {
             // Only handle if dropZone is   a slot square
@@ -146,6 +214,26 @@ class WordWebGame extends Phaser.Scene {
                 const letterText = squareContainer.getData('letterText');
                 if (letterText) {
                     letterText.setAlpha(1.0);
+                }
+            });
+            
+            // Reset square stroke colors (in case they were highlighted)
+            slotSquares.forEach(squareContainer => {
+                const square = squareContainer.getData('square');
+                if (square) {
+                    square.setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor); // Original stroke
+                }
+            });
+            
+            // Reset connection lines connected to this slot
+            this.connectionLines.forEach(line => {
+                if (line.setStrokeStyle) { // Only for line objects, not text labels
+                    const lineSlotIdx = line.getData('slotIdx');
+                    const lineToSlotIdx = line.getData('toSlotIdx');
+                    if (lineSlotIdx === slotIdx || lineToSlotIdx === slotIdx) {
+                        const originalColor = line.getData('originalColor');
+                        line.setStrokeStyle(3, originalColor); // Original color
+                    }
                 }
             });
             
@@ -328,6 +416,26 @@ class WordWebGame extends Phaser.Scene {
             });
         });
         wordGroup.on('dragend', (pointer, dragX, dragY, dropped) => {
+            // Reset all slot highlights when drag ends
+            this.slotSprites.forEach(slotContainer => {
+                slotContainer.list.forEach(squareContainer => {
+                    const square = squareContainer.getData('square');
+                    if (square && !squareContainer.getData('filled')) {
+                        square.setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor); // Original stroke
+                    }
+                });
+            });
+            
+            // Reset all connection lines
+            this.connectionLines.forEach(line => {
+                if (line.setStrokeStyle) { // Only for line objects, not text labels
+                    const originalColor = line.getData('originalColor');
+                    if (originalColor !== undefined) {
+                        line.setStrokeStyle(3, originalColor); // Original color
+                    }
+                }
+            });
+            
             if (!dropped) {
                 // Animate back to original position
                 wordGroup.getChildren().forEach(child => {
@@ -361,6 +469,10 @@ class WordWebGame extends Phaser.Scene {
             const toPt = this.getSquareSideMidpoint(toSquareContainer, ruleInfo.toSideIdx);
             let line = this.add.line(0, 0, fromPt.x, fromPt.y, toPt.x, toPt.y, connectionColor).setOrigin(0, 0).setLineWidth(3);
             line.setDepth(-100);
+            // Store slot indices on the line for later reference
+            line.setData('slotIdx', ruleInfo.slotIdx);
+            line.setData('toSlotIdx', ruleInfo.toSlotIdx);
+            line.setData('originalColor', connectionColor);
             this.connectionLines.push(line);
             
             // If type 1 connection, add increment label
