@@ -1214,6 +1214,9 @@ class WordWebGame extends Phaser.Scene {
     }
 }
 
+// Export for use in other scenes (like level viewer)
+export default WordWebGame;
+
 const config = {
     type: Phaser.WEBGL, // Use WebGL for better rendering quality
     parent: 'game-container',
@@ -1238,4 +1241,7 @@ const config = {
     }
 };
 
-const game = new Phaser.Game(config);
+// Only create game instance if this is the main script (not imported)
+if (typeof window !== 'undefined' && !window.__LEVEL_VIEWER__) {
+    const game = new Phaser.Game(config);
+}
