@@ -16,5 +16,9 @@ var CONFIG = {
     SLOT_STROKE_WIDTH: 2,
     SLOT_STROKE_COLOR: 0x000000,  // Black
     WORD_STROKE_WIDTH: 2,
-    WORD_STROKE_COLOR: 0x333333   // Dark gray
+    WORD_STROKE_COLOR: 0x333333,   // Dark gray
+    
+    // Font sizes
+    WORD_CELL_FONT_SIZE: '24px',   // Font size for letters in word cells
+    SLOT_CELL_FONT_SIZE: '24px'    // Font size for hints in slot cells
 };

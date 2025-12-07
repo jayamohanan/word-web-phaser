@@ -21,6 +21,8 @@ class WordWebGame extends Phaser.Scene {
         this.slotStrokeColor = CONFIG.SLOT_STROKE_COLOR;
         this.wordStrokeWidth = CONFIG.WORD_STROKE_WIDTH;
         this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
+        this.wordCellFontSize = CONFIG.WORD_CELL_FONT_SIZE;
+        this.slotCellFontSize = CONFIG.SLOT_CELL_FONT_SIZE;
     }
 
     preload() {
@@ -60,6 +62,7 @@ class WordWebGame extends Phaser.Scene {
                                 if (wordContainer.getData('placed') && wordContainer.getData('slotIdx') === slotIdx) {
                                     // Animate word back to its original position
                                     this.tweenBackToBottom(wordContainer);
+                                    // Clear placement data immediately
                                     wordContainer.setData('placed', false);
                                     wordContainer.setData('slotIdx', null);
                                 }
@@ -193,12 +196,19 @@ class WordWebGame extends Phaser.Scene {
             // If all checks pass, place the word over the slot
             const firstSquareContainer = slotSquares[0];
             const offset = 0;
+            const snapDuration = 200;
             this.tweens.add({
                 targets: gameObject,
                 x: dropZone.x + offset,
                 y: dropZone.y - offset,
-                duration: 200,
-                ease: 'Power2'
+                duration: snapDuration,
+                ease: 'Power2',
+                onComplete: () => {
+                    // After snap completes, wait 0.5s then check win condition
+                    this.time.delayedCall(500, () => {
+                        this.checkWinCondition();
+                    });
+                }
             });
             
             gameObject.setData('placed', true);
@@ -249,8 +259,7 @@ class WordWebGame extends Phaser.Scene {
             // Show connection validation feedback for satisfied connections
             this.showConnectionValidationFeedback(slotIdx);
             
-            // Check for win condition
-            this.checkWinCondition();
+            // Win condition check is now called after snap animation completes (see tween onComplete)
         });
     }
     tweenBackToBottom(gameObject){
@@ -293,7 +302,7 @@ class WordWebGame extends Phaser.Scene {
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', { 
                     fontFamily: 'Arial, sans-serif',
-                    fontSize: '32px',
+                    fontSize: this.slotCellFontSize,
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
@@ -342,7 +351,7 @@ class WordWebGame extends Phaser.Scene {
                 let square = this.add.rectangle(x, y, this.squareWidth, this.squareWidth, 0xeeeeee).setStrokeStyle(this.wordStrokeWidth, this.wordStrokeColor);
                 let letter = this.add.text(x, y, word[i], { 
                     fontFamily: 'Arial, sans-serif',
-                    fontSize: '32px',
+                    fontSize: this.wordCellFontSize,
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
@@ -376,6 +385,9 @@ class WordWebGame extends Phaser.Scene {
                     const slotIdx = wordContainer.getData('slotIdx');
                     console.log(`Dragging word from slot ${slotIdx}, removing temporarily`);
                     this.removeWordFromSlot(slotIdx);
+                    // Clear placement data immediately to prevent phantom connections
+                    wordContainer.setData('placed', false);
+                    wordContainer.setData('slotIdx', null);
                 }
             });
             wordContainer.on('drag', (pointer, dragX, dragY) => {
@@ -387,7 +399,10 @@ class WordWebGame extends Phaser.Scene {
                 wordContainer.setDepth(100);
                 
                 if (!dropped) {
-                    // Animate back to original position
+                    // Not dropped on a valid slot, animate back to original position
+                    // Make sure placement flags are cleared
+                    wordContainer.setData('placed', false);
+                    wordContainer.setData('slotIdx', null);
                     this.tweens.add({
                         targets: wordContainer,
                         x: startX,
@@ -1199,17 +1214,13 @@ class WordWebGame extends Phaser.Scene {
         
         if (allSlotsFilled) {
             console.log('🎉 All slots filled! You win!');
-            // Add delay to let connection validation animations complete
-            // Connection animations: 300ms delay + ~1000ms animation = ~1300ms total
-            // Add extra buffer for hint satisfaction animations
-            this.time.delayedCall(1800, () => {
-                this.scene.launch('WinScene', {
-                    currentLevelIndex: this.currentLevelIndex,
-                    totalLevels: this.totalLevels
-                });
-                // Pause the game scene
-                this.scene.pause();
+            // Launch win scene immediately (animations removed)
+            this.scene.launch('WinScene', {
+                currentLevelIndex: this.currentLevelIndex,
+                totalLevels: this.totalLevels
             });
+            // Pause the game scene
+            this.scene.pause();
         }
     }
 }
