@@ -20,5 +20,8 @@ var CONFIG = {
     
     // Font sizes
     WORD_CELL_FONT_SIZE: '24px',   // Font size for letters in word cells
-    SLOT_CELL_FONT_SIZE: '24px'    // Font size for hints in slot cells
+    SLOT_CELL_FONT_SIZE: '24px',    // Font size for hints in slot cells
+    
+    // Connection highlight color
+    CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9  // Light green for connected cells
 };

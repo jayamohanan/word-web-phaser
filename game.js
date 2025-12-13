@@ -23,6 +23,7 @@ class WordWebGame extends Phaser.Scene {
         this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
         this.wordCellFontSize = CONFIG.WORD_CELL_FONT_SIZE;
         this.slotCellFontSize = CONFIG.SLOT_CELL_FONT_SIZE;
+        this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
     }
 
     preload() {
@@ -41,6 +42,20 @@ class WordWebGame extends Phaser.Scene {
         this.selectedWord = null;
         this.wordBankArea = [];
         this.wordSlotArea = [];
+        
+        // Parse word pairs for antonym support (e.g., "LOVE-HATE")
+        this.wordAntonymMap = new Map();
+        if (this.level.words) {
+            this.level.words = this.level.words.map(wordPair => {
+                if (wordPair.includes('-')) {
+                    const [original, antonym] = wordPair.split('-');
+                    this.wordAntonymMap.set(original, antonym);
+                    return original; // Use original word for rendering
+                }
+                return wordPair;
+            });
+        }
+        
         this.createAreas();
         this.renderSlots();
         this.renderBank();
@@ -184,8 +199,11 @@ class WordWebGame extends Phaser.Scene {
                 return;
             }
             
-            // Check constraint violations
-            const violationResult = this.checkConstraintViolation(slotIdx, word);
+            // Check if slot has antonym rule and get transformed word
+            const transformedWord = this.getTransformedWord(word, slotIdx);
+            
+            // Check constraint violations using transformed word
+            const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
             if (violationResult.violated) {
                 console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
                 this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
@@ -204,22 +222,35 @@ class WordWebGame extends Phaser.Scene {
                 duration: snapDuration,
                 ease: 'Power2',
                 onComplete: () => {
-                    // After snap completes, wait 0.5s then check win condition
-                    this.time.delayedCall(500, () => {
-                        this.checkWinCondition();
-                    });
+                    // Check if we need to apply antonym transformation
+                    const slotRule = this.getSlotRule(slotIdx);
+                    if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
+                        // Apply antonym flip animation
+                        this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
+                            // After transformation, wait 0.5s then check win condition
+                            this.time.delayedCall(500, () => {
+                                this.checkWinCondition();
+                            });
+                        });
+                    } else {
+                        // No transformation needed, wait 0.5s then check win condition
+                        this.time.delayedCall(500, () => {
+                            this.checkWinCondition();
+                        });
+                    }
                 }
             });
             
             gameObject.setData('placed', true);
             gameObject.setData('slotIdx', slotIdx);
             
-            // Mark slot as filled (store the word on the slot)
+            // Mark slot as filled (store the transformed word on the slot)
             slotContainer.setData('filled', true);
-            slotContainer.setData('word', word);
+            slotContainer.setData('word', transformedWord);
+            slotContainer.setData('originalWord', word); // Store original for reference
             slotSquares.forEach((squareContainer, i) => {
                 squareContainer.setData('filled', true);
-                squareContainer.setData('letter', word[i]);
+                squareContainer.setData('letter', transformedWord[i]);
                 // Restore full opacity for placed words
                 const letterText = squareContainer.getData('letterText');
                 if (letterText) {
@@ -256,12 +287,78 @@ class WordWebGame extends Phaser.Scene {
             // Update constraint hints for all connected slots
             this.updateAllConstraintHints(true); // Animate when placing word
             
+            // Update connection highlights
+            this.updateConnectionHighlights();
+            
             // Show connection validation feedback for satisfied connections
             this.showConnectionValidationFeedback(slotIdx);
             
             // Win condition check is now called after snap animation completes (see tween onComplete)
         });
     }
+    // Apply antonym transformation with flip animation
+    applyAntonymTransformation(wordContainer, originalWord, antonymWord, slotIdx, onComplete) {
+        const letters = wordContainer.list.filter(child => child.type === 'Text');
+        
+        // Animate each letter flipping from original to antonym
+        letters.forEach((letterText, i) => {
+            // Scale down to 0.1 vertically
+            this.tweens.add({
+                targets: letterText,
+                scaleY: 0.1,
+                duration: 150,
+                ease: 'Quad.easeIn',
+                onComplete: () => {
+                    // Change letter halfway through animation
+                    letterText.setText(antonymWord[i]);
+                    
+                    // Scale back up
+                    this.tweens.add({
+                        targets: letterText,
+                        scaleY: 1,
+                        duration: 150,
+                        ease: 'Quad.easeOut',
+                        onComplete: () => {
+                            // Pop animation to indicate new letter
+                            this.tweens.add({
+                                targets: letterText,
+                                scaleX: 1.3,
+                                scaleY: 1.3,
+                                duration: 100,
+                                ease: 'Back.easeOut',
+                                yoyo: true,
+                                onComplete: () => {
+                                    // Update slot squares with new letters
+                                    const slotContainer = this.slotSprites[slotIdx];
+                                    const slotSquares = slotContainer.list;
+                                    slotSquares.forEach((squareContainer, idx) => {
+                                        const slotLetterText = squareContainer.getData('letterText');
+                                        if (slotLetterText) {
+                                            slotLetterText.setText(antonymWord[idx]);
+                                            slotLetterText.setAlpha(1.0);
+                                        }
+                                        squareContainer.setData('letter', antonymWord[idx]);
+                                    });
+                                    
+                                    // Update hints after transformation
+                                    this.updateAllConstraintHints(true);
+                                    
+                                    // Update connection highlights
+                                    this.updateConnectionHighlights();
+                                    
+                                    // Call completion callback after last letter
+                                    if (i === letters.length - 1 && onComplete) {
+                                        onComplete();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    }
+
     tweenBackToBottom(gameObject){
         this.tweens.add({
                 targets: gameObject,
@@ -336,6 +433,22 @@ class WordWebGame extends Phaser.Scene {
             slotContainer.setData('slotIdx', slotIdx);
             this.slotSprites.push(slotContainer);
         });
+    }
+
+    // Check if a slot has an antonym rule
+    getSlotRule(slotIdx) {
+        const rules = this.level.rules || [];
+        return rules.find(rule => rule.type === 'word' && rule.slot === slotIdx);
+    }
+    
+    // Get the transformed word for a slot (apply antonym if rule exists)
+    getTransformedWord(word, slotIdx) {
+        const slotRule = this.getSlotRule(slotIdx);
+        if (slotRule && slotRule.op === 'antonym') {
+            const antonym = this.wordAntonymMap.get(word);
+            return antonym || word;
+        }
+        return word;
     }
 
     renderBank() {
@@ -713,6 +826,85 @@ class WordWebGame extends Phaser.Scene {
         });
     }
 
+    // Update connection highlights for connected cells
+    updateConnectionHighlights() {
+        // First, clear all connection highlights
+        this.slotSprites.forEach(slotContainer => {
+            slotContainer.list.forEach(squareContainer => {
+                const square = squareContainer.getData('square');
+                if (square && !squareContainer.getData('filled')) {
+                    square.setFillStyle(0xffffff); // White
+                }
+            });
+        });
+        
+        // Clear highlights from word containers
+        this.bankSprites.forEach(wordContainer => {
+            if (wordContainer.getData('placed')) {
+                wordContainer.list.forEach(child => {
+                    if (child.type === 'Rectangle') {
+                        child.setFillStyle(0xeeeeee); // Default word cell color
+                    }
+                });
+            }
+        });
+        
+        // Apply highlights for active connections
+        const rules = this.level.rules || this.level.connections || [];
+        if (!rules || rules.length === 0) return;
+        
+        rules.forEach(rule => {
+            const ruleInfo = this.parseRule(rule);
+            if (!ruleInfo || ruleInfo.type === undefined) return; // Skip word-level or invalid rules
+            
+            const fromSlot = this.slotSprites[ruleInfo.slotIdx];
+            const toSlot = this.slotSprites[ruleInfo.toSlotIdx];
+            
+            // Only highlight if at least one slot is filled
+            if (fromSlot.getData('filled') || toSlot.getData('filled')) {
+                // Highlight from slot cell
+                const fromSquare = fromSlot.list[ruleInfo.squareIdx];
+                const fromRect = fromSquare.getData('square');
+                if (fromRect) {
+                    fromRect.setFillStyle(this.connectionHighlightColor);
+                }
+                
+                // Highlight to slot cell
+                const toSquare = toSlot.list[ruleInfo.toSquareIdx];
+                const toRect = toSquare.getData('square');
+                if (toRect) {
+                    toRect.setFillStyle(this.connectionHighlightColor);
+                }
+                
+                // Highlight word cell if placed on fromSlot
+                if (fromSlot.getData('filled')) {
+                    const wordContainer = this.bankSprites.find(wc => 
+                        wc.getData('placed') && wc.getData('slotIdx') === ruleInfo.slotIdx
+                    );
+                    if (wordContainer) {
+                        const wordSquares = wordContainer.list.filter(c => c.type === 'Rectangle');
+                        if (wordSquares[ruleInfo.squareIdx]) {
+                            wordSquares[ruleInfo.squareIdx].setFillStyle(this.connectionHighlightColor);
+                        }
+                    }
+                }
+                
+                // Highlight word cell if placed on toSlot
+                if (toSlot.getData('filled')) {
+                    const wordContainer = this.bankSprites.find(wc => 
+                        wc.getData('placed') && wc.getData('slotIdx') === ruleInfo.toSlotIdx
+                    );
+                    if (wordContainer) {
+                        const wordSquares = wordContainer.list.filter(c => c.type === 'Rectangle');
+                        if (wordSquares[ruleInfo.toSquareIdx]) {
+                            wordSquares[ruleInfo.toSquareIdx].setFillStyle(this.connectionHighlightColor);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     // Update constraint hints for all slots based on connections
     updateAllConstraintHints(animate = true) {
         // Store current hints before clearing
@@ -941,6 +1133,7 @@ class WordWebGame extends Phaser.Scene {
         // Mark slot as empty
         slotContainer.setData('filled', false);
         slotContainer.setData('word', null);
+        slotContainer.setData('originalWord', null);
         
         const slotSquares = slotContainer.list;
         slotSquares.forEach(squareContainer => {
@@ -950,6 +1143,9 @@ class WordWebGame extends Phaser.Scene {
         
         // Recalculate all constraint hints without animation
         this.updateAllConstraintHints(false);
+        
+        // Update connection highlights
+        this.updateConnectionHighlights();
     }
 
     // Show feedback when hints are satisfied by placing a word
