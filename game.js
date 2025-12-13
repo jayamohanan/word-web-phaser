@@ -862,17 +862,17 @@ class WordWebGame extends Phaser.Scene {
             
             // Only highlight if at least one slot is filled
             if (fromSlot.getData('filled') || toSlot.getData('filled')) {
-                // Highlight from slot cell
+                // Highlight from slot cell (but only if it's already filled, otherwise wait for animation)
                 const fromSquare = fromSlot.list[ruleInfo.squareIdx];
                 const fromRect = fromSquare.getData('square');
-                if (fromRect) {
+                if (fromRect && fromSlot.getData('filled')) {
                     fromRect.setFillStyle(this.connectionHighlightColor);
                 }
                 
-                // Highlight to slot cell
+                // Highlight to slot cell (but only if it's already filled, otherwise wait for animation)
                 const toSquare = toSlot.list[ruleInfo.toSquareIdx];
                 const toRect = toSquare.getData('square');
-                if (toRect) {
+                if (toRect && toSlot.getData('filled')) {
                     toRect.setFillStyle(this.connectionHighlightColor);
                 }
                 
@@ -968,7 +968,7 @@ class WordWebGame extends Phaser.Scene {
                     } else {
                         // New hint - animate it only if animate is true
                         if (animate) {
-                            this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx);
+                            this.animateHintCreation(fromSquareContainer, toSquareContainer, hintLetter, ruleInfo.sideIdx, ruleInfo.toSideIdx, toSquares[ruleInfo.toSquareIdx]);
                         } else {
                             // Just show instantly without animation
                             toLetterText.setText(hintLetter);
@@ -1004,7 +1004,7 @@ class WordWebGame extends Phaser.Scene {
                     } else {
                         // New hint - animate it only if animate is true
                         if (animate) {
-                            this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx);
+                            this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx, fromSquares[ruleInfo.squareIdx]);
                         } else {
                             // Just show instantly without animation
                             fromLetterText.setText(hintLetter);
@@ -1017,7 +1017,7 @@ class WordWebGame extends Phaser.Scene {
     }
 
     // Animate hint creation: particle travels along connection, then hint bounces in
-    animateHintCreation(sourceSquareContainer, targetSquareContainer, letter, sourceSideIdx, targetSideIdx) {
+    animateHintCreation(sourceSquareContainer, targetSquareContainer, letter, sourceSideIdx, targetSideIdx, hintSquareContainer = null) {
         // Get world positions
         const sourcePos = this.getSquareSideMidpoint(sourceSquareContainer, sourceSideIdx);
         const targetPos = this.getSquareSideMidpoint(targetSquareContainer, targetSideIdx);
@@ -1071,6 +1071,14 @@ class WordWebGame extends Phaser.Scene {
                 // Remove arrow
                 arrow.destroy();
                 
+                // Apply green color to hint cell NOW (after arrow animation)
+                if (hintSquareContainer) {
+                    const hintRect = hintSquareContainer.getData('square');
+                    if (hintRect && !hintSquareContainer.getData('filled')) {
+                        hintRect.setFillStyle(this.connectionHighlightColor);
+                    }
+                }
+                
                 // Now show the hint with bounce animation
                 const targetLetterText = targetSquareContainer.getData('letterText');
                 if (targetLetterText) {
@@ -1102,11 +1110,11 @@ class WordWebGame extends Phaser.Scene {
     // Create a burst effect when particle reaches destination
     createBurstEffect(x, y) {
         const particleCount = 8;
-        const burstRadius = 20;
+        const burstRadius = 40; // Doubled from 20
         
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount;
-            const burstParticle = this.add.circle(x, y, 3, 0x000000, 1);
+            const burstParticle = this.add.circle(x, y, 6, 0x000000, 1); // Doubled from 3
             burstParticle.setDepth(1000); // Above everything
             
             const targetX = x + Math.cos(angle) * burstRadius;
