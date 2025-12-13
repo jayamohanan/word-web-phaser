@@ -24,6 +24,8 @@ class WordWebGame extends Phaser.Scene {
         this.wordCellFontSize = CONFIG.WORD_CELL_FONT_SIZE;
         this.slotCellFontSize = CONFIG.SLOT_CELL_FONT_SIZE;
         this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
+        this.autopilotEnabled = CONFIG.AUTOPILOT_ENABLED;
+        this.autopilotInProgress = false; // Track if autopilot is currently running
     }
 
     preload() {
@@ -293,6 +295,13 @@ class WordWebGame extends Phaser.Scene {
             // Show connection validation feedback for satisfied connections
             this.showConnectionValidationFeedback(slotIdx);
             
+            // Check if autopilot can place an obvious word
+            if (this.autopilotEnabled && !this.autopilotInProgress) {
+                this.time.delayedCall(800, () => {
+                    this.tryAutopilotPlacement();
+                });
+            }
+            
             // Win condition check is now called after snap animation completes (see tween onComplete)
         });
     }
@@ -345,6 +354,13 @@ class WordWebGame extends Phaser.Scene {
                                     
                                     // Update connection highlights
                                     this.updateConnectionHighlights();
+                                    
+                                    // Check autopilot after transformation
+                                    if (this.autopilotEnabled && !this.autopilotInProgress && i === letters.length - 1) {
+                                        this.time.delayedCall(800, () => {
+                                            this.tryAutopilotPlacement();
+                                        });
+                                    }
                                     
                                     // Call completion callback after last letter
                                     if (i === letters.length - 1 && onComplete) {
@@ -487,6 +503,9 @@ class WordWebGame extends Phaser.Scene {
             this.input.setDraggable(wordContainer);
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
+                // Ignore if autopilot is in progress
+                if (this.autopilotInProgress) return;
+                
                 dragOffset.x = pointer.x - wordContainer.x;
                 dragOffset.y = pointer.y - wordContainer.y;
                 
@@ -1408,6 +1427,154 @@ class WordWebGame extends Phaser.Scene {
                 });
             }
         });
+    }
+
+    // Autopilot: Try to automatically place an obvious word
+    tryAutopilotPlacement() {
+        if (this.autopilotInProgress) return;
+        
+        // Find a slot with hints that has only one matching unplaced word
+        const obviousPlacement = this.findObviousPlacement();
+        
+        if (obviousPlacement) {
+            this.autopilotInProgress = true;
+            this.performAutopilotPlacement(obviousPlacement.slotIdx, obviousPlacement.word, obviousPlacement.wordContainer);
+        }
+    }
+    
+    // Find a slot with hints where only one unplaced word matches
+    findObviousPlacement() {
+        // Get all unplaced words
+        const unplacedWords = this.bankSprites.filter(wc => !wc.getData('placed'));
+        if (unplacedWords.length === 0) return null;
+        
+        // Check each empty slot
+        for (let slotIdx = 0; slotIdx < this.slotSprites.length; slotIdx++) {
+            const slotContainer = this.slotSprites[slotIdx];
+            if (slotContainer.getData('filled')) continue; // Skip filled slots
+            
+            const slotSquares = slotContainer.list;
+            
+            // Check if this slot has any hints
+            let hasHints = false;
+            for (let sq of slotSquares) {
+                const letterText = sq.getData('letterText');
+                if (letterText && letterText.text.trim()) {
+                    hasHints = true;
+                    break;
+                }
+            }
+            
+            if (!hasHints) continue; // Skip slots without hints
+            
+            // Find matching words for this slot
+            const matchingWords = [];
+            for (let wordContainer of unplacedWords) {
+                const word = wordContainer.getData('word');
+                if (word.length !== slotSquares.length) continue; // Length mismatch
+                
+                // Check if word matches hints (considering antonym transformation)
+                const transformedWord = this.getTransformedWord(word, slotIdx);
+                const violation = this.checkConstraintViolation(slotIdx, transformedWord);
+                
+                if (!violation.violated) {
+                    matchingWords.push({ word, wordContainer });
+                }
+            }
+            
+            // If exactly one word matches, this is an obvious placement
+            if (matchingWords.length === 1) {
+                return {
+                    slotIdx,
+                    word: matchingWords[0].word,
+                    wordContainer: matchingWords[0].wordContainer
+                };
+            }
+        }
+        
+        return null; // No obvious placement found
+    }
+    
+    // Perform autopilot placement with animation
+    performAutopilotPlacement(slotIdx, word, wordContainer) {
+        const slotContainer = this.slotSprites[slotIdx];
+        const dropZone = slotContainer;
+        
+        // Disable user input
+        this.input.enabled = false;
+        
+        // Animate word to slot
+        const snapDuration = 400; // Slightly slower for autopilot visibility
+        this.tweens.add({
+            targets: wordContainer,
+            x: dropZone.x,
+            y: dropZone.y,
+            duration: snapDuration,
+            ease: 'Power2',
+            onComplete: () => {
+                // Mark word as placed
+                wordContainer.setData('placed', true);
+                wordContainer.setData('slotIdx', slotIdx);
+                
+                // Get transformed word if needed
+                const transformedWord = this.getTransformedWord(word, slotIdx);
+                
+                // Mark slot as filled
+                const slotSquares = slotContainer.list;
+                slotContainer.setData('filled', true);
+                slotContainer.setData('word', transformedWord);
+                slotContainer.setData('originalWord', word);
+                slotSquares.forEach((squareContainer, i) => {
+                    squareContainer.setData('filled', true);
+                    squareContainer.setData('letter', transformedWord[i]);
+                    const letterText = squareContainer.getData('letterText');
+                    if (letterText) {
+                        letterText.setAlpha(1.0);
+                    }
+                });
+                
+                // Play fill sound
+                this.sound.play('fillSound');
+                
+                // Check if we need antonym transformation
+                const slotRule = this.getSlotRule(slotIdx);
+                if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
+                    // Apply antonym transformation
+                    this.applyAntonymTransformation(wordContainer, word, transformedWord, slotIdx, () => {
+                        this.completeAutopilotPlacement();
+                    });
+                } else {
+                    // Update hints and continue
+                    this.updateAllConstraintHints(true);
+                    this.updateConnectionHighlights();
+                    this.completeAutopilotPlacement();
+                }
+            }
+        });
+    }
+    
+    // Complete autopilot placement and check for next obvious word
+    completeAutopilotPlacement() {
+        // Re-enable input
+        this.input.enabled = true;
+        this.autopilotInProgress = false;
+        
+        // Check win condition
+        this.time.delayedCall(500, () => {
+            this.checkWinCondition();
+            
+            // Try to place another obvious word if available
+            if (this.autopilotEnabled && !this.checkAllSlotsFilled()) {
+                this.time.delayedCall(600, () => {
+                    this.tryAutopilotPlacement();
+                });
+            }
+        });
+    }
+    
+    // Helper to check if all slots are filled without triggering win
+    checkAllSlotsFilled() {
+        return this.slotSprites.every(slotContainer => slotContainer.getData('filled') === true);
     }
 
     // Check if all slots are filled (win condition)
