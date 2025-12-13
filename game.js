@@ -26,6 +26,7 @@ class WordWebGame extends Phaser.Scene {
         this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
         this.autopilotEnabled = CONFIG.AUTOPILOT_ENABLED;
         this.autopilotInProgress = false; // Track if autopilot is currently running
+        this.placementAnimationMode = CONFIG.PLACEMENT_ANIMATION_MODE || 'cell';
     }
 
     preload() {
@@ -224,22 +225,25 @@ class WordWebGame extends Phaser.Scene {
                 duration: snapDuration,
                 ease: 'Power2',
                 onComplete: () => {
-                    // Check if we need to apply antonym transformation
-                    const slotRule = this.getSlotRule(slotIdx);
-                    if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
-                        // Apply antonym flip animation
-                        this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
-                            // After transformation, wait 0.5s then check win condition
+                    // Play sequential letter bounce animation
+                    this.playPlacementAnimation(gameObject, () => {
+                        // Check if we need to apply antonym transformation
+                        const slotRule = this.getSlotRule(slotIdx);
+                        if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
+                            // Apply antonym flip animation
+                            this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
+                                // After transformation, wait 0.5s then check win condition
+                                this.time.delayedCall(500, () => {
+                                    this.checkWinCondition();
+                                });
+                            });
+                        } else {
+                            // No transformation needed, wait 0.5s then check win condition
                             this.time.delayedCall(500, () => {
                                 this.checkWinCondition();
                             });
-                        });
-                    } else {
-                        // No transformation needed, wait 0.5s then check win condition
-                        this.time.delayedCall(500, () => {
-                            this.checkWinCondition();
-                        });
-                    }
+                        }
+                    });
                 }
             });
             
@@ -305,6 +309,78 @@ class WordWebGame extends Phaser.Scene {
             // Win condition check is now called after snap animation completes (see tween onComplete)
         });
     }
+    // Play sequential letter bounce animation when word is placed
+    playPlacementAnimation(wordContainer, onComplete) {
+        const letters = wordContainer.list.filter(child => child.type === 'Text');
+        const squares = wordContainer.list.filter(child => child.type === 'Rectangle');
+        
+        if (letters.length === 0) {
+            if (onComplete) onComplete();
+            return;
+        }
+        
+        // Store animation tweens for potential cancellation
+        const animationTweens = [];
+        wordContainer.setData('placementAnimationTweens', animationTweens);
+        
+        // Determine animation targets based on mode
+        const animateSquares = this.placementAnimationMode === 'cell';
+        
+        // Animate each letter sequentially with a delay
+        letters.forEach((letter, i) => {
+            const square = squares[i];
+            const delay = i * 80; // 80ms delay between each letter
+            
+            // Choose targets based on mode: letter-only or cell (letter + square)
+            const targets = animateSquares ? [letter, square] : [letter];
+            
+            // Bounce animation: scale up then back to normal
+            const tween = this.tweens.add({
+                targets: targets,
+                scaleX: 1.4,
+                scaleY: 1.4,
+                duration: 150,
+                ease: 'Back.easeOut',
+                delay: delay,
+                yoyo: true,
+                onComplete: () => {
+                    // Reset scale to ensure it's back to normal
+                    letter.setScale(1);
+                    if (square) square.setScale(1);
+                    
+                    // If this is the last letter, call onComplete
+                    if (i === letters.length - 1) {
+                        wordContainer.setData('placementAnimationTweens', null);
+                        if (onComplete) onComplete();
+                    }
+                }
+            });
+            
+            animationTweens.push(tween);
+        });
+    }
+    
+    // Cancel placement animation and reset letter scales
+    cancelPlacementAnimation(wordContainer) {
+        const animationTweens = wordContainer.getData('placementAnimationTweens');
+        if (animationTweens) {
+            // Stop all tweens
+            animationTweens.forEach(tween => {
+                if (tween && tween.isPlaying()) {
+                    tween.stop();
+                }
+            });
+            
+            // Reset all letter and square scales
+            const letters = wordContainer.list.filter(child => child.type === 'Text');
+            const squares = wordContainer.list.filter(child => child.type === 'Rectangle');
+            letters.forEach(letter => letter.setScale(1));
+            squares.forEach(square => square.setScale(1));
+            
+            wordContainer.setData('placementAnimationTweens', null);
+        }
+    }
+
     // Apply antonym transformation with flip animation
     applyAntonymTransformation(wordContainer, originalWord, antonymWord, slotIdx, onComplete) {
         const letters = wordContainer.list.filter(child => child.type === 'Text');
@@ -516,6 +592,10 @@ class WordWebGame extends Phaser.Scene {
                 if (wordContainer.getData('placed')) {
                     const slotIdx = wordContainer.getData('slotIdx');
                     console.log(`Dragging word from slot ${slotIdx}, removing temporarily`);
+                    
+                    // Cancel any ongoing placement animation
+                    this.cancelPlacementAnimation(wordContainer);
+                    
                     this.removeWordFromSlot(slotIdx);
                     // Clear placement data immediately to prevent phantom connections
                     wordContainer.setData('placed', false);
@@ -1536,19 +1616,22 @@ class WordWebGame extends Phaser.Scene {
                 // Play fill sound
                 this.sound.play('fillSound');
                 
-                // Check if we need antonym transformation
-                const slotRule = this.getSlotRule(slotIdx);
-                if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
-                    // Apply antonym transformation
-                    this.applyAntonymTransformation(wordContainer, word, transformedWord, slotIdx, () => {
+                // Play sequential letter bounce animation
+                this.playPlacementAnimation(wordContainer, () => {
+                    // Check if we need antonym transformation
+                    const slotRule = this.getSlotRule(slotIdx);
+                    if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
+                        // Apply antonym transformation
+                        this.applyAntonymTransformation(wordContainer, word, transformedWord, slotIdx, () => {
+                            this.completeAutopilotPlacement();
+                        });
+                    } else {
+                        // Update hints and continue
+                        this.updateAllConstraintHints(true);
+                        this.updateConnectionHighlights();
                         this.completeAutopilotPlacement();
-                    });
-                } else {
-                    // Update hints and continue
-                    this.updateAllConstraintHints(true);
-                    this.updateConnectionHighlights();
-                    this.completeAutopilotPlacement();
-                }
+                    }
+                });
             }
         });
     }

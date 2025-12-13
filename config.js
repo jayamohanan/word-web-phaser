@@ -26,5 +26,8 @@ var CONFIG = {
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells
     
     // Autopilot mode - automatically places obvious words based on hints
-    AUTOPILOT_ENABLED: false  // Set to true to enable autopilot helper
+    AUTOPILOT_ENABLED: false,  // Set to true to enable autopilot helper
+    
+    // Placement animation mode
+    PLACEMENT_ANIMATION_MODE: 'cell'  // 'letter' = letters only, 'cell' = letters + squares
 };
