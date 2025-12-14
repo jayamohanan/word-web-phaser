@@ -227,6 +227,18 @@ class WordWebGame extends Phaser.Scene {
                 onComplete: () => {
                     // Play sequential letter bounce animation
                     this.playPlacementAnimation(gameObject, () => {
+                        // After placement animation completes, update hints and show arrows
+                        this.updateAllConstraintHints(true); // Animate arrows when placing word
+                        this.updateConnectionHighlights();
+                        this.showConnectionValidationFeedback(slotIdx);
+                        
+                        // Check if autopilot can place an obvious word
+                        if (this.autopilotEnabled && !this.autopilotInProgress) {
+                            this.time.delayedCall(800, () => {
+                                this.tryAutopilotPlacement();
+                            });
+                        }
+                        
                         // Check if we need to apply antonym transformation
                         const slotRule = this.getSlotRule(slotIdx);
                         if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
@@ -287,26 +299,8 @@ class WordWebGame extends Phaser.Scene {
             // Play fill sound
             this.sound.play('fillSound');
             
-            // Show satisfaction feedback for hints that were just satisfied
-            // this.showHintSatisfactionFeedback(slotIdx, word);
-            
-            // Update constraint hints for all connected slots
-            this.updateAllConstraintHints(true); // Animate when placing word
-            
-            // Update connection highlights
-            this.updateConnectionHighlights();
-            
-            // Show connection validation feedback for satisfied connections
-            this.showConnectionValidationFeedback(slotIdx);
-            
-            // Check if autopilot can place an obvious word
-            if (this.autopilotEnabled && !this.autopilotInProgress) {
-                this.time.delayedCall(800, () => {
-                    this.tryAutopilotPlacement();
-                });
-            }
-            
-            // Win condition check is now called after snap animation completes (see tween onComplete)
+            // Note: Hints, connection highlights, and arrows are now updated AFTER 
+            // the sequential letter animation completes (see playPlacementAnimation callback)
         });
     }
     // Play sequential letter bounce animation when word is placed
