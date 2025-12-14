@@ -1,5 +1,6 @@
 import * as Utils from './utils.js';
 import WinScene from './WinScene.js';
+import TutorialManager from './TutorialManager.js';
 
 // Main Phaser game logic for Word Web
 // Loads level data, renders slots, words, and handles drag-drop
@@ -32,6 +33,8 @@ class WordWebGame extends Phaser.Scene {
     preload() {
         this.load.json('levels', 'levels.json');
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
+        this.load.audio('burstSound', 'sounds/burst.wav');
+        this.load.image('handPointer', 'graphics/hand_pointer.png');
     }
 
     create() {
@@ -63,6 +66,10 @@ class WordWebGame extends Phaser.Scene {
         this.renderSlots();
         this.renderBank();
         this.renderConnections();
+        
+        // Initialize tutorial manager and create tutorial elements if level has tutorial data
+        this.tutorialManager = new TutorialManager(this);
+        this.tutorialManager.createTutorial(this.level, this.slotSprites, this.bankSprites);
 
         // Removed debug red square at canvas center
 
@@ -479,8 +486,16 @@ class WordWebGame extends Phaser.Scene {
                 // Create a sub-container for each square to hold both rectangle and text
                 let squareContainer = this.add.container(x, y);
                 
+                // Create shadow layers for depth effect - inset appearance
+                // Bottom-right inner shadow (dark) - creates depth
+                let shadowDark = this.add.rectangle(3, 3, this.squareWidth, this.squareWidth, 0x000000, 0.35);
+                // Secondary softer shadow for more depth
+                let shadowMid = this.add.rectangle(1.5, 1.5, this.squareWidth, this.squareWidth, 0x666666, 0.2);
+                // Top-left edge highlight for beveled look
+                let highlightEdge = this.add.rectangle(-2, -2, this.squareWidth - 4, this.squareWidth - 4, 0xffffff, 0.6);
+                
                 // Create the rectangle (square) centered at (0, 0) within the squareContainer
-                let square = this.add.rectangle(0, 0, this.squareWidth, this.squareWidth, 0xffffff).setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor);
+                let square = this.add.rectangle(0, 0, this.squareWidth, this.squareWidth, 0xf5f5f5).setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor);
                 
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', { 
@@ -490,8 +505,11 @@ class WordWebGame extends Phaser.Scene {
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
                 
-                // Add both to the squareContainer
+                // Add all elements to the squareContainer (shadows first for layering)
+                squareContainer.add(shadowDark);
+                squareContainer.add(shadowMid);
                 squareContainer.add(square);
+                squareContainer.add(highlightEdge);
                 squareContainer.add(letterText);
                 
                 // Store data on the squareContainer (not the rectangle)
@@ -575,6 +593,11 @@ class WordWebGame extends Phaser.Scene {
             wordContainer.on('dragstart', (pointer) => {
                 // Ignore if autopilot is in progress
                 if (this.autopilotInProgress) return;
+                
+                // Hide tutorial when user starts interacting
+                if (this.tutorialManager) {
+                    this.tutorialManager.cleanup();
+                }
                 
                 dragOffset.x = pointer.x - wordContainer.x;
                 dragOffset.y = pointer.y - wordContainer.y;
@@ -921,12 +944,20 @@ class WordWebGame extends Phaser.Scene {
 
     // Update connection highlights for connected cells
     updateConnectionHighlights() {
-        // First, clear all connection highlights
+        // First, clear all connection highlights (but preserve hint backgrounds)
         this.slotSprites.forEach(slotContainer => {
             slotContainer.list.forEach(squareContainer => {
                 const square = squareContainer.getData('square');
+                const letterText = squareContainer.getData('letterText');
+                const hasHint = letterText && letterText.text && letterText.text.trim() !== '';
+                
                 if (square && !squareContainer.getData('filled')) {
-                    square.setFillStyle(0xffffff); // White
+                    // If cell has a hint, keep it green, otherwise reset to white
+                    if (hasHint) {
+                        square.setFillStyle(this.connectionHighlightColor); // Keep green
+                    } else {
+                        square.setFillStyle(0xf5f5f5); // Reset to light gray (base color)
+                    }
                 }
             });
         });
@@ -1058,6 +1089,11 @@ class WordWebGame extends Phaser.Scene {
                         // Hint already existed, just set it without animation
                         toLetterText.setText(hintLetter);
                         toLetterText.setAlpha(0.5); // Half transparent for hints
+                        // Reapply green background color
+                        const hintRect = toSquareContainer.getData('square');
+                        if (hintRect && !toSquareContainer.getData('filled')) {
+                            hintRect.setFillStyle(this.connectionHighlightColor);
+                        }
                     } else {
                         // New hint - animate it only if animate is true
                         if (animate) {
@@ -1066,6 +1102,11 @@ class WordWebGame extends Phaser.Scene {
                             // Just show instantly without animation
                             toLetterText.setText(hintLetter);
                             toLetterText.setAlpha(0.5); // Half transparent for hints
+                            // Apply green background color
+                            const hintRect = toSquareContainer.getData('square');
+                            if (hintRect && !toSquareContainer.getData('filled')) {
+                                hintRect.setFillStyle(this.connectionHighlightColor);
+                            }
                         }
                     }
                 }
@@ -1094,6 +1135,11 @@ class WordWebGame extends Phaser.Scene {
                         // Hint already existed, just set it without animation
                         fromLetterText.setText(hintLetter);
                         fromLetterText.setAlpha(0.5); // Half transparent for hints
+                        // Reapply green background color
+                        const hintRect = fromSquareContainer.getData('square');
+                        if (hintRect && !fromSquareContainer.getData('filled')) {
+                            hintRect.setFillStyle(this.connectionHighlightColor);
+                        }
                     } else {
                         // New hint - animate it only if animate is true
                         if (animate) {
@@ -1102,6 +1148,11 @@ class WordWebGame extends Phaser.Scene {
                             // Just show instantly without animation
                             fromLetterText.setText(hintLetter);
                             fromLetterText.setAlpha(0.5); // Half transparent for hints
+                            // Apply green background color
+                            const hintRect = fromSquareContainer.getData('square');
+                            if (hintRect && !fromSquareContainer.getData('filled')) {
+                                hintRect.setFillStyle(this.connectionHighlightColor);
+                            }
                         }
                     }
                 }
@@ -1158,8 +1209,13 @@ class WordWebGame extends Phaser.Scene {
                 arrow.setScale(scale);
             },
             onComplete: () => {
-                // Arrow reached destination - create burst effect
-                this.createBurstEffect(targetPos.x, targetPos.y);
+                // Arrow reached destination - create burst effect at center of target cell
+                const targetCellBounds = targetSquareContainer.getBounds();
+                const targetCellCenter = {
+                    x: targetCellBounds.centerX,
+                    y: targetCellBounds.centerY
+                };
+                this.createBurstEffect(targetCellCenter.x, targetCellCenter.y);
                 
                 // Remove arrow
                 arrow.destroy();
@@ -1202,6 +1258,9 @@ class WordWebGame extends Phaser.Scene {
 
     // Create a burst effect when particle reaches destination
     createBurstEffect(x, y) {
+        // Play burst sound
+        this.sound.play('burstSound', { volume: 0.5 });
+        
         const particleCount = 8;
         const burstRadius = 40; // Doubled from 20
         
