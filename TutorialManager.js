@@ -92,62 +92,43 @@ export default class TutorialManager {
             return;
         }
 
-        // Create hand sprite
+        // Create hand sprite, visible from first frame
         const hand = this.scene.add.image(fromPos.x, fromPos.y, 'handPointer')
-            .setScale(2.0)
+            .setScale(0.15)
             .setDepth(1500)
-            .setAlpha(0);
+            .setAlpha(1);
 
         this.tutorialObjects.push(hand);
 
         // Animation parameters
         const duration = element.duration || 2000;
-        const delay = element.delay || 500;
+        // Remove initial delay for first cycle
         const repeat = element.repeat !== undefined ? element.repeat : -1;
 
         // Function to play the complete animation sequence
         const playAnimationSequence = () => {
-            // Fade in
+            // Move to slot
             this.scene.tweens.add({
                 targets: hand,
-                alpha: 1,
-                duration: 300,
-                ease: 'Power2',
+                x: toPos.x,
+                y: toPos.y,
+                duration: duration * 0.8,
+                ease: 'Sine.easeInOut',
                 onComplete: () => {
-                    // Move to slot
-                    this.scene.tweens.add({
-                        targets: hand,
-                        x: toPos.x,
-                        y: toPos.y,
-                        duration: duration * 0.8,
-                        ease: 'Sine.easeInOut',
-                        onComplete: () => {
-                            // Brief pause then fade out
-                            this.scene.time.delayedCall(300, () => {
-                                this.scene.tweens.add({
-                                    targets: hand,
-                                    alpha: 0,
-                                    duration: 200,
-                                    ease: 'Power2',
-                                    onComplete: () => {
-                                        // Reset position instantly
-                                        hand.setPosition(fromPos.x, fromPos.y);
-                                        
-                                        // Loop if needed
-                                        if (repeat === -1) {
-                                            this.scene.time.delayedCall(delay, playAnimationSequence);
-                                        }
-                                    }
-                                });
-                            });
+                    // Brief pause then instantly reset to bottom and repeat
+                    this.scene.time.delayedCall(300, () => {
+                        hand.setAlpha(1);
+                        hand.setPosition(fromPos.x, fromPos.y);
+                        if (repeat === -1) {
+                            playAnimationSequence();
                         }
                     });
                 }
             });
         };
 
-        // Start the first animation after initial delay
-        this.scene.time.delayedCall(delay, playAnimationSequence);
+        // Start the animation immediately
+        playAnimationSequence();
     }
 
     /**
