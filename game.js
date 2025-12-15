@@ -330,7 +330,7 @@ class WordWebGame extends Phaser.Scene {
         // Animate each letter sequentially with a delay
         letters.forEach((letter, i) => {
             const square = squares[i];
-            const delay = i * 80; // 80ms delay between each letter
+            const delay = i * 50; // 50ms delay between each letter for smoother cascade
             
             // Choose targets based on mode: letter-only or cell (letter + square)
             const targets = animateSquares ? [letter, square] : [letter];
@@ -340,7 +340,7 @@ class WordWebGame extends Phaser.Scene {
                 targets: targets,
                 scaleX: 1.4,
                 scaleY: 1.4,
-                duration: 150,
+                duration: 120,
                 ease: 'Back.easeOut',
                 delay: delay,
                 yoyo: true,
