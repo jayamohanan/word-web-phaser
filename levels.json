@@ -1,46 +1,5 @@
 {
   "levels": [
-     
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "RED"
-      ],
-      "rules": [],
-      "tutorial": {
-        "elements": [
-          {
-            "type": "text",
-            "text": "Drop here",
-            "target": "slot",
-            "slotIndex": 0,
-            "offsetY": -60,
-            "style": {
-              "fontSize": "28px",
-              "fontFamily": "Arial, sans-serif",
-              "color": "#444",
-              "fontStyle": "bold"
-            }
-          },
-          {
-            "type": "handAnimation",
-            "from": "word",
-            "to": "slot",
-            "wordIndex": 0,
-            "slotIndex": 0,
-            "duration": 2000,
-            "repeat": -1,
-            "delay": 500
-          }
-        ]
-      }
-    },
     {
       "slots": [
         {
@@ -109,6 +68,47 @@
         }
       ]
     },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "RED"
+      ],
+      "rules": [],
+      "tutorial": {
+        "elements": [
+          {
+            "type": "text",
+            "text": "Drop here",
+            "target": "slot",
+            "slotIndex": 0,
+            "offsetY": -60,
+            "style": {
+              "fontSize": "28px",
+              "fontFamily": "Arial, sans-serif",
+              "color": "#444",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "type": "handAnimation",
+            "from": "word",
+            "to": "slot",
+            "wordIndex": 0,
+            "slotIndex": 0,
+            "duration": 2000,
+            "repeat": -1,
+            "delay": 500
+          }
+        ]
+      }
+    },
+
     {
       "slots": [
         {
