@@ -39,6 +39,11 @@ class WordWebGame extends Phaser.Scene {
 
     create() {
         const levels = this.cache.json.get('levels');
+        if (!levels || !levels.levels) {
+            console.error('Failed to load levels data. Check if levels.json is loaded correctly.');
+            console.error('Available JSON cache keys:', this.cache.json.getKeys());
+            return;
+        }
         this.totalLevels = levels.levels.length;
         // Use modulo to loop levels
         this.level = levels.levels[this.currentLevelIndex % this.totalLevels];
@@ -66,6 +71,7 @@ class WordWebGame extends Phaser.Scene {
         this.renderSlots();
         this.renderBank();
         this.renderConnections();
+        this.renderSlotLabels();
         
         // Initialize tutorial manager and create tutorial elements if level has tutorial data
         this.tutorialManager = new TutorialManager(this);
@@ -116,8 +122,11 @@ class WordWebGame extends Phaser.Scene {
             const slotFilled = slotSquares.some(sq => sq.getData('filled'));
             if (slotFilled) return;
             
-            // Check constraint violations
-            const violationResult = this.checkConstraintViolation(slotIdx, word);
+            // Get transformed word for constraint checking
+            const transformedWord = this.getTransformedWord(word, slotIdx);
+            
+            // Check constraint violations using transformed word
+            const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
             if (violationResult.violated) return;
             
             // Highlight all squares in the slot with blue stroke
@@ -209,7 +218,7 @@ class WordWebGame extends Phaser.Scene {
                 return;
             }
             
-            // Check if slot has antonym rule and get transformed word
+            // Check if slot has opposite rule and get transformed word
             const transformedWord = this.getTransformedWord(word, slotIdx);
             
             // Check constraint violations using transformed word
@@ -246,10 +255,10 @@ class WordWebGame extends Phaser.Scene {
                             });
                         }
                         
-                        // Check if we need to apply antonym transformation
+                        // Check if we need to apply opposite transformation
                         const slotRule = this.getSlotRule(slotIdx);
-                        if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
-                            // Apply antonym flip animation
+                        if (slotRule && slotRule.op === 'opposite' && transformedWord !== word) {
+                            // Apply opposite flip animation
                             this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
                                 // After transformation, wait 0.5s then check win condition
                                 this.time.delayedCall(500, () => {
@@ -269,13 +278,19 @@ class WordWebGame extends Phaser.Scene {
             gameObject.setData('placed', true);
             gameObject.setData('slotIdx', slotIdx);
             
-            // Mark slot as filled (store the transformed word on the slot)
+            // Mark slot as filled
+            // If transformation will occur, store original word initially and transformation will update it
+            // Otherwise, store the final word directly
+            const slotRule = this.getSlotRule(slotIdx);
+            const willTransform = slotRule && slotRule.op === 'opposite' && transformedWord !== word;
+            
             slotContainer.setData('filled', true);
-            slotContainer.setData('word', transformedWord);
+            slotContainer.setData('word', willTransform ? word : transformedWord);
             slotContainer.setData('originalWord', word); // Store original for reference
             slotSquares.forEach((squareContainer, i) => {
                 squareContainer.setData('filled', true);
-                squareContainer.setData('letter', transformedWord[i]);
+                // Initially fill with original word - transformation will update if needed
+                squareContainer.setData('letter', willTransform ? word[i] : transformedWord[i]);
                 // Restore full opacity for placed words
                 const letterText = squareContainer.getData('letterText');
                 if (letterText) {
@@ -417,6 +432,10 @@ class WordWebGame extends Phaser.Scene {
                                     // Update slot squares with new letters
                                     const slotContainer = this.slotSprites[slotIdx];
                                     const slotSquares = slotContainer.list;
+                                    
+                                    // Update slot container's word data to transformed word
+                                    slotContainer.setData('word', antonymWord);
+                                    
                                     slotSquares.forEach((squareContainer, idx) => {
                                         const slotLetterText = squareContainer.getData('letterText');
                                         if (slotLetterText) {
@@ -539,16 +558,16 @@ class WordWebGame extends Phaser.Scene {
         });
     }
 
-    // Check if a slot has an antonym rule
+    // Check if a slot has a word-level rule (like opposite)
     getSlotRule(slotIdx) {
         const rules = this.level.rules || [];
         return rules.find(rule => rule.type === 'word' && rule.slot === slotIdx);
     }
     
-    // Get the transformed word for a slot (apply antonym if rule exists)
+    // Get the transformed word for a slot (apply opposite if rule exists)
     getTransformedWord(word, slotIdx) {
         const slotRule = this.getSlotRule(slotIdx);
-        if (slotRule && slotRule.op === 'antonym') {
+        if (slotRule && slotRule.op === 'opposite') {
             const antonym = this.wordAntonymMap.get(word);
             return antonym || word;
         }
@@ -695,6 +714,81 @@ class WordWebGame extends Phaser.Scene {
         });
     }
 
+    renderSlotLabels() {
+        // Render labels for word-level rules (like 'opposite', 'reverse', etc.)
+        const rules = this.level.rules || [];
+        
+        rules.forEach(rule => {
+            if (rule.type === 'word' && rule.slot !== undefined) {
+                const slotIdx = rule.slot;
+                const slotContainer = this.slotSprites[slotIdx];
+                if (!slotContainer) return;
+                
+                // Get the label text based on operation
+                let labelText = '';
+                if (rule.op === 'opposite') {
+                    labelText = 'opposite';
+                } else if (rule.op === 'reverse') {
+                    labelText = 'reverse';
+                } else {
+                    labelText = rule.op; // fallback to operation name
+                }
+                
+                // Get slot bounds for positioning
+                const bounds = slotContainer.getBounds();
+                const labelPos = rule.labelPos !== undefined ? parseInt(rule.labelPos) : 0;
+                
+                let labelX, labelY;
+                const sideGap = 15; // Gap for left/right positions
+                const topBottomGap = 8; // Reduced gap for top/bottom positions (half of 15)
+                
+                // Calculate position based on labelPos
+                switch (labelPos) {
+                    case 1: // Right of slot
+                        labelX = bounds.right + sideGap;
+                        labelY = bounds.centerY;
+                        break;
+                    case 2: // Bottom of slot
+                        labelX = bounds.centerX;
+                        labelY = bounds.bottom + topBottomGap;
+                        break;
+                    case 3: // Left of slot
+                        labelX = bounds.left - sideGap;
+                        labelY = bounds.centerY;
+                        break;
+                    case 0: // Top of slot (default)
+                    default:
+                        labelX = bounds.centerX;
+                        labelY = bounds.top - topBottomGap;
+                        break;
+                }
+                
+                // Create the label text
+                const label = this.add.text(labelX, labelY, labelText, {
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '22px',
+                    color: '#888888', // Grey color
+                    resolution: window.devicePixelRatio || 2
+                }).setDepth(15);
+                
+                // Set origin based on position for proper alignment
+                if (labelPos === 3) {
+                    // Left of slot - align right
+                    label.setOrigin(1, 0.5);
+                } else if (labelPos === 1) {
+                    // Right of slot - align left
+                    label.setOrigin(0, 0.5);
+                } else if (labelPos === 2) {
+                    // Bottom of slot - center horizontally, top align
+                    label.setOrigin(0.5, 0);
+                } else {
+                    // Top of slot (default) - center horizontally, bottom align
+                    label.setOrigin(0.5, 1);
+                }
+            }
+        });
+    }
+
     renderConnections() {
         // Use the same color as slot square outline: black (0x000000)
         const connectionColor = 0x000000;
@@ -775,6 +869,11 @@ class WordWebGame extends Phaser.Scene {
             }
             
             return result;
+        }
+        
+        // Word-level rules (like 'opposite') are handled separately by getSlotRule
+        if (rule.type === 'word') {
+            return null; // Not an error - these rules don't define cell connections
         }
         
         // Fallback for unknown format

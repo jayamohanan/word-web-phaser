@@ -1,5 +1,5 @@
 // Import the main game scene to extend it
-import WordWebGame from '../game.js';
+import WordWebGame from './game.js';
 
 // Mark as level viewer to prevent game instantiation in game.js
 window.__LEVEL_VIEWER__ = true;
@@ -13,11 +13,11 @@ class LevelViewerScene extends WordWebGame {
     }
 
     preload() {
-        // Load assets from parent directory (Phaser handles caching automatically)
-        this.load.json('levels', '../levels.json');
-        this.load.audio('fillSound', '../sounds/fill_sound4.wav');
-        this.load.audio('burstSound', '../sounds/burst.wav');
-        this.load.image('handPointer', '../graphics/hand_pointer.png');
+        // Load assets from same directory as game.js
+        this.load.json('levels', 'levels.json');
+        this.load.audio('fillSound', 'sounds/fill_sound4.wav');
+        this.load.audio('burstSound', 'sounds/burst.wav');
+        this.load.image('handPointer', 'graphics/hand_pointer.png');
     }
 
     create() {

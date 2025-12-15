@@ -1355,7 +1355,7 @@
         {
           "type": "word",
           "slot": 0,
-          "op": "antonym"
+          "op": "opposite"
         }
       ]
     }
