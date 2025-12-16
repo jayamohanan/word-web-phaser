@@ -55,12 +55,15 @@ class WordWebGame extends Phaser.Scene {
         this.wordSlotArea = [];
         
         // Parse word pairs for antonym support (e.g., "LOVE-HATE")
+        // Make it bidirectional so both LOVE→HATE and HATE→LOVE work
         this.wordAntonymMap = new Map();
         if (this.level.words) {
             this.level.words = this.level.words.map(wordPair => {
                 if (wordPair.includes('-')) {
                     const [original, antonym] = wordPair.split('-');
+                    // Store both directions for bidirectional mapping
                     this.wordAntonymMap.set(original, antonym);
+                    this.wordAntonymMap.set(antonym, original);
                     return original; // Use original word for rendering
                 }
                 return wordPair;
@@ -234,6 +237,11 @@ class WordWebGame extends Phaser.Scene {
             const firstSquareContainer = slotSquares[0];
             const offset = 0;
             const snapDuration = 200;
+            
+            // Check if we need to apply transformation (opposite or reverse)
+            const slotRule = this.getSlotRule(slotIdx);
+            const willTransform = slotRule && (slotRule.op === 'opposite' || slotRule.op === 'reverse') && transformedWord !== word;
+            
             this.tweens.add({
                 targets: gameObject,
                 x: dropZone.x + offset,
@@ -241,37 +249,50 @@ class WordWebGame extends Phaser.Scene {
                 duration: snapDuration,
                 ease: 'Power2',
                 onComplete: () => {
-                    // Play sequential letter bounce animation
-                    this.playPlacementAnimation(gameObject, () => {
-                        // After placement animation completes, update hints and show arrows
-                        this.updateAllConstraintHints(true); // Animate arrows when placing word
-                        this.updateConnectionHighlights();
-                        this.showConnectionValidationFeedback(slotIdx);
-                        
-                        // Check if autopilot can place an obvious word
-                        if (this.autopilotEnabled && !this.autopilotInProgress) {
-                            this.time.delayedCall(800, () => {
-                                this.tryAutopilotPlacement();
-                            });
-                        }
-                        
-                        // Check if we need to apply opposite transformation
-                        const slotRule = this.getSlotRule(slotIdx);
-                        if (slotRule && slotRule.op === 'opposite' && transformedWord !== word) {
-                            // Apply opposite flip animation
-                            this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
-                                // After transformation, wait 0.5s then check win condition
+                    if (willTransform) {
+                        // First: Apply transformation animation (flip letters)
+                        this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
+                            // Second: Play placement animation with transformed word
+                            this.playPlacementAnimation(gameObject, () => {
+                                // Third: Update hints and show arrows ONCE
+                                this.updateAllConstraintHints(true);
+                                this.updateConnectionHighlights();
+                                this.showConnectionValidationFeedback(slotIdx);
+                                
+                                // Check if autopilot can place an obvious word
+                                if (this.autopilotEnabled && !this.autopilotInProgress) {
+                                    this.time.delayedCall(800, () => {
+                                        this.tryAutopilotPlacement();
+                                    });
+                                }
+                                
+                                // Check win condition
                                 this.time.delayedCall(500, () => {
                                     this.checkWinCondition();
                                 });
                             });
-                        } else {
-                            // No transformation needed, wait 0.5s then check win condition
+                        });
+                    } else {
+                        // No transformation: Play placement animation then show hints
+                        this.playPlacementAnimation(gameObject, () => {
+                            // After placement animation, update hints and show arrows
+                            this.updateAllConstraintHints(true);
+                            this.updateConnectionHighlights();
+                            this.showConnectionValidationFeedback(slotIdx);
+                            
+                            // Check if autopilot can place an obvious word
+                            if (this.autopilotEnabled && !this.autopilotInProgress) {
+                                this.time.delayedCall(800, () => {
+                                    this.tryAutopilotPlacement();
+                                });
+                            }
+                            
+                            // Check win condition
                             this.time.delayedCall(500, () => {
                                 this.checkWinCondition();
                             });
-                        }
-                    });
+                        });
+                    }
                 }
             });
             
@@ -281,9 +302,6 @@ class WordWebGame extends Phaser.Scene {
             // Mark slot as filled
             // If transformation will occur, store original word initially and transformation will update it
             // Otherwise, store the final word directly
-            const slotRule = this.getSlotRule(slotIdx);
-            const willTransform = slotRule && slotRule.op === 'opposite' && transformedWord !== word;
-            
             slotContainer.setData('filled', true);
             slotContainer.setData('word', willTransform ? word : transformedWord);
             slotContainer.setData('originalWord', word); // Store original for reference
@@ -401,6 +419,9 @@ class WordWebGame extends Phaser.Scene {
     applyAntonymTransformation(wordContainer, originalWord, antonymWord, slotIdx, onComplete) {
         const letters = wordContainer.list.filter(child => child.type === 'Text');
         
+        // Update word container's data so when dragged again it uses the new word
+        wordContainer.setData('word', antonymWord);
+        
         // Animate each letter flipping from original to antonym
         letters.forEach((letterText, i) => {
             // Scale down to 0.1 vertically
@@ -445,18 +466,7 @@ class WordWebGame extends Phaser.Scene {
                                         squareContainer.setData('letter', antonymWord[idx]);
                                     });
                                     
-                                    // Update hints after transformation
-                                    this.updateAllConstraintHints(true);
-                                    
-                                    // Update connection highlights
-                                    this.updateConnectionHighlights();
-                                    
-                                    // Check autopilot after transformation
-                                    if (this.autopilotEnabled && !this.autopilotInProgress && i === letters.length - 1) {
-                                        this.time.delayedCall(800, () => {
-                                            this.tryAutopilotPlacement();
-                                        });
-                                    }
+                                    // Hints will be updated after placement animation, not here
                                     
                                     // Call completion callback after last letter
                                     if (i === letters.length - 1 && onComplete) {
@@ -564,12 +574,15 @@ class WordWebGame extends Phaser.Scene {
         return rules.find(rule => rule.type === 'word' && rule.slot === slotIdx);
     }
     
-    // Get the transformed word for a slot (apply opposite if rule exists)
+    // Get the transformed word for a slot (apply opposite or reverse if rule exists)
     getTransformedWord(word, slotIdx) {
         const slotRule = this.getSlotRule(slotIdx);
         if (slotRule && slotRule.op === 'opposite') {
             const antonym = this.wordAntonymMap.get(word);
             return antonym || word;
+        } else if (slotRule && slotRule.op === 'reverse') {
+            // Reverse the word: LOOP becomes POOL
+            return word.split('').reverse().join('');
         }
         return word;
     }
@@ -813,6 +826,12 @@ class WordWebGame extends Phaser.Scene {
             line.setData('originalColor', connectionColor);
             this.connectionLines.push(line);
             
+            // Draw directional arrows for incremental rules only (type 1)
+            if (ruleInfo.type === 1 && ruleInfo.increment !== 0) {
+                const isBidirectional = ruleInfo.direction === 'bi';
+                this.drawConnectionArrow(fromPt, toPt, connectionColor, isBidirectional);
+            }
+            
             // If type 1 connection, add increment label
             if (ruleInfo.type === 1 && ruleInfo.increment !== 0) {
                 const midX = (fromPt.x + toPt.x) / 2;
@@ -853,7 +872,8 @@ class WordWebGame extends Phaser.Scene {
                 toSquareIdx: rule.b.cell,
                 toSideIdx: rule.b.side,
                 type: 0,
-                increment: 0
+                increment: 0,
+                direction: rule.direction || 'uni' // Default to unidirectional
             };
             
             // Parse operation
@@ -932,6 +952,69 @@ class WordWebGame extends Phaser.Scene {
         while (targetIndex >= 26) targetIndex -= 26;
         
         return alphabet[targetIndex];
+    }
+
+    drawConnectionArrow(fromPt, toPt, color, isBidirectional) {
+        // Calculate angle from fromPt to toPt
+        const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
+        const arrowSize = 15; // Increased by 50% from 10 to 15
+        const arrowOffset = 8; // Increased proportionally
+        
+        if (isBidirectional) {
+            // Draw two arrows: one pointing to B, one pointing to A
+            // Arrow pointing towards B (at toPt)
+            const arrowTipB = {
+                x: toPt.x - Math.cos(angle) * arrowOffset,
+                y: toPt.y - Math.sin(angle) * arrowOffset
+            };
+            this.drawArrowhead(arrowTipB.x, arrowTipB.y, angle, arrowSize, color);
+            
+            // Arrow pointing towards A (at fromPt)
+            const arrowTipA = {
+                x: fromPt.x + Math.cos(angle) * arrowOffset,
+                y: fromPt.y + Math.sin(angle) * arrowOffset
+            };
+            this.drawArrowhead(arrowTipA.x, arrowTipA.y, angle + Math.PI, arrowSize, color);
+        } else {
+            // Unidirectional: only arrow pointing towards B
+            const arrowTip = {
+                x: toPt.x - Math.cos(angle) * arrowOffset,
+                y: toPt.y - Math.sin(angle) * arrowOffset
+            };
+            this.drawArrowhead(arrowTip.x, arrowTip.y, angle, arrowSize, color);
+        }
+    }
+    
+    drawArrowhead(x, y, angle, size, color) {
+        // Draw a filled triangle arrowhead
+        const arrow = this.add.graphics();
+        arrow.fillStyle(color, 1);
+        arrow.lineStyle(1, 0xffffff, 1); // White outline for visibility
+        
+        // Define triangle vertices (pointing right)
+        const points = [
+            { x: size, y: 0 },           // Tip
+            { x: -size/2, y: -size/2 },  // Top corner
+            { x: -size/2, y: size/2 }    // Bottom corner
+        ];
+        
+        // Rotate and translate points
+        const rotatedPoints = points.map(pt => ({
+            x: x + pt.x * Math.cos(angle) - pt.y * Math.sin(angle),
+            y: y + pt.x * Math.sin(angle) + pt.y * Math.cos(angle)
+        }));
+        
+        // Draw the triangle
+        arrow.beginPath();
+        arrow.moveTo(rotatedPoints[0].x, rotatedPoints[0].y);
+        arrow.lineTo(rotatedPoints[1].x, rotatedPoints[1].y);
+        arrow.lineTo(rotatedPoints[2].x, rotatedPoints[2].y);
+        arrow.closePath();
+        arrow.fillPath();
+        arrow.strokePath();
+        
+        arrow.setDepth(-99); // Just above the line
+        this.connectionLines.push(arrow);
     }
 
     getSquareSideMidpoint(squareContainer, sideIdx) {
@@ -1211,14 +1294,23 @@ class WordWebGame extends Phaser.Scene {
                 }
             }
             
-            // Check if toSlot has a word placed (connection works both ways)
+            // Check if toSlot has a word placed - apply reverse hints
+            // Arrow shows direction of increment, reverse direction always decrements
             if (toSlot.getData('filled') && !fromSlot.getData('filled')) {
                 const toSquares = toSlot.list;
                 const toSquareContainer = toSquares[ruleInfo.toSquareIdx];
                 const sourceLetter = toSquareContainer.getData('letter');
                 
-                // Calculate the hint letter based on connection type (reversed direction, so negate increment)
-                const hintLetter = this.calculateHintLetter(sourceLetter, -ruleInfo.increment);
+                // Calculate hint for reverse direction
+                let hintLetter;
+                if (ruleInfo.direction === 'bi' && ruleInfo.type === 1) {
+                    // Bidirectional incremental: both directions use same increment
+                    hintLetter = this.calculateHintLetter(sourceLetter, ruleInfo.increment);
+                } else {
+                    // Unidirectional or same-letter: reverse direction uses negated increment
+                    // If arrow shows +1 from A to B, then B to A uses -1
+                    hintLetter = this.calculateHintLetter(sourceLetter, -ruleInfo.increment);
+                }
                 
                 // Get positions for animation
                 const fromSquares = fromSlot.list;
