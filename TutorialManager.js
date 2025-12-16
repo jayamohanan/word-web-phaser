@@ -94,7 +94,7 @@ export default class TutorialManager {
 
         // Create hand sprite, visible from first frame
         const hand = this.scene.add.image(fromPos.x, fromPos.y, 'handPointer')
-            .setScale(0.15)
+            .setScale(1)
             .setDepth(1500)
             .setAlpha(1);
 
