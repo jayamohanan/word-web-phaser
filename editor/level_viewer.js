@@ -48,8 +48,8 @@ class LevelViewerScene extends WordWebGame {
 // Phaser game configuration for level viewer
 const config = {
     type: Phaser.AUTO,
-    width: 1920,
-    height: 1080,
+    width: 720, // Portrait mode to match game (9:16 aspect ratio)
+    height: 1280,
     parent: 'viewer-game',
     backgroundColor: '#eaf6ff',
     scene: [LevelViewerScene],

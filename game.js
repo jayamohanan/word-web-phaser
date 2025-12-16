@@ -1939,8 +1939,8 @@ const config = {
     scale: {
         mode: Phaser.Scale.FIT, // FIT mode works better in iframes
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 1920, // Base dimensions
-        height: 1080,
+        width: 720, // Portrait mode - mobile first (9:16 aspect ratio)
+        height: 1280,
         resolution: window.devicePixelRatio || 1, // Handle high DPI screens (Retina, 4K)
     },
     

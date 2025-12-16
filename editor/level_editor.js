@@ -748,8 +748,8 @@ class LevelEditorScene extends Phaser.Scene {
 
 const config = {
     type: Phaser.WEBGL, // Use WebGL for better rendering quality
-    width: window.innerWidth,
-    height: window.innerHeight,
+    width: 720, // Portrait mode to match game (9:16 aspect ratio)
+    height: 1280,
     backgroundColor: '#f0f8ff',
     parent: 'editor-game',
     scene: [LevelEditorScene],
@@ -759,7 +759,7 @@ const config = {
     antialias: true, // Enable anti-aliasing for smooth edges
     
     scale: {
-        mode: Phaser.Scale.RESIZE,
+        mode: Phaser.Scale.FIT, // Changed to FIT for consistent portrait view
         autoCenter: Phaser.Scale.CENTER_BOTH,
         resolution: window.devicePixelRatio || 1, // Handle high DPI screens (Retina, 4K)
     },
@@ -771,6 +771,4 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-window.addEventListener('resize', () => {
-    game.scale.resize(window.innerWidth, window.innerHeight);
-});
+// Resize listener removed - using FIT mode for consistent portrait layout

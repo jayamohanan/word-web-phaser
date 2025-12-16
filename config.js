@@ -7,10 +7,10 @@ var CONFIG = {
     BANK_AREA_BG: 0xfce4ec,
     GRID_COLOR: 0xcfd8dc,
     GRID_LINE_WIDTH: 1,
-    SLOT_AREA_HEIGHT_FACTOR: 0.6, // Fraction of canvas height for slot area
+    SLOT_AREA_HEIGHT_FACTOR: 0.7, // Fraction of canvas height for slot area (portrait mode)
     WORD_GAP: 16,
     ORIGIN_X_FACTOR: 0.5,  // 50% of canvas width (horizontal center)
-    ORIGIN_Y_FACTOR: 0.55,  // 55% of canvas height (55% above word bank area at 60%)
+    ORIGIN_Y_FACTOR: 0.50,  // 50% of canvas height (closer to words in portrait mode)
     
     // Stroke styles for slots and words
     SLOT_STROKE_WIDTH: 2,
