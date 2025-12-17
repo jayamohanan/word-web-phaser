@@ -916,16 +916,33 @@ class WordWebGame extends Phaser.Scene {
                 const midX = (fromPt.x + toPt.x) / 2;
                 const midY = (fromPt.y + toPt.y) / 2;
                 
+                // Calculate line angle and perpendicular offset
+                const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
+                const isHorizontal = Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle));
+                
+                // Offset distance from the line
+                const offset = 20;
+                
+                // Position label perpendicular to the line
+                let labelX, labelY;
+                if (isHorizontal) {
+                    // For horizontal lines, place label above or below
+                    labelX = midX;
+                    labelY = midY - offset; // Place above the line
+                } else {
+                    // For vertical or diagonal lines, place label to the side
+                    labelX = midX + offset; // Place to the right of the line
+                    labelY = midY;
+                }
+                
                 // Format increment as +1, -2, etc.
                 const incrementText = ruleInfo.increment > 0 ? `+${ruleInfo.increment}` : `${ruleInfo.increment}`;
                 
-                // Create label with background
-                const label = this.add.text(midX, midY, incrementText, {
+                // Create label with black text, no background
+                const label = this.add.text(labelX, labelY, incrementText, {
                     fontFamily: 'Arial, sans-serif',
                     fontSize: '20px',
-                    color: '#ffffff',
-                    backgroundColor: '#2196F3', // Blue background for type 1
-                    padding: { x: 6, y: 4 },
+                    color: '#000000', // Black text
                     resolution: window.devicePixelRatio || 2
                 }).setOrigin(0.5);
                 label.setDepth(-50); // Above line, below words
