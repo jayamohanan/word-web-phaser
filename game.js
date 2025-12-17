@@ -1073,6 +1073,11 @@ class WordWebGame extends Phaser.Scene {
     }
 
     drawConnectionArrow(fromPt, toPt, color, isBidirectional) {
+        // Don't draw any arrows for bidirectional connections
+        if (isBidirectional) {
+            return;
+        }
+        
         // Calculate angle from fromPt to toPt
         const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
         const arrowSize = 15; // Increased by 50% from 10 to 15
@@ -1081,28 +1086,8 @@ class WordWebGame extends Phaser.Scene {
         const midX = (fromPt.x + toPt.x) / 2;
         const midY = (fromPt.y + toPt.y) / 2;
         
-        if (isBidirectional) {
-            // Draw two arrows at midpoint: one pointing to B, one pointing to A
-            // Space them slightly apart
-            const spacing = 10;
-            
-            // Arrow pointing towards B (forward direction)
-            const arrowPosB = {
-                x: midX + Math.cos(angle) * spacing,
-                y: midY + Math.sin(angle) * spacing
-            };
-            this.drawArrowhead(arrowPosB.x, arrowPosB.y, angle, arrowSize, color);
-            
-            // Arrow pointing towards A (backward direction)
-            const arrowPosA = {
-                x: midX - Math.cos(angle) * spacing,
-                y: midY - Math.sin(angle) * spacing
-            };
-            this.drawArrowhead(arrowPosA.x, arrowPosA.y, angle + Math.PI, arrowSize, color);
-        } else {
-            // Unidirectional: single arrow at midpoint pointing towards B
-            this.drawArrowhead(midX, midY, angle, arrowSize, color);
-        }
+        // Unidirectional: single arrow at midpoint pointing towards B
+        this.drawArrowhead(midX, midY, angle, arrowSize, color);
     }
     
     drawArrowhead(x, y, angle, size, color) {
