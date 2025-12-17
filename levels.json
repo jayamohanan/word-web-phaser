@@ -1,20 +1,55 @@
 {
   "levels": [
     {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "TRUE",
+        "LOVE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "+1",
+          "direction":"bi"
+        }
+      ]
+    },
+    {
   "slots": [
     {
       "length": 4,
-      "anchorCol": -3,
+      "anchorCol": -4,
       "anchorRow": -8
     },
     {
       "length": 4,
-      "anchorCol": -3,
+      "anchorCol": -4,
       "anchorRow": -5
     },
     {
       "length": 4,
-      "anchorCol": 2,
+      "anchorCol": 1,
       "anchorRow": -2
     }
   ],

@@ -34,7 +34,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.json('levels', 'levels.json');
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
-        this.load.image('handPointer', 'graphics/hand_pointer.png');
+        this.load.image('handPointer', 'graphics/hand_pointer.webp');
     }
 
     create() {
@@ -71,6 +71,12 @@ class WordWebGame extends Phaser.Scene {
         }
         
         this.createAreas();
+        
+        // Show portrait boundary for debugging (if enabled in config)
+        if (CONFIG.SHOW_PORTRAIT_BOUNDARY) {
+            this.createPortraitBoundary();
+        }
+        
         this.renderSlots();
         this.renderBank();
         this.renderConnections();
@@ -497,6 +503,79 @@ class WordWebGame extends Phaser.Scene {
         this.slotAreaHeight = height * 0.6;
         this.bankAreaY = this.slotAreaHeight;
         this.bankAreaHeight = height * 0.4;
+    }
+
+    createPortraitBoundary() {
+        const { width, height } = this.sys.game.canvas;
+        
+        // Draw a darker background outside the portrait area
+        // Portrait area is 720x1280 centered in the canvas
+        const portraitWidth = 720;
+        const portraitHeight = 1280;
+        
+        // Calculate offsets if canvas is larger than portrait area
+        const leftOffset = (width - portraitWidth) / 2;
+        const topOffset = (height - portraitHeight) / 2;
+        
+        if (leftOffset > 0 || topOffset > 0) {
+            // Draw darker background panels on sides
+            const darkerBg = 0xd0e0f0; // Slightly darker blue-gray
+            
+            // Left panel
+            if (leftOffset > 0) {
+                const leftPanel = this.add.rectangle(0, 0, leftOffset, height, darkerBg);
+                leftPanel.setOrigin(0, 0);
+                leftPanel.setDepth(-1000);
+                
+                // Right panel
+                const rightPanel = this.add.rectangle(width - leftOffset, 0, leftOffset, height, darkerBg);
+                rightPanel.setOrigin(0, 0);
+                rightPanel.setDepth(-1000);
+            }
+            
+            // Top panel (only in the portrait area width)
+            if (topOffset > 0) {
+                const topPanel = this.add.rectangle(leftOffset, 0, portraitWidth, topOffset, darkerBg);
+                topPanel.setOrigin(0, 0);
+                topPanel.setDepth(-1000);
+                
+                // Bottom panel
+                const bottomPanel = this.add.rectangle(leftOffset, height - topOffset, portraitWidth, topOffset, darkerBg);
+                bottomPanel.setOrigin(0, 0);
+                bottomPanel.setDepth(-1000);
+            }
+        }
+        
+        // Draw portrait boundary outline
+        const portraitX = width / 2;
+        const portraitY = height / 2;
+        
+        const boundaryGraphics = this.add.graphics();
+        boundaryGraphics.lineStyle(3, 0xff6600, 0.8); // Orange border, semi-transparent
+        boundaryGraphics.strokeRect(
+            portraitX - portraitWidth / 2,
+            portraitY - portraitHeight / 2,
+            portraitWidth,
+            portraitHeight
+        );
+        boundaryGraphics.setDepth(10000); // Above everything
+        
+        // Add label
+        const labelText = this.add.text(
+            portraitX,
+            portraitY - portraitHeight / 2 - 20,
+            'Portrait Area (720x1280)',
+            {
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '16px',
+                color: '#ff6600',
+                fontStyle: 'bold',
+                backgroundColor: '#ffffff',
+                padding: { x: 8, y: 4 }
+            }
+        );
+        labelText.setOrigin(0.5, 1);
+        labelText.setDepth(10001);
     }
 
     renderSlots() {

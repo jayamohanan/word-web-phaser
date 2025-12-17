@@ -17,7 +17,7 @@ class LevelViewerScene extends WordWebGame {
         this.load.json('levels', '../levels.json');
         this.load.audio('fillSound', '../sounds/fill_sound4.wav');
         this.load.audio('burstSound', '../sounds/burst.wav');
-        this.load.image('handPointer', '../graphics/hand_pointer.png');
+        this.load.image('handPointer', '../graphics/hand_pointer.webp');
     }
 
     create() {

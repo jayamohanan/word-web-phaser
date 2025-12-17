@@ -1,6 +1,6 @@
 // Shared config for dimensions and layout
 var CONFIG = {
-    SQUARE_WIDTH: 40,
+    SQUARE_WIDTH: 60,
     SQUARE_GAP: 5,
     get GRID_SIZE() { return this.SQUARE_WIDTH + this.SQUARE_GAP; },
     SLOT_AREA_BG: 0xe3f2fd,
@@ -19,8 +19,8 @@ var CONFIG = {
     WORD_STROKE_COLOR: 0x333333,   // Dark gray
     
     // Font sizes
-    WORD_CELL_FONT_SIZE: '24px',   // Font size for letters in word cells
-    SLOT_CELL_FONT_SIZE: '24px',    // Font size for hints in slot cells
+    WORD_CELL_FONT_SIZE: '36px',   // Font size for letters in word cells
+    SLOT_CELL_FONT_SIZE: '36px',    // Font size for hints in slot cells
     
     // Connection highlight color
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells
@@ -29,5 +29,8 @@ var CONFIG = {
     AUTOPILOT_ENABLED: false,  // Set to true to enable autopilot helper
     
     // Placement animation mode
-    PLACEMENT_ANIMATION_MODE: 'cell'  // 'letter' = letters only, 'cell' = letters + squares
+    PLACEMENT_ANIMATION_MODE: 'cell',  // 'letter' = letters only, 'cell' = letters + squares
+    
+    // Debug mode - show portrait boundary (720x1280 area) on desktop
+    SHOW_PORTRAIT_BOUNDARY: true  // Set to false to hide portrait boundary in debug
 };
