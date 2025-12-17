@@ -24,7 +24,7 @@ var CONFIG = {
     
     // Font family for letters in squares (both slots and words)
     // Use 'default' for Arial sans-serif, or 'Petita' for custom font
-    LETTER_FONT_FAMILY: 'Style',
+    LETTER_FONT_FAMILY: 'default',
     
     // Connection highlight color
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells
