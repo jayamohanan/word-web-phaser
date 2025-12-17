@@ -24,6 +24,7 @@ class WordWebGame extends Phaser.Scene {
         this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
         this.wordCellFontSize = CONFIG.WORD_CELL_FONT_SIZE;
         this.slotCellFontSize = CONFIG.SLOT_CELL_FONT_SIZE;
+        this.letterFontFamily = CONFIG.LETTER_FONT_FAMILY === 'default' ? 'Arial, sans-serif' : CONFIG.LETTER_FONT_FAMILY;
         this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
         this.autopilotEnabled = CONFIG.AUTOPILOT_ENABLED;
         this.autopilotInProgress = false; // Track if autopilot is currently running
@@ -607,7 +608,7 @@ class WordWebGame extends Phaser.Scene {
                 
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', { 
-                    fontFamily: 'Arial, sans-serif',
+                    fontFamily: this.letterFontFamily,
                     fontSize: this.slotCellFontSize,
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
@@ -678,7 +679,7 @@ class WordWebGame extends Phaser.Scene {
                 let y = 0;
                 let square = this.add.rectangle(x, y, this.squareWidth, this.squareWidth, 0xeeeeee).setStrokeStyle(this.wordStrokeWidth, this.wordStrokeColor);
                 let letter = this.add.text(x, y, word[i], { 
-                    fontFamily: 'Arial, sans-serif',
+                    fontFamily: this.letterFontFamily,
                     fontSize: this.wordCellFontSize,
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text

@@ -22,6 +22,10 @@ var CONFIG = {
     WORD_CELL_FONT_SIZE: '36px',   // Font size for letters in word cells
     SLOT_CELL_FONT_SIZE: '36px',    // Font size for hints in slot cells
     
+    // Font family for letters in squares (both slots and words)
+    // Use 'default' for Arial sans-serif, or 'Petita' for custom font
+    LETTER_FONT_FAMILY: 'Petita',
+    
     // Connection highlight color
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells
     
