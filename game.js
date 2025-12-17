@@ -1054,30 +1054,32 @@ class WordWebGame extends Phaser.Scene {
         // Calculate angle from fromPt to toPt
         const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
         const arrowSize = 15; // Increased by 50% from 10 to 15
-        const arrowOffset = 8; // Increased proportionally
+        
+        // Calculate midpoint of the line
+        const midX = (fromPt.x + toPt.x) / 2;
+        const midY = (fromPt.y + toPt.y) / 2;
         
         if (isBidirectional) {
-            // Draw two arrows: one pointing to B, one pointing to A
-            // Arrow pointing towards B (at toPt)
-            const arrowTipB = {
-                x: toPt.x - Math.cos(angle) * arrowOffset,
-                y: toPt.y - Math.sin(angle) * arrowOffset
-            };
-            this.drawArrowhead(arrowTipB.x, arrowTipB.y, angle, arrowSize, color);
+            // Draw two arrows at midpoint: one pointing to B, one pointing to A
+            // Space them slightly apart
+            const spacing = 10;
             
-            // Arrow pointing towards A (at fromPt)
-            const arrowTipA = {
-                x: fromPt.x + Math.cos(angle) * arrowOffset,
-                y: fromPt.y + Math.sin(angle) * arrowOffset
+            // Arrow pointing towards B (forward direction)
+            const arrowPosB = {
+                x: midX + Math.cos(angle) * spacing,
+                y: midY + Math.sin(angle) * spacing
             };
-            this.drawArrowhead(arrowTipA.x, arrowTipA.y, angle + Math.PI, arrowSize, color);
+            this.drawArrowhead(arrowPosB.x, arrowPosB.y, angle, arrowSize, color);
+            
+            // Arrow pointing towards A (backward direction)
+            const arrowPosA = {
+                x: midX - Math.cos(angle) * spacing,
+                y: midY - Math.sin(angle) * spacing
+            };
+            this.drawArrowhead(arrowPosA.x, arrowPosA.y, angle + Math.PI, arrowSize, color);
         } else {
-            // Unidirectional: only arrow pointing towards B
-            const arrowTip = {
-                x: toPt.x - Math.cos(angle) * arrowOffset,
-                y: toPt.y - Math.sin(angle) * arrowOffset
-            };
-            this.drawArrowhead(arrowTip.x, arrowTip.y, angle, arrowSize, color);
+            // Unidirectional: single arrow at midpoint pointing towards B
+            this.drawArrowhead(midX, midY, angle, arrowSize, color);
         }
     }
     
@@ -1085,7 +1087,6 @@ class WordWebGame extends Phaser.Scene {
         // Draw a filled triangle arrowhead
         const arrow = this.add.graphics();
         arrow.fillStyle(color, 1);
-        arrow.lineStyle(1, 0xffffff, 1); // White outline for visibility
         
         // Define triangle vertices (pointing right)
         const points = [
@@ -1107,7 +1108,6 @@ class WordWebGame extends Phaser.Scene {
         arrow.lineTo(rotatedPoints[2].x, rotatedPoints[2].y);
         arrow.closePath();
         arrow.fillPath();
-        arrow.strokePath();
         
         arrow.setDepth(-99); // Just above the line
         this.connectionLines.push(arrow);
