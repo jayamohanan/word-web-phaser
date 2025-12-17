@@ -55,6 +55,26 @@ class WordWebGame extends Phaser.Scene {
         this.wordBankArea = [];
         this.wordSlotArea = [];
         
+        // Normalize rules: convert negative increments to positive with reversed direction
+        if (this.level.rules) {
+            this.level.rules = this.level.rules.map(rule => {
+                if (rule.type === 'cell' && rule.op && rule.op.startsWith('-')) {
+                    // Extract the negative increment value
+                    const increment = parseInt(rule.op);
+                    if (increment < 0) {
+                        // Convert to positive increment and swap a and b
+                        return {
+                            ...rule,
+                            a: rule.b,  // Swap: b becomes a
+                            b: rule.a,  // Swap: a becomes b
+                            op: `+${Math.abs(increment)}`  // Convert -1 to +1, -2 to +2, etc.
+                        };
+                    }
+                }
+                return rule;
+            });
+        }
+        
         // Parse word pairs for antonym support (e.g., "LOVE-HATE")
         // Make it bidirectional so both LOVE→HATE and HATE→LOVE work
         this.wordAntonymMap = new Map();
