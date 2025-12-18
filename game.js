@@ -36,7 +36,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
         this.load.image('handPointer', 'graphics/hand_pointer.webp');
-        this.load.font('Roboto', 'fonts/Roboto-Regular.ttf');
+        this.load.font('Roboto', 'fonts/Roboto-Bold.ttf');
     }
 
     create() {
@@ -841,9 +841,9 @@ class WordWebGame extends Phaser.Scene {
                 // Get the label text based on operation
                 let labelText = '';
                 if (rule.op === 'opposite') {
-                    labelText = 'opposite';
+                    labelText = 'Opposite';
                 } else if (rule.op === 'reverse') {
-                    labelText = 'reverse';
+                    labelText = 'Reverse';
                 } else {
                     labelText = rule.op; // fallback to operation name
                 }
@@ -853,8 +853,8 @@ class WordWebGame extends Phaser.Scene {
                 const labelPos = rule.labelPos !== undefined ? parseInt(rule.labelPos) : 0;
                 
                 let labelX, labelY;
-                const sideGap = 15; // Gap for left/right positions
-                const topBottomGap = 8; // Reduced gap for top/bottom positions (half of 15)
+                const sideGap = 11; // Gap for left/right positions
+                const topBottomGap = 6; // Reduced gap for top/bottom positions
                 
                 // Calculate position based on labelPos
                 switch (labelPos) {
