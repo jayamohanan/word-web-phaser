@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Test</title>
+    <style>
+        /* Your @font-face rules */
+        @font-face {
+            font-family: 'ClearSans';
+            src: url('fonts/ClearSans-Regular.woff2') format('woff2'),
+                url('fonts/ClearSans-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'ClearSans';
+            src: url('fonts/ClearSans-Medium.woff2') format('woff2'),
+                url('fonts/ClearSans-Medium.woff') format('woff');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'ClearSans';
+            src: url('fonts/ClearSans-Bold.woff2') format('woff2'),
+                url('fonts/ClearSans-Bold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+        }
+        
+        body {
+            padding: 50px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Font Weight Test</h1>
+    
+    <div style="font-family: 'ClearSans'; font-weight: 400; font-size: 48px; margin: 20px 0;">
+        ClearSans 400 (Regular)
+    </div>
+    <div style="font-family: 'ClearSans'; font-weight: 500; font-size: 48px; margin: 20px 0;">
+        ClearSans 500 (Medium)
+    </div>
+    <div style="font-family: 'ClearSans'; font-weight: 700; font-size: 48px; margin: 20px 0;">
+        ClearSans 700 (Bold)
+    </div>
+    
+    <hr>
+    <button onclick="checkFonts()">Check Loaded Fonts</button>
+    <div id="output"></div>
+    
+    <script>
+        function checkFonts() {
+            let output = document.getElementById('output');
+            output.innerHTML = '<h3>Loaded Fonts:</h3>';
+            
+            document.fonts.forEach(font => {
+                output.innerHTML += `Family: ${font.family}, Weight: ${font.weight}, Status: ${font.status}<br>`;
+            });
+            
+            // Also check if fonts are ready
+            document.fonts.ready.then(() => {
+                output.innerHTML += '<br><strong>All fonts loaded!</strong>';
+            });
+        }
+        
+        // Auto-check on load
+        window.onload = () => {
+            setTimeout(checkFonts, 1000);
+        };
+    </script>
+</body>
+</html>
