@@ -36,7 +36,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
         this.load.image('handPointer', 'graphics/hand_pointer.webp');
-        this.load.font('Roboto', 'fonts/Roboto-Bold.ttf');
+        this.load.font('Roboto', 'fonts/Roboto-Regular.ttf');
     }
 
     create() {
@@ -618,9 +618,9 @@ class WordWebGame extends Phaser.Scene {
                 
                 // Create shadow layers for depth effect - inset appearance
                 // Bottom-right inner shadow (dark) - creates depth
-                let shadowDark = this.add.rectangle(3, 3, this.squareWidth, this.squareWidth, 0x000000, 0.35);
+                let shadowDark = this.add.rectangle(5, 5, this.squareWidth, this.squareWidth, 0x000000, 0.35);
                 // Secondary softer shadow for more depth
-                let shadowMid = this.add.rectangle(1.5, 1.5, this.squareWidth, this.squareWidth, 0x666666, 0.2);
+                let shadowMid = this.add.rectangle(15, 15, this.squareWidth, this.squareWidth, 0x666666, 0.2);
                 // Top-left edge highlight for beveled look
                 let highlightEdge = this.add.rectangle(-2, -2, this.squareWidth - 4, this.squareWidth - 4, 0xffffff, 0.6);
                 
