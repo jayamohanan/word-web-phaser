@@ -25,6 +25,7 @@ class WordWebGame extends Phaser.Scene {
         this.wordCellFontSize = CONFIG.WORD_CELL_FONT_SIZE;
         this.slotCellFontSize = CONFIG.SLOT_CELL_FONT_SIZE;
         this.letterFontFamily = CONFIG.LETTER_FONT_FAMILY === 'default' ? 'Arial, sans-serif' : CONFIG.LETTER_FONT_FAMILY;
+        this.letterFontWeight = CONFIG.LETTER_FONT_WEIGHT;
         this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
         this.autopilotEnabled = CONFIG.AUTOPILOT_ENABLED;
         this.autopilotInProgress = false; // Track if autopilot is currently running
@@ -32,14 +33,34 @@ class WordWebGame extends Phaser.Scene {
     }
 
     preload() {
+        // Load WebFontLoader script
+        this.load.script('webfont', 'fonts/webfontloader.js');
+
         this.load.json('levels', 'levels.json');
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
         this.load.image('handPointer', 'graphics/hand_pointer.webp');
-        this.load.font('Roboto', 'fonts/Roboto-Bold.ttf');
+
+        this.load.once('complete', () => {
+        // Only need the font family names now
+        this.fontsReady = new Promise((resolve) => {
+            WebFont.load({
+                custom: {
+                    families: ['Roboto', 'Style','ClearSans']  // just the font family, no urls needed
+                },
+                active: () => {
+                    resolve(); // font fully loaded
+                }
+            });
+        });
+    });
     }
 
-    create() {
+    async create() {
+        if (this.fontsReady) {
+        await this.fontsReady;
+    }
+
         const levels = this.cache.json.get('levels');
         if (!levels || !levels.levels) {
             console.error('Failed to load levels data. Check if levels.json is loaded correctly.');
@@ -630,6 +651,7 @@ class WordWebGame extends Phaser.Scene {
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', { 
                     fontFamily: this.letterFontFamily,
+                    fontWeight: this.letterFontWeight,
                     fontSize: this.slotCellFontSize,
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
@@ -701,6 +723,7 @@ class WordWebGame extends Phaser.Scene {
                 let square = this.add.rectangle(x, y, this.squareWidth, this.squareWidth, 0xeeeeee).setStrokeStyle(this.wordStrokeWidth, this.wordStrokeColor);
                 let letter = this.add.text(x, y, word[i], { 
                     fontFamily: this.letterFontFamily,
+                    fontWeight: this.letterFontWeight,
                     fontSize: this.wordCellFontSize,
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text

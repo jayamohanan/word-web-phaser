@@ -24,7 +24,8 @@ var CONFIG = {
     
     // Font family for letters in squares (both slots and words)
     // Use 'default' for Arial sans-serif, or 'Petita' for custom font
-    LETTER_FONT_FAMILY: 'Roboto',
+    LETTER_FONT_FAMILY: 'ClearSans',
+    LETTER_FONT_WEIGHT: '700', // Font weight for letters in squares (use '400', '500', or '700' as string)
     
     // Connection highlight color
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells
