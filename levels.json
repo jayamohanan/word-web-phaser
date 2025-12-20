@@ -5,6 +5,88 @@
         {
           "length": 4,
           "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "EDIT",
+        "DUEL"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "word",
+          "slot":1,
+          "op": "reverse",
+          "labelPos":2
+
+        }
+      ]
+    },
+    {
+  "slots": [
+    {
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -6
+    },
+    {
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -2
+    }
+  ],
+  "words": [
+    "BIRD",
+    "ACER"
+  ],
+  "rules": [
+    {
+      "type": "cell",
+      "a": {
+        "slot": 0,
+        "cell": 2,
+        "side": 2
+      },
+      "b": {
+        "slot": 1,
+        "cell": 2,
+        "side": 0
+      },
+      "op": "same"
+    },
+     {
+          "type": "word",
+          "slot":1,
+          "op": "swap",
+          "pairs":[[1,2],[2,3]],
+          "labelPos":2
+        }
+  ]
+},
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
           "anchorRow": -6
         },
         {
