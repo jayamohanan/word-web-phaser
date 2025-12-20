@@ -190,15 +190,8 @@ class WordWebGame extends Phaser.Scene {
             const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
             if (violationResult.violated) return;
 
-            // Highlight all squares in the slot with blue stroke
-            slotSquares.forEach(squareContainer => {
-                const squareStroke = squareContainer.getData('squareStroke');
-                if (squareStroke) {
-                    squareStroke.clear();
-                    squareStroke.lineStyle(this.slotStrokeWidth, 0x2196F3);
-                    squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                }
-            });
+            // Note: Square strokes are now baked into the texture
+            // Highlighting is handled by connection highlights and tinting
 
             // Highlight connection lines connected to this slot
             this.connectionLines.forEach(line => {
@@ -220,15 +213,8 @@ class WordWebGame extends Phaser.Scene {
             const slotContainer = this.slotSprites[slotIdx];
             const slotSquares = slotContainer.list;
 
-            // Reset all squares to original stroke color
-            slotSquares.forEach(squareContainer => {
-                const squareStroke = squareContainer.getData('squareStroke');
-                if (squareStroke && !squareContainer.getData('filled')) {
-                    squareStroke.clear();
-                    squareStroke.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                }
-            });
+            // Note: Square strokes are now baked into the texture
+            // No need to reset stroke colors
 
             // Reset connection lines connected to this slot
             this.connectionLines.forEach(line => {
@@ -378,15 +364,8 @@ class WordWebGame extends Phaser.Scene {
                 }
             });
 
-            // Reset square stroke colors (in case they were highlighted)
-            slotSquares.forEach(squareContainer => {
-                const squareStroke = squareContainer.getData('squareStroke');
-                if (squareStroke) {
-                    squareStroke.clear();
-                    squareStroke.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                }
-            });
+            // Note: Square strokes are now baked into the texture
+            // No need to reset stroke colors
 
             // Reset connection lines connected to this slot
             this.connectionLines.forEach(line => {
@@ -429,7 +408,7 @@ class WordWebGame extends Phaser.Scene {
             const square = squares[i];
             const delay = i * 50; // 50ms delay between each letter for smoother cascade
 
-            // Choose targets based on mode: letter-only or cell (letter + square)
+            // Choose targets based on mode: letter-only or cell (letter + square with baked-in stroke)
             const targets = animateSquares ? [letter, square] : [letter];
 
             // Bounce animation: scale up then back to normal
@@ -598,6 +577,11 @@ class WordWebGame extends Phaser.Scene {
         wordCtx.closePath();
         wordCtx.fill();
 
+        // Add stroke to the texture
+        wordCtx.strokeStyle = '#' + this.wordStrokeColor.toString(16).padStart(6, '0');
+        wordCtx.lineWidth = this.wordStrokeWidth;
+        wordCtx.strokeRect(this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, size - this.wordStrokeWidth, size - this.wordStrokeWidth);
+
         wordTexture.refresh();
 
         // Create slot cell texture with uniform color1
@@ -605,6 +589,12 @@ class WordWebGame extends Phaser.Scene {
         const slotCtx = slotTexture.getSourceImage().getContext('2d');
         slotCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
         slotCtx.fillRect(0, 0, size, size);
+        
+        // Add stroke to the texture
+        slotCtx.strokeStyle = '#' + this.slotStrokeColor.toString(16).padStart(6, '0');
+        slotCtx.lineWidth = this.slotStrokeWidth;
+        slotCtx.strokeRect(this.slotStrokeWidth / 2, this.slotStrokeWidth / 2, size - this.slotStrokeWidth, size - this.slotStrokeWidth);
+        
         slotTexture.refresh();
     }
 
@@ -705,14 +695,9 @@ class WordWebGame extends Phaser.Scene {
                 // Top-left edge highlight for beveled look
                 let highlightEdge = this.add.rectangle(-2, -2, this.squareWidth - 4, this.squareWidth - 4, 0xffffff, 0.6);
 
-                // Create the image (square) centered at (0, 0) within the squareContainer using slot texture
+                // Create the image (square) centered at (0, 0) within the squareContainer using slot texture (includes stroke)
                 let square = this.add.image(0, 0, 'slotCellTexture');
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
-
-                // Create graphics for stroke
-                let squareStroke = this.add.graphics();
-                squareStroke.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
 
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', {
@@ -727,7 +712,6 @@ class WordWebGame extends Phaser.Scene {
                 squareContainer.add(shadowDark);
                 squareContainer.add(shadowMid);
                 squareContainer.add(square);
-                squareContainer.add(squareStroke);
                 squareContainer.add(highlightEdge);
                 squareContainer.add(letterText);
 
@@ -736,7 +720,6 @@ class WordWebGame extends Phaser.Scene {
 
                 // Store references to the children for easy access
                 squareContainer.setData('square', square);
-                squareContainer.setData('squareStroke', squareStroke);
                 squareContainer.setData('letterText', letterText);
 
                 // Add squareContainer to the slotContainer
@@ -788,14 +771,9 @@ class WordWebGame extends Phaser.Scene {
             for (let i = 0; i < word.length; i++) {
                 let x = i * this.gridSize;
                 let y = 0;
-                // Create image object for word cell at position x,y using word texture
+                // Create image object for word cell at position x,y using word texture (includes stroke)
                 let square = this.add.image(x, y, 'wordCellTexture');
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
-
-                // Create graphics for stroke
-                let squareStroke = this.add.graphics({ x: x, y: y });
-                squareStroke.lineStyle(this.wordStrokeWidth, this.wordStrokeColor);
-                squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
 
                 let letter = this.add.text(x, y, word[i], {
                     fontFamily: this.letterFontFamily,
@@ -806,7 +784,6 @@ class WordWebGame extends Phaser.Scene {
                 }).setOrigin(0.5);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
-                wordContainer.add(squareStroke);
                 wordContainer.add(letter);
             }
             wordContainer.setPosition(startX, baseY);
