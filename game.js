@@ -46,7 +46,7 @@ class WordWebGame extends Phaser.Scene {
             this.load.once('complete', () => {
                 WebFont.load({
                     custom: {
-                        families: ['Poppins-Regular','Poppins-Medium','DMSans-Medium','Roboto-Regular', 'Roboto-Medium', 'Roboto-Bold', 'Style', 'ClearSans-Regular', 'ClearSans-Medium', 'ClearSans-Bold'],
+                        families: ['Poppins-Regular', 'Poppins-Medium', 'DMSans-Medium', 'Roboto-Regular', 'Roboto-Medium', 'Roboto-Bold', 'Style', 'ClearSans-Regular', 'ClearSans-Medium', 'ClearSans-Bold'],
                     },
                     active: () => {
                         console.log('Fonts loaded successfully!');
@@ -121,6 +121,9 @@ class WordWebGame extends Phaser.Scene {
 
         this.createAreas();
 
+        // Create dynamic textures for cell backgrounds
+        this.createCellTextures();
+
         // Show portrait boundary for debugging (if enabled in config)
         if (CONFIG.SHOW_PORTRAIT_BOUNDARY) {
             this.createPortraitBoundary();
@@ -189,13 +192,11 @@ class WordWebGame extends Phaser.Scene {
 
             // Highlight all squares in the slot with blue stroke
             slotSquares.forEach(squareContainer => {
-                const square = squareContainer.getData('square');
-                if (square) {
-                    square.clear();
-                    square.fillStyle(0xf5f5f5);
-                    square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    square.lineStyle(this.slotStrokeWidth, 0x2196F3);
-                    square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                const squareStroke = squareContainer.getData('squareStroke');
+                if (squareStroke) {
+                    squareStroke.clear();
+                    squareStroke.lineStyle(this.slotStrokeWidth, 0x2196F3);
+                    squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
                 }
             });
 
@@ -221,13 +222,11 @@ class WordWebGame extends Phaser.Scene {
 
             // Reset all squares to original stroke color
             slotSquares.forEach(squareContainer => {
-                const square = squareContainer.getData('square');
-                if (square && !squareContainer.getData('filled')) {
-                    square.clear();
-                    square.fillStyle(0xf5f5f5);
-                    square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                const squareStroke = squareContainer.getData('squareStroke');
+                if (squareStroke && !squareContainer.getData('filled')) {
+                    squareStroke.clear();
+                    squareStroke.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
+                    squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
                 }
             });
 
@@ -381,13 +380,11 @@ class WordWebGame extends Phaser.Scene {
 
             // Reset square stroke colors (in case they were highlighted)
             slotSquares.forEach(squareContainer => {
-                const square = squareContainer.getData('square');
-                if (square) {
-                    square.clear();
-                    square.fillStyle(0xf5f5f5);
-                    square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                const squareStroke = squareContainer.getData('squareStroke');
+                if (squareStroke) {
+                    squareStroke.clear();
+                    squareStroke.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
+                    squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
                 }
             });
 
@@ -413,7 +410,7 @@ class WordWebGame extends Phaser.Scene {
     // Play sequential letter bounce animation when word is placed
     playPlacementAnimation(wordContainer, onComplete) {
         const letters = wordContainer.list.filter(child => child.type === 'Text');
-        const squares = wordContainer.list.filter(child => child.type === 'Graphics');
+        const squares = wordContainer.list.filter(child => child.type === 'Image');
 
         if (letters.length === 0) {
             if (onComplete) onComplete();
@@ -474,7 +471,7 @@ class WordWebGame extends Phaser.Scene {
 
             // Reset all letter and square scales
             const letters = wordContainer.list.filter(child => child.type === 'Text');
-            const squares = wordContainer.list.filter(child => child.type === 'Graphics');
+            const squares = wordContainer.list.filter(child => child.type === 'Image');
             letters.forEach(letter => letter.setScale(1));
             squares.forEach(square => square.setScale(1));
 
@@ -564,6 +561,51 @@ class WordWebGame extends Phaser.Scene {
         this.slotAreaHeight = height * 0.6;
         this.bankAreaY = this.slotAreaHeight;
         this.bankAreaHeight = height * 0.4;
+    }
+
+    createCellTextures() {
+        const size = this.squareWidth;
+        const color1 = CONFIG.CELL_BG1_COLOR;
+        const color2 = CONFIG.CELL_BG2_COLOR;
+
+        // Remove existing textures if they exist (for hot reload)
+        if (this.textures.exists('wordCellTexture')) {
+            this.textures.remove('wordCellTexture');
+        }
+        if (this.textures.exists('slotCellTexture')) {
+            this.textures.remove('slotCellTexture');
+        }
+
+        // Create word cell texture with diagonal split (top-right to bottom-left)
+        const wordTexture = this.textures.createCanvas('wordCellTexture', size, size);
+        const wordCtx = wordTexture.getSourceImage().getContext('2d');
+
+        // Draw top-left triangle (color1)
+        wordCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
+        wordCtx.beginPath();
+        wordCtx.moveTo(0, 0);        // top-left
+        wordCtx.lineTo(size, 0);    // top-right
+        wordCtx.lineTo(0, size);    // bottom-left
+        wordCtx.closePath();
+        wordCtx.fill();
+
+        // Draw bottom-right triangle (color2)
+        wordCtx.fillStyle = '#' + color2.toString(16).padStart(6, '0');
+        wordCtx.beginPath();
+        wordCtx.moveTo(size, size); // bottom-right
+        wordCtx.lineTo(size, 0);    // top-right
+        wordCtx.lineTo(0, size);    // bottom-left
+        wordCtx.closePath();
+        wordCtx.fill();
+
+        wordTexture.refresh();
+
+        // Create slot cell texture with uniform color1
+        const slotTexture = this.textures.createCanvas('slotCellTexture', size, size);
+        const slotCtx = slotTexture.getSourceImage().getContext('2d');
+        slotCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
+        slotCtx.fillRect(0, 0, size, size);
+        slotTexture.refresh();
     }
 
     createPortraitBoundary() {
@@ -663,12 +705,14 @@ class WordWebGame extends Phaser.Scene {
                 // Top-left edge highlight for beveled look
                 let highlightEdge = this.add.rectangle(-2, -2, this.squareWidth - 4, this.squareWidth - 4, 0xffffff, 0.6);
 
-                // Create the graphics (square) centered at (0, 0) within the squareContainer
-                let square = this.add.graphics();
-                square.fillStyle(0xf5f5f5);
-                square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                // Create the image (square) centered at (0, 0) within the squareContainer using slot texture
+                let square = this.add.image(0, 0, 'slotCellTexture');
+                square.setDisplaySize(this.squareWidth, this.squareWidth);
+
+                // Create graphics for stroke
+                let squareStroke = this.add.graphics();
+                squareStroke.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
+                squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
 
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', {
@@ -683,6 +727,7 @@ class WordWebGame extends Phaser.Scene {
                 squareContainer.add(shadowDark);
                 squareContainer.add(shadowMid);
                 squareContainer.add(square);
+                squareContainer.add(squareStroke);
                 squareContainer.add(highlightEdge);
                 squareContainer.add(letterText);
 
@@ -691,6 +736,7 @@ class WordWebGame extends Phaser.Scene {
 
                 // Store references to the children for easy access
                 squareContainer.setData('square', square);
+                squareContainer.setData('squareStroke', squareStroke);
                 squareContainer.setData('letterText', letterText);
 
                 // Add squareContainer to the slotContainer
@@ -742,12 +788,15 @@ class WordWebGame extends Phaser.Scene {
             for (let i = 0; i < word.length; i++) {
                 let x = i * this.gridSize;
                 let y = 0;
-                // Create graphics object for word cell at position x,y
-                let square = this.add.graphics({ x: x, y: y });
-                square.fillStyle(0xeeeeee);
-                square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                square.lineStyle(this.wordStrokeWidth, this.wordStrokeColor);
-                square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                // Create image object for word cell at position x,y using word texture
+                let square = this.add.image(x, y, 'wordCellTexture');
+                square.setDisplaySize(this.squareWidth, this.squareWidth);
+
+                // Create graphics for stroke
+                let squareStroke = this.add.graphics({ x: x, y: y });
+                squareStroke.lineStyle(this.wordStrokeWidth, this.wordStrokeColor);
+                squareStroke.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+
                 let letter = this.add.text(x, y, word[i], {
                     fontFamily: this.letterFontFamily,
                     fontWeight: this.letterFontWeight,
@@ -757,6 +806,7 @@ class WordWebGame extends Phaser.Scene {
                 }).setOrigin(0.5);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
+                wordContainer.add(squareStroke);
                 wordContainer.add(letter);
             }
             wordContainer.setPosition(startX, baseY);
@@ -1260,18 +1310,10 @@ class WordWebGame extends Phaser.Scene {
         });
 
         // Flash the square red briefly
-        square.clear();
-        square.fillStyle(0xff6b6b);
-        square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-        square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-        square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+        square.setTint(0xff6b6b);
 
         this.time.delayedCall(500, () => {
-            square.clear();
-            square.fillStyle(0xf5f5f5);
-            square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-            square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-            square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+            square.clearTint();
         });
 
         // Make the hint text pulse/scale up briefly
@@ -1296,13 +1338,12 @@ class WordWebGame extends Phaser.Scene {
                 const hasHint = letterText && letterText.text && letterText.text.trim() !== '';
 
                 if (square && !squareContainer.getData('filled')) {
-                    // If cell has a hint, keep it green, otherwise reset to light gray
-                    const color = hasHint ? this.connectionHighlightColor : 0xf5f5f5;
-                    square.clear();
-                    square.fillStyle(color);
-                    square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                    // If cell has a hint, keep it green, otherwise reset to white
+                    if (hasHint) {
+                        square.setTint(this.connectionHighlightColor);
+                    } else {
+                        square.clearTint();
+                    }
                 }
             });
         });
@@ -1312,13 +1353,9 @@ class WordWebGame extends Phaser.Scene {
             if (wordContainer.getData('placed')) {
                 const word = wordContainer.getData('word');
                 wordContainer.list.forEach((child, idx) => {
-                    if (child.type === 'Graphics') {
-                        // Redraw with default color using centered coordinates
-                        child.clear();
-                        child.fillStyle(0xeeeeee);
-                        child.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                        child.lineStyle(this.wordStrokeWidth, this.wordStrokeColor);
-                        child.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                    if (child.type === 'Image') {
+                        // Clear tint to reset to default color
+                        child.clearTint();
                     }
                 });
             }
@@ -1341,22 +1378,14 @@ class WordWebGame extends Phaser.Scene {
                 const fromSquare = fromSlot.list[ruleInfo.squareIdx];
                 const fromRect = fromSquare.getData('square');
                 if (fromRect && fromSlot.getData('filled')) {
-                    fromRect.clear();
-                    fromRect.fillStyle(this.connectionHighlightColor);
-                    fromRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    fromRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    fromRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                    fromRect.setTint(this.connectionHighlightColor);
                 }
 
                 // Highlight to slot cell (but only if it's already filled, otherwise wait for animation)
                 const toSquare = toSlot.list[ruleInfo.toSquareIdx];
                 const toRect = toSquare.getData('square');
                 if (toRect && toSlot.getData('filled')) {
-                    toRect.clear();
-                    toRect.fillStyle(this.connectionHighlightColor);
-                    toRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    toRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    toRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                    toRect.setTint(this.connectionHighlightColor);
                 }
 
                 // Highlight word cell if placed on fromSlot
@@ -1365,14 +1394,10 @@ class WordWebGame extends Phaser.Scene {
                         wc.getData('placed') && wc.getData('slotIdx') === ruleInfo.slotIdx
                     );
                     if (wordContainer) {
-                        const wordSquares = wordContainer.list.filter(c => c.type === 'Graphics');
+                        const wordSquares = wordContainer.list.filter(c => c.type === 'Image');
                         if (wordSquares[ruleInfo.squareIdx]) {
                             const square = wordSquares[ruleInfo.squareIdx];
-                            square.clear();
-                            square.fillStyle(this.connectionHighlightColor);
-                            square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                            square.lineStyle(this.wordStrokeWidth, this.wordStrokeColor);
-                            square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                            square.setTint(this.connectionHighlightColor);
                         }
                     }
                 }
@@ -1383,14 +1408,10 @@ class WordWebGame extends Phaser.Scene {
                         wc.getData('placed') && wc.getData('slotIdx') === ruleInfo.toSlotIdx
                     );
                     if (wordContainer) {
-                        const wordSquares = wordContainer.list.filter(c => c.type === 'Graphics');
+                        const wordSquares = wordContainer.list.filter(c => c.type === 'Image');
                         if (wordSquares[ruleInfo.toSquareIdx]) {
                             const square = wordSquares[ruleInfo.toSquareIdx];
-                            square.clear();
-                            square.fillStyle(this.connectionHighlightColor);
-                            square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                            square.lineStyle(this.wordStrokeWidth, this.wordStrokeColor);
-                            square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                            square.setTint(this.connectionHighlightColor);
                         }
                     }
                 }
@@ -1461,11 +1482,7 @@ class WordWebGame extends Phaser.Scene {
                         // Reapply green background color
                         const hintRect = toSquareContainer.getData('square');
                         if (hintRect && !toSquareContainer.getData('filled')) {
-                            hintRect.clear();
-                            hintRect.fillStyle(this.connectionHighlightColor);
-                            hintRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                            hintRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                            hintRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                            hintRect.setTint(this.connectionHighlightColor);
                         }
                     } else {
                         // New hint - animate it only if animate is true
@@ -1478,11 +1495,7 @@ class WordWebGame extends Phaser.Scene {
                             // Apply green background color
                             const hintRect = toSquareContainer.getData('square');
                             if (hintRect && !toSquareContainer.getData('filled')) {
-                                hintRect.clear();
-                                hintRect.fillStyle(this.connectionHighlightColor);
-                                hintRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                                hintRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                                hintRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                                hintRect.setTint(this.connectionHighlightColor);
                             }
                         }
                     }
@@ -1524,11 +1537,7 @@ class WordWebGame extends Phaser.Scene {
                         // Reapply green background color
                         const hintRect = fromSquareContainer.getData('square');
                         if (hintRect && !fromSquareContainer.getData('filled')) {
-                            hintRect.clear();
-                            hintRect.fillStyle(this.connectionHighlightColor);
-                            hintRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                            hintRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                            hintRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                            hintRect.setTint(this.connectionHighlightColor);
                         }
                     } else {
                         // New hint - animate it only if animate is true
@@ -1541,11 +1550,7 @@ class WordWebGame extends Phaser.Scene {
                             // Apply green background color
                             const hintRect = fromSquareContainer.getData('square');
                             if (hintRect && !fromSquareContainer.getData('filled')) {
-                                hintRect.clear();
-                                hintRect.fillStyle(this.connectionHighlightColor);
-                                hintRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                                hintRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                                hintRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                                hintRect.setTint(this.connectionHighlightColor);
                             }
                         }
                     }
@@ -1618,11 +1623,7 @@ class WordWebGame extends Phaser.Scene {
                 if (hintSquareContainer) {
                     const hintRect = hintSquareContainer.getData('square');
                     if (hintRect && !hintSquareContainer.getData('filled')) {
-                        hintRect.clear();
-                        hintRect.fillStyle(this.connectionHighlightColor);
-                        hintRect.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                        hintRect.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                        hintRect.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                        hintRect.setTint(this.connectionHighlightColor);
                     }
                 }
 
@@ -1754,18 +1755,10 @@ class WordWebGame extends Phaser.Scene {
                 const worldPos = matrix.transformPoint(0, 0);
 
                 // Green flash on the square
-                square.clear();
-                square.fillStyle(0xC8E6C9);
-                square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                square.setTint(0xC8E6C9);
 
                 this.time.delayedCall(400, () => {
-                    square.clear();
-                    square.fillStyle(0xf5f5f5);
-                    square.fillRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
-                    square.lineStyle(this.slotStrokeWidth, this.slotStrokeColor);
-                    square.strokeRect(-this.squareWidth / 2, -this.squareWidth / 2, this.squareWidth, this.squareWidth);
+                    square.clearTint();
                 });
 
                 // Checkmark particle animation

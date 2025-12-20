@@ -17,6 +17,9 @@ var CONFIG = {
     SLOT_STROKE_COLOR: 0x000000,  // Black
     WORD_STROKE_WIDTH: 2,
     WORD_STROKE_COLOR: 0x333333,   // Dark gray
+
+    CELL_BG1_COLOR: 0xf7f7f7,  // White for normal cells
+    CELL_BG2_COLOR: 0xededed,  // Light gray for special cells (e.g., starting letters)
     
     // Font sizes
     WORD_CELL_FONT_SIZE: '40px',   // Font size for letters in word cells
