@@ -5,6 +5,56 @@
         {
           "length": 4,
           "anchorCol": -2,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        "BIRD",
+        "ACER"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "word",
+          "slot": 1,
+          "op": "swap",
+          "pairs": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "labelPos": 2
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
           "anchorRow": -7
         },
         {
@@ -34,54 +84,12 @@
         },
         {
           "type": "word",
-          "slot":1,
+          "slot": 1,
           "op": "reverse",
-          "labelPos":2
-
+          "labelPos": 2
         }
       ]
     },
-    {
-  "slots": [
-    {
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -6
-    },
-    {
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -2
-    }
-  ],
-  "words": [
-    "BIRD",
-    "ACER"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    },
-     {
-          "type": "word",
-          "slot":1,
-          "op": "swap",
-          "pairs":[[1,2],[2,3]],
-          "labelPos":2
-        }
-  ]
-},
     {
       "slots": [
         {
@@ -113,78 +121,78 @@
             "side": 0
           },
           "op": "+1",
-          "direction":"bi"
+          "direction": "bi"
         }
       ]
     },
     {
-  "slots": [
-    {
-      "length": 4,
-      "anchorCol": -4,
-      "anchorRow": -8
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -8
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -5
+        },
+        {
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        "CURD",
+        "CAVE",
+        "RULE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        }
+      ]
     },
-    {
-      "length": 4,
-      "anchorCol": -4,
-      "anchorRow": -5
-    },
-    {
-      "length": 4,
-      "anchorCol": 1,
-      "anchorRow": -2
-    }
-  ],
-  "words": [
-    "CURD",
-    "CAVE",
-    "RULE"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 3,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 3,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 3
-      },
-      "op": "same"
-    }
-  ]
-},
     {
       "slots": [
         {
@@ -219,10 +227,9 @@
         },
         {
           "type": "word",
-          "slot":1,
+          "slot": 1,
           "op": "reverse",
-          "labelPos":2
-
+          "labelPos": 2
         }
       ]
     },
