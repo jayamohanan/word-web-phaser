@@ -176,11 +176,11 @@ class WordWebGame extends Phaser.Scene {
             const slotIdx = dropZone.getData('slotIdx');
             const word = gameObject.getData('word');
             const slotContainer = this.slotSprites[slotIdx];
-            const slotSquares = slotContainer.list;
+            const slotCells = slotContainer.getData('slotCells');
 
             // Check if word length matches and slot is not filled
-            if (slotSquares.length !== word.length) return;
-            const slotFilled = slotSquares.some(sq => sq.getData('filled'));
+            if (slotCells.length !== word.length) return;
+            const slotFilled = slotCells.some(cell => cell.squareContainer.getData('filled'));
             if (slotFilled) return;
 
             // Get transformed word for constraint checking
@@ -211,7 +211,7 @@ class WordWebGame extends Phaser.Scene {
 
             const slotIdx = dropZone.getData('slotIdx');
             const slotContainer = this.slotSprites[slotIdx];
-            const slotSquares = slotContainer.list;
+            const slotCells = slotContainer.getData('slotCells');
 
             // Note: Square strokes are now baked into the texture
             // No need to reset stroke colors
@@ -239,15 +239,15 @@ class WordWebGame extends Phaser.Scene {
             const slotIdx = dropZone.getData('slotIdx');
             const slotContainer = this.slotSprites[slotIdx];
             console.log('slotContainer:', slotContainer);
-            const slotSquares = slotContainer.list;
-            console.log('slot squares:', slotSquares);
+            const slotCells = slotContainer.getData('slotCells');
+            console.log('slot cells:', slotCells);
             // Only allow drop if slot is not filled and word length matches slot length
             if (!gameObject || !gameObject.getData('word')) {
                 console.assert.log('No gameObject or word data');
                 this.tweenBackToBottom(gameObject);
             }
             const word = gameObject.getData('word');
-            if (slotSquares.length !== word.length) {
+            if (slotCells.length !== word.length) {
                 console.log('length mismatch, going back');
                 this.tweenBackToBottom(gameObject);
                 return;
@@ -262,7 +262,7 @@ class WordWebGame extends Phaser.Scene {
                 return;
             }
             // Check if slot is already filled
-            let slotFilled = slotSquares.some(squareContainer => squareContainer.getData('filled'));
+            let slotFilled = slotCells.some(cell => cell.squareContainer.getData('filled'));
             if (slotFilled) {
                 console.log('slot is already filled, going back');
                 this.tweenBackToBottom(gameObject);
@@ -282,7 +282,7 @@ class WordWebGame extends Phaser.Scene {
             }
 
             // If all checks pass, place the word over the slot
-            const firstSquareContainer = slotSquares[0];
+            const firstSquareContainer = slotCells[0].squareContainer;
             const offset = 0;
             const snapDuration = 200;
 
@@ -353,14 +353,13 @@ class WordWebGame extends Phaser.Scene {
             slotContainer.setData('filled', true);
             slotContainer.setData('word', willTransform ? word : transformedWord);
             slotContainer.setData('originalWord', word); // Store original for reference
-            slotSquares.forEach((squareContainer, i) => {
-                squareContainer.setData('filled', true);
+            slotCells.forEach((cell, i) => {
+                cell.squareContainer.setData('filled', true);
                 // Initially fill with original word - transformation will update if needed
-                squareContainer.setData('letter', willTransform ? word[i] : transformedWord[i]);
+                cell.squareContainer.setData('letter', willTransform ? word[i] : transformedWord[i]);
                 // Restore full opacity for placed words
-                const letterText = squareContainer.getData('letterText');
-                if (letterText) {
-                    letterText.setAlpha(1.0);
+                if (cell.letterText) {
+                    cell.letterText.setAlpha(1.0);
                 }
             });
 
@@ -388,8 +387,9 @@ class WordWebGame extends Phaser.Scene {
     }
     // Play sequential letter bounce animation when word is placed
     playPlacementAnimation(wordContainer, onComplete) {
-        const letters = wordContainer.list.filter(child => child.type === 'Text');
-        const squares = wordContainer.list.filter(child => child.type === 'Image');
+        const wordCells = wordContainer.getData('wordCells');
+        const letters = wordCells.map(cell => cell.letter);
+        const squares = wordCells.map(cell => cell.square);
 
         if (letters.length === 0) {
             if (onComplete) onComplete();
@@ -449,8 +449,9 @@ class WordWebGame extends Phaser.Scene {
             });
 
             // Reset all letter and square scales
-            const letters = wordContainer.list.filter(child => child.type === 'Text');
-            const squares = wordContainer.list.filter(child => child.type === 'Image');
+            const wordCells = wordContainer.getData('wordCells');
+            const letters = wordCells.map(cell => cell.letter);
+            const squares = wordCells.map(cell => cell.square);
             letters.forEach(letter => letter.setScale(1));
             squares.forEach(square => square.setScale(1));
 
@@ -460,7 +461,8 @@ class WordWebGame extends Phaser.Scene {
 
     // Apply word transformation with appropriate animation
     applyWordTransformation(wordContainer, originalWord, transformedWord, slotIdx, slotRule, onComplete) {
-        const letters = wordContainer.list.filter(child => child.type === 'Text');
+        const wordCells = wordContainer.getData('wordCells');
+        const letters = wordCells.map(cell => cell.letter);
 
         // Update word container's data so when dragged again it uses the new word
         wordContainer.setData('word', transformedWord);
@@ -619,26 +621,26 @@ class WordWebGame extends Phaser.Scene {
     // Helper method to update slot squares with transformed word
     updateSlotWithTransformedWord(slotIdx, transformedWord) {
         const slotContainer = this.slotSprites[slotIdx];
-        const slotSquares = slotContainer.list;
+        const slotCells = slotContainer.getData('slotCells');
 
         // Update slot container's word data to transformed word
         slotContainer.setData('word', transformedWord);
 
-        slotSquares.forEach((squareContainer, idx) => {
-            const slotLetterText = squareContainer.getData('letterText');
-            if (slotLetterText && idx < transformedWord.length) {
-                slotLetterText.setText(transformedWord[idx]);
-                slotLetterText.setAlpha(1.0);
+        slotCells.forEach((cell, idx) => {
+            if (cell.letterText && idx < transformedWord.length) {
+                cell.letterText.setText(transformedWord[idx]);
+                cell.letterText.setAlpha(1.0);
             }
             if (idx < transformedWord.length) {
-                squareContainer.setData('letter', transformedWord[idx]);
+                cell.squareContainer.setData('letter', transformedWord[idx]);
             }
         });
     }
 
     // Apply antonym transformation with flip animation (kept for backwards compatibility)
     applyAntonymTransformation(wordContainer, originalWord, antonymWord, slotIdx, onComplete) {
-        const letters = wordContainer.list.filter(child => child.type === 'Text');
+        const wordCells = wordContainer.getData('wordCells');
+        const letters = wordCells.map(cell => cell.letter);
         wordContainer.setData('word', antonymWord);
         const slotRule = { op: 'opposite' };
         this.applyWordTransformation(wordContainer, originalWord, antonymWord, slotIdx, slotRule, onComplete);
@@ -799,7 +801,9 @@ class WordWebGame extends Phaser.Scene {
         this.level.slots.forEach((slot, slotIdx) => {
             let slotContainer = this.add.container();
             slotContainer.setDepth(10); // Slots at depth 10
+            let slotCells = [];
 
+            // First pass: Create all shadow layers and background images
             for (let i = 0; i < slot.length; i++) {
                 let x = i * this.gridSize;
                 let y = 0;
@@ -819,6 +823,35 @@ class WordWebGame extends Phaser.Scene {
                 let square = this.add.image(0, 0, 'slotCellTexture');
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
 
+                // Add shadows and square first (text will be added in second pass)
+                squareContainer.add(shadowDark);
+                squareContainer.add(shadowMid);
+                squareContainer.add(square);
+                squareContainer.add(highlightEdge);
+
+                // Store data on the squareContainer (not the rectangle)
+                squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
+                squareContainer.setData('square', square);
+
+                // Add squareContainer to the slotContainer
+                slotContainer.add(squareContainer);
+                
+                // Store cell object
+                slotCells.push({
+                    squareContainer: squareContainer,
+                    shadowDark: shadowDark,
+                    shadowMid: shadowMid,
+                    highlightEdge: highlightEdge,
+                    square: square,
+                    letterText: null, // Will be set in second pass
+                    index: i
+                });
+            }
+            
+            // Second pass: Create all text elements (so they render above all squares)
+            for (let i = 0; i < slot.length; i++) {
+                const squareContainer = slotContainer.list[i];
+                
                 // Create the text centered at (0, 0) within the squareContainer
                 let letterText = this.add.text(0, 0, '', {
                     fontFamily: this.letterFontFamily,
@@ -827,24 +860,16 @@ class WordWebGame extends Phaser.Scene {
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
-
-                // Add all elements to the squareContainer (shadows first for layering)
-                squareContainer.add(shadowDark);
-                squareContainer.add(shadowMid);
-                squareContainer.add(square);
-                squareContainer.add(highlightEdge);
+                
                 squareContainer.add(letterText);
-
-                // Store data on the squareContainer (not the rectangle)
-                squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
-
-                // Store references to the children for easy access
-                squareContainer.setData('square', square);
                 squareContainer.setData('letterText', letterText);
-
-                // Add squareContainer to the slotContainer
-                slotContainer.add(squareContainer);
+                
+                // Update cell object with letter reference
+                slotCells[i].letterText = letterText;
             }
+            
+            // Store slotCells array on the slot container
+            slotContainer.setData('slotCells', slotCells);
 
             // Add swap pair dots if this slot has a swap rule
             const slotRule = this.getSlotRule(slotIdx);
@@ -938,13 +963,26 @@ class WordWebGame extends Phaser.Scene {
             let startX = this.sys.game.canvas.width / 2 - Utils.getFrameWidth(word.length) / 2;
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(0, 0);
+            let wordCells = [];
+            
+            // First, create all background squares and add them to container
             for (let i = 0; i < word.length; i++) {
                 let x = i * this.gridSize;
                 let y = 0;
                 // Create image object for word cell at position x,y using word texture (includes stroke)
                 let square = this.add.image(x, y, 'wordCellTexture');
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
-
+                square.setData({ wordIdx, letterIdx: i });
+                wordContainer.add(square);
+                
+                // Store cell object with references
+                wordCells.push({ square: square, letter: null, index: i });
+            }
+            
+            // Then, create all letters and add them to container (so they render above all squares)
+            for (let i = 0; i < word.length; i++) {
+                let x = i * this.gridSize;
+                let y = 0;
                 let letter = this.add.text(x, y, word[i], {
                     fontFamily: this.letterFontFamily,
                     fontWeight: this.letterFontWeight,
@@ -952,14 +990,17 @@ class WordWebGame extends Phaser.Scene {
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
-                square.setData({ wordIdx, letterIdx: i });
-                wordContainer.add(square);
                 wordContainer.add(letter);
+                
+                // Update cell object with letter reference
+                wordCells[i].letter = letter;
             }
+            
             wordContainer.setPosition(startX, baseY);
             wordContainer.setDepth(100);
             wordContainer.setData('initPosition', { x: startX, y: baseY });
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
+            wordContainer.setData('wordCells', wordCells); // Store wordCells array
             wordContainer.setInteractive(
                 new Phaser.Geom.Rectangle(
                     -this.gridSize / 2,
@@ -1042,10 +1083,10 @@ class WordWebGame extends Phaser.Scene {
         wordGroup.on('dragend', (pointer, dragX, dragY, dropped) => {
             // Reset all slot highlights when drag ends
             this.slotSprites.forEach(slotContainer => {
-                slotContainer.list.forEach(squareContainer => {
-                    const square = squareContainer.getData('square');
-                    if (square && !squareContainer.getData('filled')) {
-                        square.setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor); // Original stroke
+                const slotCells = slotContainer.getData('slotCells');
+                slotCells.forEach(cell => {
+                    if (cell.square && !cell.squareContainer.getData('filled')) {
+                        cell.square.setStrokeStyle(this.slotStrokeWidth, this.slotStrokeColor); // Original stroke
                     }
                 });
             });
@@ -1406,15 +1447,14 @@ class WordWebGame extends Phaser.Scene {
     // Check if placing a word would violate any constraint hints
     checkConstraintViolation(slotIdx, word) {
         const slotContainer = this.slotSprites[slotIdx];
-        const slotSquares = slotContainer.list;
+        const slotCells = slotContainer.getData('slotCells');
 
         // Check each square for hint violations
-        for (let i = 0; i < slotSquares.length; i++) {
-            const squareContainer = slotSquares[i];
-            const letterText = squareContainer.getData('letterText');
+        for (let i = 0; i < slotCells.length; i++) {
+            const cell = slotCells[i];
 
-            if (letterText) {
-                const hintLetter = letterText.text.trim().toUpperCase();
+            if (cell.letterText) {
+                const hintLetter = cell.letterText.text.trim().toUpperCase();
                 const wordLetter = word[i].toUpperCase();
 
                 // If there's a hint and it doesn't match the word letter, it's a violation
@@ -1843,10 +1883,10 @@ class WordWebGame extends Phaser.Scene {
         slotContainer.setData('word', null);
         slotContainer.setData('originalWord', null);
 
-        const slotSquares = slotContainer.list;
-        slotSquares.forEach(squareContainer => {
-            squareContainer.setData('filled', false);
-            squareContainer.setData('letter', null);
+        const slotCells = slotContainer.getData('slotCells');
+        slotCells.forEach(cell => {
+            cell.squareContainer.setData('filled', false);
+            cell.squareContainer.setData('letter', null);
         });
 
         // Recalculate all constraint hints without animation
