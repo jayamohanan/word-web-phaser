@@ -123,6 +123,10 @@ class WordWebGame extends Phaser.Scene {
 
         // Create dynamic textures for cell backgrounds
         this.createCellTextures();
+        
+        // Calculate max swap pairs and create grayscale textures for swap animations
+        this.maxSwapPairs = this.calculateMaxSwapPairs();
+        this.createSwapHighlightTextures();
 
         // Show portrait boundary for debugging (if enabled in config)
         if (CONFIG.SHOW_PORTRAIT_BOUNDARY) {
@@ -530,6 +534,8 @@ class WordWebGame extends Phaser.Scene {
     applySwapAnimation(wordContainer, letters, originalWord, transformedWord, slotIdx, slotRule, onComplete) {
         // Determine swap pairs
         let swapPairs = [];
+        const isSwapOp = slotRule.op === 'swap'; // Track if it's a swap operation (not reverse)
+        
         if (slotRule.op === 'reverse') {
             // Generate pairs for reverse: 1-n, 2-(n-1), etc., skipping middle if odd
             const len = originalWord.length;
@@ -547,11 +553,14 @@ class WordWebGame extends Phaser.Scene {
             return;
         }
 
+        // Get word cells for background highlighting (only for swap operation)
+        const wordCells = wordContainer.getData('wordCells');
+
         // Animate swaps simultaneously (letters only, not the bg cells)
         let completedSwaps = 0;
         const totalSwaps = swapPairs.length;
 
-        swapPairs.forEach(([idx1, idx2]) => {
+        swapPairs.forEach(([idx1, idx2], pairIndex) => {
             if (idx1 >= letters.length || idx2 >= letters.length) return;
 
             const letter1 = letters[idx1];
@@ -567,6 +576,24 @@ class WordWebGame extends Phaser.Scene {
             // Bring letters to front during animation so they stay visible above tiles
             letter1.setDepth(100000);
             letter2.setDepth(100000);
+            
+            // Highlight cell backgrounds during swap animation (only for swap operation, not reverse)
+            let square1, square2, originalTexture1, originalTexture2;
+            if (isSwapOp && wordCells && pairIndex < this.maxSwapPairs) {
+                const cell1 = wordCells[idx1];
+                const cell2 = wordCells[idx2];
+                square1 = cell1.square;
+                square2 = cell2.square;
+                
+                // Store original textures
+                originalTexture1 = square1.texture.key;
+                originalTexture2 = square2.texture.key;
+                
+                // Apply grayscale highlight texture
+                const highlightTexture = `swapHighlight${pairIndex}`;
+                square1.setTexture(highlightTexture);
+                square2.setTexture(highlightTexture);
+            }
 
             // Animate only letters swapping positions (not the cells/squares)
             const duration = 900;
@@ -592,6 +619,13 @@ class WordWebGame extends Phaser.Scene {
                 onComplete: () => {
                     console.log('after: letter1 depth ', letter1.depth);
                     console.log('after: letter2 depth ', letter2.depth);
+                    
+                    // Restore original cell textures (only for swap operation)
+                    if (isSwapOp && square1 && square2) {
+                        square1.setTexture(originalTexture1);
+                        square2.setTexture(originalTexture2);
+                    }
+                    
                     completedSwaps++;
                     if (completedSwaps === totalSwaps) {
                         // All swaps complete - now reset positions and update text values
@@ -718,6 +752,55 @@ class WordWebGame extends Phaser.Scene {
         slotCtx.strokeRect(this.slotStrokeWidth / 2, this.slotStrokeWidth / 2, size - this.slotStrokeWidth, size - this.slotStrokeWidth);
         
         slotTexture.refresh();
+    }
+
+    // Calculate maximum number of swap pairs in level
+    calculateMaxSwapPairs() {
+        if (!this.level.rules) return 0;
+        
+        let maxPairs = 0;
+        this.level.rules.forEach(rule => {
+            if (rule.type === 'word' && rule.op === 'swap' && rule.pairs) {
+                maxPairs = Math.max(maxPairs, rule.pairs.length);
+            }
+        });
+        
+        return maxPairs;
+    }
+
+    // Create grayscale textures for swap animation highlighting
+    createSwapHighlightTextures() {
+        const size = this.squareWidth;
+        
+        // Remove existing swap textures if they exist
+        for (let i = 0; i < this.maxSwapPairs; i++) {
+            const textureName = `swapHighlight${i}`;
+            if (this.textures.exists(textureName)) {
+                this.textures.remove(textureName);
+            }
+        }
+        
+        // Create grayscale textures with incrementing intensity
+        for (let i = 0; i < this.maxSwapPairs; i++) {
+            const textureName = `swapHighlight${i}`;
+            const texture = this.textures.createCanvas(textureName, size, size);
+            const ctx = texture.getSourceImage().getContext('2d');
+            
+            // Calculate grayscale value: 0.9, 0.7, 0.5, 0.3, etc.
+            const grayValue = Phaser.Math.Clamp(0.7 - i * 0.2, 0, 1);
+            const gray = Math.floor(255 * grayValue);
+            
+            // Fill with grayscale color
+            ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add stroke to match original texture
+            ctx.strokeStyle = '#' + this.wordStrokeColor.toString(16).padStart(6, '0');
+            ctx.lineWidth = this.wordStrokeWidth;
+            ctx.strokeRect(this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, size - this.wordStrokeWidth, size - this.wordStrokeWidth);
+            
+            texture.refresh();
+        }
     }
 
     createPortraitBoundary() {
@@ -875,11 +958,12 @@ class WordWebGame extends Phaser.Scene {
             const slotRule = this.getSlotRule(slotIdx);
             if (slotRule && slotRule.op === 'swap' && slotRule.pairs) {
                 // Dot positions: top-right, bottom-left, top-center, bottom-center
+                var gapFactor = 12;
                 const dotPositions = [
-                    { x: this.squareWidth / 2 - 6, y: -this.squareWidth / 2 + 6 }, // top-right
-                    { x: -this.squareWidth / 2 + 6, y: this.squareWidth / 2 - 6 }, // bottom-left
-                    { x: 0, y: -this.squareWidth / 2 + 6 }, // top-center
-                    { x: 0, y: this.squareWidth / 2 - 6 }  // bottom-center
+                    { x: this.squareWidth / 2 - gapFactor, y: -this.squareWidth / 2 + gapFactor }, // top-right
+                    { x: -this.squareWidth / 2 + gapFactor, y: this.squareWidth / 2 - gapFactor }, // bottom-left
+                    { x: 0, y: -this.squareWidth / 2 + gapFactor }, // top-center
+                    { x: 0, y: this.squareWidth / 2 - gapFactor }  // bottom-center
                 ];
 
                 slotRule.pairs.forEach((pair, pairIdx) => {
@@ -1138,6 +1222,12 @@ class WordWebGame extends Phaser.Scene {
                 //     labelText = rule.op; // fallback to operation name
                 // }
                 labelText = rule.op.charAt(0).toUpperCase() + rule.op.slice(1).toLowerCase();
+                
+                // Add pairs information for swap operation
+                if (rule.op === 'swap' && rule.pairs && rule.pairs.length > 0) {
+                    const pairsText = rule.pairs.map(pair => `${pair[0]}-${pair[1]}`).join(' ');
+                    labelText += ' ' + pairsText;
+                }
 
 
                 // Get slot bounds for positioning
@@ -1174,7 +1264,7 @@ class WordWebGame extends Phaser.Scene {
                 const label = this.add.text(labelX, labelY, labelText, {
                     fontFamily: 'Arial, sans-serif',
                     fontSize: '22px',
-                    color: '#888888', // Grey color
+                    color: '#434343ff', // Grey color
                     resolution: window.devicePixelRatio || 2
                 }).setDepth(15);
 
