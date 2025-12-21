@@ -1128,23 +1128,26 @@ class WordWebGame extends Phaser.Scene {
 
                 // Get the label text based on operation
                 let labelText = '';
-                if (rule.op === 'opposite') {
-                    labelText = 'Opposite';
-                } else if (rule.op === 'reverse') {
-                    labelText = 'Reverse';
-                } else if (rule.op === 'swap') {
-                    labelText = 'Swap';
-                } else {
-                    labelText = rule.op; // fallback to operation name
-                }
+                // if (rule.op === 'opposite') {
+                //     labelText = 'Opposite';
+                // } else if (rule.op === 'reverse') {
+                //     labelText = 'Reverse';
+                // } else if (rule.op === 'swap') {
+                //     labelText = 'Swap';
+                // } else {
+                //     labelText = rule.op; // fallback to operation name
+                // }
+                labelText = rule.op.charAt(0).toUpperCase() + rule.op.slice(1).toLowerCase();
+
 
                 // Get slot bounds for positioning
                 const bounds = slotContainer.getBounds();
+                
                 const labelPos = rule.labelPos !== undefined ? parseInt(rule.labelPos) : 0;
 
                 let labelX, labelY;
                 const sideGap = 11; // Gap for left/right positions
-                const topBottomGap = 6; // Reduced gap for top/bottom positions
+                const topBottomGap = -4; // Reduced gap for top/bottom positions
 
                 // Calculate position based on labelPos
                 switch (labelPos) {
