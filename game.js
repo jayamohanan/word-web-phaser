@@ -952,7 +952,6 @@ class WordWebGame extends Phaser.Scene {
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
-                letter.setDepth(1);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
                 wordContainer.add(letter);
