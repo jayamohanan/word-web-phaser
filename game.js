@@ -286,9 +286,9 @@ class WordWebGame extends Phaser.Scene {
             const offset = 0;
             const snapDuration = 200;
 
-            // Check if we need to apply transformation (opposite or reverse)
+            // Check if we need to apply transformation (opposite, reverse, or swap)
             const slotRule = this.getSlotRule(slotIdx);
-            const willTransform = slotRule && (slotRule.op === 'opposite' || slotRule.op === 'reverse') && transformedWord !== word;
+            const willTransform = slotRule && (slotRule.op === 'opposite' || slotRule.op === 'reverse' || slotRule.op === 'swap') && transformedWord !== word;
 
             this.tweens.add({
                 targets: gameObject,
@@ -298,8 +298,8 @@ class WordWebGame extends Phaser.Scene {
                 ease: 'Power2',
                 onComplete: () => {
                     if (willTransform) {
-                        // First: Apply transformation animation (flip letters)
-                        this.applyAntonymTransformation(gameObject, word, transformedWord, slotIdx, () => {
+                        // First: Apply transformation animation
+                        this.applyWordTransformation(gameObject, word, transformedWord, slotIdx, slotRule, () => {
                             // Second: Play placement animation with transformed word
                             this.playPlacementAnimation(gameObject, () => {
                                 // Third: Update hints and show arrows ONCE
@@ -458,14 +458,29 @@ class WordWebGame extends Phaser.Scene {
         }
     }
 
-    // Apply antonym transformation with flip animation
-    applyAntonymTransformation(wordContainer, originalWord, antonymWord, slotIdx, onComplete) {
+    // Apply word transformation with appropriate animation
+    applyWordTransformation(wordContainer, originalWord, transformedWord, slotIdx, slotRule, onComplete) {
         const letters = wordContainer.list.filter(child => child.type === 'Text');
 
         // Update word container's data so when dragged again it uses the new word
-        wordContainer.setData('word', antonymWord);
+        wordContainer.setData('word', transformedWord);
 
-        // Animate each letter flipping from original to antonym
+        // Determine which animation to use
+        if (slotRule.op === 'opposite') {
+            // Use flip animation for opposite
+            this.applyFlipAnimation(wordContainer, letters, transformedWord, slotIdx, onComplete);
+        } else if (slotRule.op === 'reverse' || slotRule.op === 'swap') {
+            // Use swap animation for reverse and swap (letters only, not cells)
+            this.applySwapAnimation(wordContainer, letters, originalWord, transformedWord, slotIdx, slotRule, onComplete);
+        } else {
+            // Fallback: just update text
+            this.updateSlotWithTransformedWord(slotIdx, transformedWord);
+            if (onComplete) onComplete();
+        }
+    }
+
+    // Flip animation for opposite transformation
+    applyFlipAnimation(wordContainer, letters, transformedWord, slotIdx, onComplete) {
         letters.forEach((letterText, i) => {
             // Scale down to 0.1 vertically
             this.tweens.add({
@@ -475,7 +490,7 @@ class WordWebGame extends Phaser.Scene {
                 ease: 'Quad.easeIn',
                 onComplete: () => {
                     // Change letter halfway through animation
-                    letterText.setText(antonymWord[i]);
+                    letterText.setText(transformedWord[i]);
 
                     // Scale back up
                     this.tweens.add({
@@ -494,22 +509,7 @@ class WordWebGame extends Phaser.Scene {
                                 yoyo: true,
                                 onComplete: () => {
                                     // Update slot squares with new letters
-                                    const slotContainer = this.slotSprites[slotIdx];
-                                    const slotSquares = slotContainer.list;
-
-                                    // Update slot container's word data to transformed word
-                                    slotContainer.setData('word', antonymWord);
-
-                                    slotSquares.forEach((squareContainer, idx) => {
-                                        const slotLetterText = squareContainer.getData('letterText');
-                                        if (slotLetterText) {
-                                            slotLetterText.setText(antonymWord[idx]);
-                                            slotLetterText.setAlpha(1.0);
-                                        }
-                                        squareContainer.setData('letter', antonymWord[idx]);
-                                    });
-
-                                    // Hints will be updated after placement animation, not here
+                                    this.updateSlotWithTransformedWord(slotIdx, transformedWord);
 
                                     // Call completion callback after last letter
                                     if (i === letters.length - 1 && onComplete) {
@@ -522,6 +522,120 @@ class WordWebGame extends Phaser.Scene {
                 }
             });
         });
+    }
+
+    // Swap animation for reverse and swap transformations (letters only, cells stay in place)
+    applySwapAnimation(wordContainer, letters, originalWord, transformedWord, slotIdx, slotRule, onComplete) {
+        // Determine swap pairs
+        let swapPairs = [];
+        if (slotRule.op === 'reverse') {
+            // Generate pairs for reverse: 1-n, 2-(n-1), etc., skipping middle if odd
+            const len = originalWord.length;
+            for (let i = 0; i < Math.floor(len / 2); i++) {
+                swapPairs.push([i, len - 1 - i]);
+            }
+        } else if (slotRule.op === 'swap' && slotRule.pairs) {
+            // Convert 1-based pairs to 0-based
+            swapPairs = slotRule.pairs.map(pair => [pair[0] - 1, pair[1] - 1]);
+        }
+
+        if (swapPairs.length === 0) {
+            this.updateSlotWithTransformedWord(slotIdx, transformedWord);
+            if (onComplete) onComplete();
+            return;
+        }
+
+        // Animate swaps simultaneously (letters only, not the bg cells)
+        let completedSwaps = 0;
+        const totalSwaps = swapPairs.length;
+
+        swapPairs.forEach(([idx1, idx2]) => {
+            if (idx1 >= letters.length || idx2 >= letters.length) return;
+
+            const letter1 = letters[idx1];
+            const letter2 = letters[idx2];
+
+            // Store original positions
+            const pos1 = { x: letter1.x, y: letter1.y };
+            const pos2 = { x: letter2.x, y: letter2.y };
+
+            // Bring letters to front during animation so they stay visible above tiles
+            letter1.setDepth(1000);
+            letter2.setDepth(1000);
+
+            // Animate only letters swapping positions (not the cells/squares)
+            const duration = 900;
+            const curve = 'Back.easeInOut';
+
+            // Move letter1 to position 2
+            this.tweens.add({
+                targets: letter1,
+                x: pos2.x,
+                y: pos2.y,
+                duration: duration,
+                ease: curve
+            });
+
+            // Move letter2 to position 1
+            this.tweens.add({
+                targets: letter2,
+                x: pos1.x,
+                y: pos1.y,
+                duration: duration,
+                ease: curve,
+                onComplete: () => {
+                    completedSwaps++;
+                    if (completedSwaps === totalSwaps) {
+                        // All swaps complete - now reset positions and update text values
+                        letters.forEach((letter, i) => {
+                            letter.setText(transformedWord[i]);
+                            // Reset depth after animation
+                            letter.setDepth(0);
+                        });
+                        
+                        // Reset all letters to their original container positions
+                        letters.forEach((letter, i) => {
+                            const originalX = i * this.gridSize;
+                            letter.x = originalX;
+                            letter.y = 0;
+                        });
+
+                        // Update slot with transformed word
+                        this.updateSlotWithTransformedWord(slotIdx, transformedWord);
+
+                        if (onComplete) onComplete();
+                    }
+                }
+            });
+        });
+    }
+
+    // Helper method to update slot squares with transformed word
+    updateSlotWithTransformedWord(slotIdx, transformedWord) {
+        const slotContainer = this.slotSprites[slotIdx];
+        const slotSquares = slotContainer.list;
+
+        // Update slot container's word data to transformed word
+        slotContainer.setData('word', transformedWord);
+
+        slotSquares.forEach((squareContainer, idx) => {
+            const slotLetterText = squareContainer.getData('letterText');
+            if (slotLetterText && idx < transformedWord.length) {
+                slotLetterText.setText(transformedWord[idx]);
+                slotLetterText.setAlpha(1.0);
+            }
+            if (idx < transformedWord.length) {
+                squareContainer.setData('letter', transformedWord[idx]);
+            }
+        });
+    }
+
+    // Apply antonym transformation with flip animation (kept for backwards compatibility)
+    applyAntonymTransformation(wordContainer, originalWord, antonymWord, slotIdx, onComplete) {
+        const letters = wordContainer.list.filter(child => child.type === 'Text');
+        wordContainer.setData('word', antonymWord);
+        const slotRule = { op: 'opposite' };
+        this.applyWordTransformation(wordContainer, originalWord, antonymWord, slotIdx, slotRule, onComplete);
     }
 
     tweenBackToBottom(gameObject) {
@@ -726,6 +840,42 @@ class WordWebGame extends Phaser.Scene {
                 slotContainer.add(squareContainer);
             }
 
+            // Add swap pair dots if this slot has a swap rule
+            const slotRule = this.getSlotRule(slotIdx);
+            if (slotRule && slotRule.op === 'swap' && slotRule.pairs) {
+                // Dot positions: top-right, bottom-left, top-center, bottom-center
+                const dotPositions = [
+                    { x: this.squareWidth / 2 - 6, y: -this.squareWidth / 2 + 6 }, // top-right
+                    { x: -this.squareWidth / 2 + 6, y: this.squareWidth / 2 - 6 }, // bottom-left
+                    { x: 0, y: -this.squareWidth / 2 + 6 }, // top-center
+                    { x: 0, y: this.squareWidth / 2 - 6 }  // bottom-center
+                ];
+
+                slotRule.pairs.forEach((pair, pairIdx) => {
+                    if (pairIdx >= dotPositions.length) return; // Max 4 pairs
+                    
+                    const dotPos = dotPositions[pairIdx];
+                    const dotRadius = 3;
+                    const dotColor = this.slotStrokeColor;
+
+                    // Add dot to first position in pair
+                    const idx1 = pair[0] - 1; // Convert to 0-based
+                    if (idx1 >= 0 && idx1 < slot.length) {
+                        const squareContainer1 = slotContainer.list[idx1];
+                        const dot1 = this.add.circle(dotPos.x, dotPos.y, dotRadius, dotColor);
+                        squareContainer1.add(dot1);
+                    }
+
+                    // Add dot to second position in pair
+                    const idx2 = pair[1] - 1; // Convert to 0-based
+                    if (idx2 >= 0 && idx2 < slot.length) {
+                        const squareContainer2 = slotContainer.list[idx2];
+                        const dot2 = this.add.circle(dotPos.x, dotPos.y, dotRadius, dotColor);
+                        squareContainer2.add(dot2);
+                    }
+                });
+            }
+
             // Position slot at anchor cell center, relative to grid origin
             const anchorCellPoints = Utils.getGridCellPoints(slot.anchorCol, slot.anchorRow, this.originX, this.originY, this.gridSize);
             slotContainer.setPosition(anchorCellPoints.center.x, anchorCellPoints.center.y);
@@ -748,7 +898,7 @@ class WordWebGame extends Phaser.Scene {
         return rules.find(rule => rule.type === 'word' && rule.slot === slotIdx);
     }
 
-    // Get the transformed word for a slot (apply opposite or reverse if rule exists)
+    // Get the transformed word for a slot (apply opposite, reverse, or swap if rule exists)
     getTransformedWord(word, slotIdx) {
         const slotRule = this.getSlotRule(slotIdx);
         if (slotRule && slotRule.op === 'opposite') {
@@ -757,6 +907,20 @@ class WordWebGame extends Phaser.Scene {
         } else if (slotRule && slotRule.op === 'reverse') {
             // Reverse the word: LOOP becomes POOL
             return word.split('').reverse().join('');
+        } else if (slotRule && slotRule.op === 'swap' && slotRule.pairs) {
+            // Swap letters according to pairs: [[1,2],[3,4]] swaps positions 1-2 and 3-4
+            const letters = word.split('');
+            slotRule.pairs.forEach(pair => {
+                const idx1 = pair[0] - 1; // Convert to 0-based index
+                const idx2 = pair[1] - 1;
+                if (idx1 >= 0 && idx1 < letters.length && idx2 >= 0 && idx2 < letters.length) {
+                    // Swap
+                    const temp = letters[idx1];
+                    letters[idx1] = letters[idx2];
+                    letters[idx2] = temp;
+                }
+            });
+            return letters.join('');
         }
         return word;
     }
@@ -921,6 +1085,8 @@ class WordWebGame extends Phaser.Scene {
                     labelText = 'Opposite';
                 } else if (rule.op === 'reverse') {
                     labelText = 'Reverse';
+                } else if (rule.op === 'swap') {
+                    labelText = 'Swap';
                 } else {
                     labelText = rule.op; // fallback to operation name
                 }
@@ -2046,11 +2212,13 @@ class WordWebGame extends Phaser.Scene {
 
                 // Play sequential letter bounce animation
                 this.playPlacementAnimation(wordContainer, () => {
-                    // Check if we need antonym transformation
+                    // Check if we need transformation
                     const slotRule = this.getSlotRule(slotIdx);
-                    if (slotRule && slotRule.op === 'antonym' && transformedWord !== word) {
-                        // Apply antonym transformation
-                        this.applyAntonymTransformation(wordContainer, word, transformedWord, slotIdx, () => {
+                    const willTransform = slotRule && (slotRule.op === 'opposite' || slotRule.op === 'reverse' || slotRule.op === 'swap') && transformedWord !== word;
+                    
+                    if (willTransform) {
+                        // Apply transformation
+                        this.applyWordTransformation(wordContainer, word, transformedWord, slotIdx, slotRule, () => {
                             this.completeAutopilotPlacement();
                         });
                     } else {
