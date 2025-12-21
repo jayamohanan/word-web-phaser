@@ -555,13 +555,16 @@ class WordWebGame extends Phaser.Scene {
             const letter1 = letters[idx1];
             const letter2 = letters[idx2];
 
+            console.log('before: letter1 deapth ', letter1.depth);
+            console.log('before: letter2 depth ', letter2.depth);
+
             // Store original positions
             const pos1 = { x: letter1.x, y: letter1.y };
             const pos2 = { x: letter2.x, y: letter2.y };
 
             // Bring letters to front during animation so they stay visible above tiles
-            letter1.setDepth(1000);
-            letter2.setDepth(1000);
+            letter1.setDepth(100000);
+            letter2.setDepth(100000);
 
             // Animate only letters swapping positions (not the cells/squares)
             const duration = 900;
@@ -574,6 +577,7 @@ class WordWebGame extends Phaser.Scene {
                 y: pos2.y,
                 duration: duration,
                 ease: curve
+                
             });
 
             // Move letter2 to position 1
@@ -584,6 +588,8 @@ class WordWebGame extends Phaser.Scene {
                 duration: duration,
                 ease: curve,
                 onComplete: () => {
+                    console.log('after: letter1 depth ', letter1.depth);
+                    console.log('after: letter2 depth ', letter2.depth);
                     completedSwaps++;
                     if (completedSwaps === totalSwaps) {
                         // All swaps complete - now reset positions and update text values
@@ -946,6 +952,7 @@ class WordWebGame extends Phaser.Scene {
                     color: '#222',
                     resolution: window.devicePixelRatio || 2 // High resolution for crisp text
                 }).setOrigin(0.5);
+                letter.setDepth(1);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
                 wordContainer.add(letter);
