@@ -278,10 +278,10 @@ class WordWebGame extends Phaser.Scene {
                 this.tweenBackToBottom(gameObject);
                 return;
             }
-
+console.log('word ', word);
             // Check if slot has opposite rule and get transformed word
             const transformedWord = this.getTransformedWord(word, slotIdx);
-
+console.log('transformedWord ', transformedWord);
             // Check constraint violations using transformed word
             const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
             if (violationResult.violated) {

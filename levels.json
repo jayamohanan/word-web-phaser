@@ -15,7 +15,7 @@
       ],
       "words": [
         "BIRD",
-        "ACER"
+        "ACRE"
       ],
       "rules": [
         {
@@ -38,7 +38,7 @@
           "op": "swap",
           "pairs": [
             [
-              1,
+              3,
               4
             ]
           ],
