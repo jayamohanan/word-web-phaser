@@ -37,6 +37,9 @@ class WordWebGame extends Phaser.Scene {
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
         this.load.image('handPointer', 'graphics/hand_pointer.webp');
+        this.load.image('hintButton', 'graphics/hint.png');
+        this.load.image('skipButton', 'graphics/skip.png');
+        this.load.image('retryButton', 'graphics/retry.png');
 
         // Load WebFontLoader script
         this.load.script('webfont', 'fonts/webfontloader.js');
@@ -141,6 +144,9 @@ class WordWebGame extends Phaser.Scene {
         // Initialize tutorial manager and create tutorial elements if level has tutorial data
         this.tutorialManager = new TutorialManager(this);
         this.tutorialManager.createTutorial(this.level, this.slotSprites, this.bankSprites);
+
+        // Create UI elements (level display and buttons)
+        this.createUIElements();
 
         // Removed debug red square at canvas center
 
@@ -801,6 +807,69 @@ class WordWebGame extends Phaser.Scene {
             
             texture.refresh();
         }
+    }
+
+    createUIElements() {
+        const { width, height } = this.sys.game.canvas;
+
+        // 1. Level number display at top center
+        const levelNumber = this.currentLevelIndex + 1; // Convert to 1-indexed
+        const levelText = this.add.text(width / 2, 30, `Level ${levelNumber}`, {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '28px',
+            fontWeight: 'bold',
+            color: '#333333',
+            resolution: window.devicePixelRatio || 2
+        }).setOrigin(0.5, 0).setDepth(10001);
+
+        // 2. UI Buttons
+        const buttonSize = 80; // Button display size
+        const buttonGap = 50; // Gap between buttons
+        const sideMargin = 20; // Distance from screen edge
+        const bottomMargin = height * 0.20; // 10% from bottom
+
+        // Hint button - right side, 10% from bottom
+        const hintButton = this.add.image(width - sideMargin - buttonSize / 2, height - bottomMargin, 'hintButton')
+            // .setDisplaySize(buttonSize, buttonSize)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(10001);
+
+        hintButton.on('pointerdown', () => {
+            // TODO: Implement hint functionality
+            console.log('Hint button clicked');
+        });
+
+        const hintBtnScale = buttonSize / hintButton.width;
+        hintButton.setScale(hintBtnScale);
+        // Skip button - right side, directly above hint button
+        const skipButton = this.add.image(
+            width - sideMargin - buttonSize / 2, 
+            height - bottomMargin - buttonSize - buttonGap, 
+            'skipButton'
+        )
+            // .setDisplaySize(buttonSize, buttonSize)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(10001);
+
+        skipButton.on('pointerdown', () => {
+            // TODO: Implement skip functionality
+            console.log('Skip button clicked');
+        });
+        const skipBtnScale = buttonSize / skipButton.width;
+        skipButton.setScale(skipBtnScale);
+
+        // Retry button - left side, symmetrically opposite to hint button
+        const retryButton = this.add.image(sideMargin + buttonSize / 2, height - bottomMargin, 'retryButton')
+            // .setDisplaySize(buttonSize, buttonSize)
+            .setInteractive({ useHandCursor: true })
+            .setDepth(10001);
+
+        retryButton.on('pointerdown', () => {
+            // Reload the current level (reset everything)
+            this.scene.restart({ levelIndex: this.currentLevelIndex });
+        });
+        const retryBtnScale = buttonSize / retryButton.width;
+        retryButton.setScale(retryBtnScale);
     }
 
     createPortraitBoundary() {
