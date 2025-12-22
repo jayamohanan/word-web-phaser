@@ -306,7 +306,9 @@ console.log('transformedWord ', transformedWord);
                         // First: Apply transformation animation
                         this.applyWordTransformation(gameObject, word, transformedWord, slotIdx, slotRule, () => {
                             // After transformation, check constraints with transformed word
+                            console.log('transformedWord ',transformedWord);
                             const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
+                            console.log('violationResult', violationResult);
                             if (violationResult.violated) {
                                 console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
                                 
@@ -579,9 +581,6 @@ console.log('transformedWord ', transformedWord);
             const letter1 = letters[idx1];
             const letter2 = letters[idx2];
 
-            console.log('before: letter1 deapth ', letter1.depth);
-            console.log('before: letter2 depth ', letter2.depth);
-
             // Store original positions
             const pos1 = { x: letter1.x, y: letter1.y };
             const pos2 = { x: letter2.x, y: letter2.y };
@@ -667,6 +666,7 @@ console.log('transformedWord ', transformedWord);
 
     // Helper method to update slot squares with transformed word
     updateSlotWithTransformedWord(slotIdx, transformedWord) {
+        return;
         const slotContainer = this.slotSprites[slotIdx];
         const slotCells = slotContainer.getData('slotCells');
 
@@ -1345,9 +1345,13 @@ console.log('transformedWord ', transformedWord);
                 // }
                 labelText = rule.op.charAt(0).toUpperCase() + rule.op.slice(1).toLowerCase();
                 
+                const swapArrow = '⇄'; // Unicode arrow
+                // const swapArrow = '🔁'; // Unicode arrow
+                // const swapArrow = '-'; // fallback if you ever need ASCII only
+
                 // Add pairs information for swap operation
                 if (rule.op === 'swap' && rule.pairs && rule.pairs.length > 0) {
-                    const pairsText = rule.pairs.map(pair => `${pair[0]}-${pair[1]}`).join(' ');
+                    const pairsText = rule.pairs.map(pair => `${pair[0]} ${swapArrow} ${pair[1]}`).join(' ');
                     labelText += ' ' + pairsText;
                 }
 
@@ -1661,15 +1665,17 @@ console.log('transformedWord ', transformedWord);
 
     // Check if placing a word would violate any constraint hints
     checkConstraintViolation(slotIdx, word) {
+        console.log('f: checkConstraintViolation ', slotIdx, word);
         const slotContainer = this.slotSprites[slotIdx];
         const slotCells = slotContainer.getData('slotCells');
 
         // Check each square for hint violations
         for (let i = 0; i < slotCells.length; i++) {
             const cell = slotCells[i];
-
             if (cell.letterText) {
+                console.log('cell.letterText ',cell.letterText.text);
                 const hintLetter = cell.letterText.text.trim().toUpperCase();
+                console.log('hintLetter ',hintLetter, 'i = ',i );
                 const wordLetter = word[i].toUpperCase();
 
                 // If there's a hint and it doesn't match the word letter, it's a violation
@@ -1683,7 +1689,7 @@ console.log('transformedWord ', transformedWord);
                 }
             }
         }
-
+console.log('jaya');
         // No violations found
         return { violated: false };
     }
