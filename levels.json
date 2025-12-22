@@ -1,5 +1,40 @@
 {
   "levels": [
+     {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "TRUE",
+        "LOVE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "+1",
+          "direction": "bi"
+        }
+      ]
+    },
     {
       "slots": [
         {
@@ -83,42 +118,6 @@
             ]
           ],
           "labelPos": 2
-        }
-      ]
-    },
-    
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -6
-        },
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "TRUE",
-        "LOVE"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "+1",
-          "direction": "bi"
         }
       ]
     },
