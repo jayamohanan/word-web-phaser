@@ -85,6 +85,7 @@ class WordWebGame extends Phaser.Scene {
         this.selectedWord = null;
         this.wordBankArea = [];
         this.wordSlotArea = [];
+        this.activeArrowAnimations = new Map(); // Track arrow animations by slot index
 
         // Normalize rules: convert negative increments to positive with reversed direction
         if (this.level.rules) {
@@ -295,6 +296,12 @@ console.log('transformedWord ', transformedWord);
             const slotRule = this.getSlotRule(slotIdx);
             const willTransform = slotRule && (slotRule.op === 'opposite' || slotRule.op === 'reverse' || slotRule.op === 'swap') && transformedWord !== word;
 
+            // Store original word before any transformation (for reverting if dragged mid-animation)
+            if (willTransform) {
+                gameObject.setData('originalWordBeforeTransform', word);
+            }
+            gameObject.setData('animationsComplete', false);
+
             this.tweens.add({
                 targets: gameObject,
                 x: dropZone.x + offset,
@@ -333,6 +340,10 @@ console.log('transformedWord ', transformedWord);
                                 this.updateConnectionHighlights();
                                 this.showConnectionValidationFeedback(slotIdx);
 
+                                // Mark all animations as complete - word is now locked in transformed state
+                                gameObject.setData('animationsComplete', true);
+                                gameObject.setData('originalWordBeforeTransform', null); // No longer needed
+
                                 // Check if autopilot can place an obvious word
                                 if (this.autopilotEnabled && !this.autopilotInProgress) {
                                     this.time.delayedCall(800, () => {
@@ -365,6 +376,9 @@ console.log('transformedWord ', transformedWord);
                             this.updateAllConstraintHints(true);
                             this.updateConnectionHighlights();
                             this.showConnectionValidationFeedback(slotIdx);
+
+                            // Mark all animations as complete
+                            gameObject.setData('animationsComplete', true);
 
                             // Check if autopilot can place an obvious word
                             if (this.autopilotEnabled && !this.autopilotInProgress) {
@@ -475,6 +489,33 @@ console.log('transformedWord ', transformedWord);
             squares.forEach(square => square.setScale(1));
 
             wordContainer.setData('placementAnimationTweens', null);
+        }
+    }
+
+    // Cancel all animations related to word placement (transformation, placement, etc.)
+    cancelAllWordAnimations(wordContainer) {
+        // Cancel placement animation
+        this.cancelPlacementAnimation(wordContainer);
+
+        // Kill all tweens on the word container itself
+        this.tweens.killTweensOf(wordContainer);
+
+        // Kill all tweens on letters and squares
+        const wordCells = wordContainer.getData('wordCells');
+        if (wordCells) {
+            const letters = wordCells.map(cell => cell.letter);
+            const squares = wordCells.map(cell => cell.square);
+            
+            letters.forEach(letter => {
+                this.tweens.killTweensOf(letter);
+                letter.setScale(1);
+                letter.setDepth(0);
+            });
+            
+            squares.forEach(square => {
+                this.tweens.killTweensOf(square);
+                square.setScale(1);
+            });
         }
     }
 
@@ -1236,13 +1277,26 @@ console.log('transformedWord ', transformedWord);
                     const slotIdx = wordContainer.getData('slotIdx');
                     console.log(`Dragging word from slot ${slotIdx}, removing temporarily`);
 
-                    // Cancel any ongoing placement animation
-                    this.cancelPlacementAnimation(wordContainer);
+                    // Check if all animations are complete
+                    const animationsComplete = wordContainer.getData('animationsComplete');
+                    const originalWord = wordContainer.getData('originalWordBeforeTransform');
+                    
+                    if (!animationsComplete && originalWord) {
+                        // Animations not complete - reset to original word
+                        console.log('Animations incomplete, resetting to original word:', originalWord);
+                        this.resetWordToOriginal(wordContainer, originalWord);
+                    }
+                    // If animations complete, keep the transformed word
+
+                    // Cancel all ongoing animations (transformation, placement, hints)
+                    this.cancelAllWordAnimations(wordContainer);
 
                     this.removeWordFromSlot(slotIdx);
                     // Clear placement data immediately to prevent phantom connections
                     wordContainer.setData('placed', false);
                     wordContainer.setData('slotIdx', null);
+                    wordContainer.setData('animationsComplete', false);
+                    wordContainer.setData('originalWordBeforeTransform', null);
                 }
             });
             wordContainer.on('drag', (pointer, dragX, dragY) => {
@@ -1999,12 +2053,21 @@ console.log('jaya');
         arrow.setPosition(sourcePos.x, sourcePos.y);
         arrow.setRotation(angle);
 
+        // Store reference to source slot for cancellation tracking
+        const sourceSlotIdx = sourceSquareContainer.parentContainer?.getData ? 
+            this.slotSprites.indexOf(sourceSquareContainer.parentContainer) : -1;
+        
+        if (sourceSlotIdx !== -1) {
+            arrow.setData('sourceSlotIdx', sourceSlotIdx);
+        }
+
         // Calculate travel duration based on distance
         const distance = Phaser.Math.Distance.Between(sourcePos.x, sourcePos.y, targetPos.x, targetPos.y);
         const duration = Math.max(300, Math.min(600, distance * 0.5)); // Between 300-600ms
 
-        // Animate arrow traveling along the connection line
-        this.tweens.add({
+        // Track this animation
+        let cancelled = false;
+        const arrowTween = this.tweens.add({
             targets: arrow,
             x: targetPos.x,
             y: targetPos.y,
@@ -2017,6 +2080,21 @@ console.log('jaya');
                 arrow.setScale(scale);
             },
             onComplete: () => {
+                // Check if animation was cancelled
+                if (cancelled) {
+                    arrow.destroy();
+                    return;
+                }
+
+                // Remove from active animations tracking
+                if (sourceSlotIdx !== -1) {
+                    const slotAnimations = this.activeArrowAnimations.get(sourceSlotIdx);
+                    if (slotAnimations) {
+                        const index = slotAnimations.findIndex(a => a.arrow === arrow);
+                        if (index !== -1) slotAnimations.splice(index, 1);
+                    }
+                }
+
                 // Arrow reached destination - create burst effect at center of target cell
                 const targetCellBounds = targetSquareContainer.getBounds();
                 const targetCellCenter = {
@@ -2043,6 +2121,9 @@ console.log('jaya');
                     targetLetterText.setAlpha(0.5); // Half transparent for hints
                     targetLetterText.setScale(0); // Start invisible
 
+                    // Store reference for potential cancellation
+                    targetLetterText.setData('hintBouncing', true);
+
                     // Bounce in animation
                     this.tweens.add({
                         targets: targetLetterText,
@@ -2055,13 +2136,32 @@ console.log('jaya');
                                 targets: targetLetterText,
                                 scale: 1,
                                 duration: 150,
-                                ease: 'Quad.easeInOut'
+                                ease: 'Quad.easeInOut',
+                                onComplete: () => {
+                                    targetLetterText.setData('hintBouncing', false);
+                                }
                             });
                         }
                     });
                 }
             }
         });
+
+        // Track this arrow animation for potential cancellation
+        if (sourceSlotIdx !== -1) {
+            if (!this.activeArrowAnimations.has(sourceSlotIdx)) {
+                this.activeArrowAnimations.set(sourceSlotIdx, []);
+            }
+            this.activeArrowAnimations.get(sourceSlotIdx).push({
+                arrow,
+                tween: arrowTween,
+                cancel: () => {
+                    cancelled = true;
+                    arrowTween.stop();
+                    arrow.destroy();
+                }
+            });
+        }
     }
 
     // Create a burst effect when particle reaches destination
@@ -2098,6 +2198,12 @@ console.log('jaya');
         const slotContainer = this.slotSprites[slotIdx];
         if (!slotContainer) return;
 
+        // Cancel any active arrow animations originating from this slot
+        this.cancelArrowAnimationsFromSlot(slotIdx);
+
+        // Cancel any bouncing hint animations in all target slots
+        this.cancelBouncingHintAnimations();
+
         // Mark slot as empty
         slotContainer.setData('filled', false);
         slotContainer.setData('word', null);
@@ -2114,6 +2220,42 @@ console.log('jaya');
 
         // Update connection highlights
         this.updateConnectionHighlights();
+    }
+
+    // Cancel all arrow animations originating from a specific slot
+    cancelArrowAnimationsFromSlot(slotIdx) {
+        const animations = this.activeArrowAnimations.get(slotIdx);
+        if (animations) {
+            // Cancel all arrow animations for this slot
+            animations.forEach(anim => {
+                if (anim.cancel) anim.cancel();
+            });
+            // Clear the array
+            this.activeArrowAnimations.set(slotIdx, []);
+        }
+    }
+
+    // Cancel any hint letters that are currently bouncing
+    cancelBouncingHintAnimations() {
+        this.slotSprites.forEach(slotContainer => {
+            const slotSquares = slotContainer.list;
+            slotSquares.forEach(squareContainer => {
+                const letterText = squareContainer.getData('letterText');
+                if (letterText && letterText.getData('hintBouncing')) {
+                    // Stop all tweens on this letter
+                    this.tweens.killTweensOf(letterText);
+                    // Clear the hint
+                    letterText.setText('');
+                    letterText.setScale(1);
+                    letterText.setData('hintBouncing', false);
+                    // Remove green tint
+                    const square = squareContainer.getData('square');
+                    if (square) {
+                        square.clearTint();
+                    }
+                }
+            });
+        });
     }
 
     // Show feedback when hints are satisfied by placing a word
