@@ -279,19 +279,14 @@ class WordWebGame extends Phaser.Scene {
                 return;
             }
 console.log('word ', word);
-            // Check if slot has opposite rule and get transformed word
+            // Get transformed word for later use
             const transformedWord = this.getTransformedWord(word, slotIdx);
 console.log('transformedWord ', transformedWord);
-            // Check constraint violations using transformed word
-            const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
-            if (violationResult.violated) {
-                console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
-                this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
-                this.tweenBackToBottom(gameObject);
-                return;
-            }
 
-            // If all checks pass, place the word over the slot
+            // Note: Constraint checking now happens AFTER transformation animation
+            // This provides visual feedback to the user about why a word was rejected
+
+            // Proceed to snap and potentially transform the word
             const firstSquareContainer = slotCells[0].squareContainer;
             const offset = 0;
             const snapDuration = 200;
@@ -310,6 +305,25 @@ console.log('transformedWord ', transformedWord);
                     if (willTransform) {
                         // First: Apply transformation animation
                         this.applyWordTransformation(gameObject, word, transformedWord, slotIdx, slotRule, () => {
+                            // After transformation, check constraints with transformed word
+                            const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
+                            if (violationResult.violated) {
+                                console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
+                                
+                                // Instantly reset word to original (no animation)
+                                this.resetWordToOriginal(gameObject, word);
+                                
+                                // Show violation feedback
+                                this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
+                                
+                                // Tween back to word bank
+                                this.tweenBackToBottom(gameObject);
+                                return;
+                            }
+
+                            // Transformation successful and constraints met - mark as placed
+                            this.markWordAsPlaced(gameObject, slotIdx, slotContainer, slotCells, word, transformedWord, true);
+
                             // Second: Play placement animation with transformed word
                             this.playPlacementAnimation(gameObject, () => {
                                 // Third: Update hints and show arrows ONCE
@@ -331,6 +345,18 @@ console.log('transformedWord ', transformedWord);
                             });
                         });
                     } else {
+                        // No transformation: Check constraints immediately
+                        const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
+                        if (violationResult.violated) {
+                            console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
+                            this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
+                            this.tweenBackToBottom(gameObject);
+                            return;
+                        }
+
+                        // Constraints met - mark as placed
+                        this.markWordAsPlaced(gameObject, slotIdx, slotContainer, slotCells, word, transformedWord, false);
+
                         // No transformation: Play placement animation then show hints
                         this.playPlacementAnimation(gameObject, () => {
                             // After placement animation, update hints and show arrows
@@ -351,25 +377,6 @@ console.log('transformedWord ', transformedWord);
                             });
                         });
                     }
-                }
-            });
-
-            gameObject.setData('placed', true);
-            gameObject.setData('slotIdx', slotIdx);
-
-            // Mark slot as filled
-            // If transformation will occur, store original word initially and transformation will update it
-            // Otherwise, store the final word directly
-            slotContainer.setData('filled', true);
-            slotContainer.setData('word', willTransform ? word : transformedWord);
-            slotContainer.setData('originalWord', word); // Store original for reference
-            slotCells.forEach((cell, i) => {
-                cell.squareContainer.setData('filled', true);
-                // Initially fill with original word - transformation will update if needed
-                cell.squareContainer.setData('letter', willTransform ? word[i] : transformedWord[i]);
-                // Restore full opacity for placed words
-                if (cell.letterText) {
-                    cell.letterText.setAlpha(1.0);
                 }
             });
 
@@ -684,6 +691,52 @@ console.log('transformedWord ', transformedWord);
         wordContainer.setData('word', antonymWord);
         const slotRule = { op: 'opposite' };
         this.applyWordTransformation(wordContainer, originalWord, antonymWord, slotIdx, slotRule, onComplete);
+    }
+
+    // Instantly reset word to original (no animation) - used when transformation fails constraint check
+    resetWordToOriginal(wordContainer, originalWord) {
+        const wordCells = wordContainer.getData('wordCells');
+        const letters = wordCells.map(cell => cell.letter);
+
+        // Update word container's data back to original
+        wordContainer.setData('word', originalWord);
+
+        // Instantly update all letter texts to original word
+        letters.forEach((letter, i) => {
+            letter.setText(originalWord[i]);
+            letter.setScale(1); // Reset any scale changes
+            letter.setDepth(0); // Reset depth
+            
+            // Reset letter position to original container position
+            const originalX = i * this.gridSize;
+            letter.x = originalX;
+            letter.y = 0;
+        });
+
+        // Stop any ongoing tweens on these letters
+        letters.forEach(letter => {
+            this.tweens.killTweensOf(letter);
+        });
+    }
+
+    // Mark word as placed and slot as filled - only called after constraint validation
+    markWordAsPlaced(gameObject, slotIdx, slotContainer, slotCells, originalWord, transformedWord, wasTransformed) {
+        gameObject.setData('placed', true);
+        gameObject.setData('slotIdx', slotIdx);
+
+        // Mark slot as filled with the final word (transformed or original)
+        slotContainer.setData('filled', true);
+        slotContainer.setData('word', transformedWord);
+        slotContainer.setData('originalWord', originalWord); // Store original for reference
+        
+        slotCells.forEach((cell, i) => {
+            cell.squareContainer.setData('filled', true);
+            cell.squareContainer.setData('letter', transformedWord[i]);
+            // Restore full opacity for placed words
+            if (cell.letterText) {
+                cell.letterText.setAlpha(1.0);
+            }
+        });
     }
 
     tweenBackToBottom(gameObject) {
