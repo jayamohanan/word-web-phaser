@@ -617,7 +617,8 @@ console.log('transformedWord ', transformedWord);
                 x: pos2.x,
                 y: pos2.y,
                 duration: duration,
-                ease: curve
+                ease: curve,
+                easeParams: [4]
                 
             });
 
@@ -628,10 +629,8 @@ console.log('transformedWord ', transformedWord);
                 y: pos1.y,
                 duration: duration,
                 ease: curve,
+                easeParams: [4],
                 onComplete: () => {
-                    console.log('after: letter1 depth ', letter1.depth);
-                    console.log('after: letter2 depth ', letter2.depth);
-                    
                     // Restore original cell textures (only for swap operation)
                     if (isSwapOp && square1 && square2) {
                         square1.setTexture(originalTexture1);
