@@ -153,9 +153,12 @@ class WordWebGame extends Phaser.Scene {
 
         // Add right-click handler to remove words from slots
         this.input.on('pointerdown', (pointer) => {
+            console.log('jaya');
             if (pointer.rightButtonDown()) {
+                console.log('rightButtonDown');
                 // Check if clicking on a filled slot to remove the word
                 this.slotSprites.forEach((slotContainer, slotIdx) => {
+                    console.log(`Checking slot ${slotIdx}`);
                     if (slotContainer.getData('filled')) {
                         const bounds = slotContainer.getBounds();
                         if (bounds.contains(pointer.worldX, pointer.worldY)) {
@@ -249,9 +252,7 @@ class WordWebGame extends Phaser.Scene {
             }
             const slotIdx = dropZone.getData('slotIdx');
             const slotContainer = this.slotSprites[slotIdx];
-            console.log('slotContainer:', slotContainer);
             const slotCells = slotContainer.getData('slotCells');
-            console.log('slot cells:', slotCells);
             // Only allow drop if slot is not filled and word length matches slot length
             if (!gameObject || !gameObject.getData('word')) {
                 console.assert.log('No gameObject or word data');
@@ -279,10 +280,8 @@ class WordWebGame extends Phaser.Scene {
                 this.tweenBackToBottom(gameObject);
                 return;
             }
-console.log('word ', word);
             // Get transformed word for later use
             const transformedWord = this.getTransformedWord(word, slotIdx);
-console.log('transformedWord ', transformedWord);
 
             // Note: Constraint checking now happens AFTER transformation animation
             // This provides visual feedback to the user about why a word was rejected
@@ -313,9 +312,7 @@ console.log('transformedWord ', transformedWord);
                         // First: Apply transformation animation
                         this.applyWordTransformation(gameObject, word, transformedWord, slotIdx, slotRule, () => {
                             // After transformation, check constraints with transformed word
-                            console.log('transformedWord ',transformedWord);
                             const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
-                            console.log('violationResult', violationResult);
                             if (violationResult.violated) {
                                 console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
                                 
@@ -1718,7 +1715,6 @@ console.log('transformedWord ', transformedWord);
 
     // Check if placing a word would violate any constraint hints
     checkConstraintViolation(slotIdx, word) {
-        console.log('f: checkConstraintViolation ', slotIdx, word);
         const slotContainer = this.slotSprites[slotIdx];
         const slotCells = slotContainer.getData('slotCells');
 
@@ -1726,9 +1722,7 @@ console.log('transformedWord ', transformedWord);
         for (let i = 0; i < slotCells.length; i++) {
             const cell = slotCells[i];
             if (cell.letterText) {
-                console.log('cell.letterText ',cell.letterText.text);
                 const hintLetter = cell.letterText.text.trim().toUpperCase();
-                console.log('hintLetter ',hintLetter, 'i = ',i );
                 const wordLetter = word[i].toUpperCase();
 
                 // If there's a hint and it doesn't match the word letter, it's a violation
@@ -1742,7 +1736,6 @@ console.log('transformedWord ', transformedWord);
                 }
             }
         }
-console.log('jaya');
         // No violations found
         return { violated: false };
     }
