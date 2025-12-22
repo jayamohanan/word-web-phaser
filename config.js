@@ -40,5 +40,10 @@ var CONFIG = {
     PLACEMENT_ANIMATION_MODE: 'cell',  // 'letter' = letters only, 'cell' = letters + squares
     
     // Debug mode - show portrait boundary (720x1280 area) on desktop
-    SHOW_PORTRAIT_BOUNDARY: true  // Set to false to hide portrait boundary in debug
+    SHOW_PORTRAIT_BOUNDARY: true,  // Set to false to hide portrait boundary in debug
+
+    //Game Scores
+    HINT_SCORE_1 : '5',
+    HINT_SCORE_2 : '10'   
+    
 };
