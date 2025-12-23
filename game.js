@@ -37,6 +37,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.json('levels', 'levels.json');
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
+        this.load.audio('invalidSound', 'sounds/invalid.ogg');
         this.load.image('handPointer', 'graphics/hand_pointer.webp');
         this.load.image('hintButton', 'graphics/hint.png');
         this.load.image('skipButton', 'graphics/skip.png');
@@ -340,9 +341,9 @@ class WordWebGame extends Phaser.Scene {
                 duration: snapDuration,
                 ease: 'Power2',
                 onComplete: () => {
-                    // Clear snap tween reference and continue with sequence
+                    // Clear snap tween reference and notify sequence to continue
                     stateMachine.clearSnapTween();
-                    // The sequence will continue automatically via playNextSequence
+                    stateMachine.notifySnapComplete();
                 }
             });
 
@@ -360,9 +361,6 @@ class WordWebGame extends Phaser.Scene {
                     }
                 }
             });
-
-            // Play fill sound
-            this.sound.play('fillSound');
 
             // Note: Hints, connection highlights, and arrows are now updated AFTER 
             // the sequential letter animation completes (see playPlacementAnimation callback)

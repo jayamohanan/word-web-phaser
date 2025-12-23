@@ -83,6 +83,24 @@ export class WordAnimationStateMachine {
     }
 
     /**
+     * Set callback to be called when snap completes
+     */
+    setSnapCompleteCallback(callback) {
+        this.snapCompleteCallback = callback;
+    }
+
+    /**
+     * Notify that snap has completed
+     */
+    notifySnapComplete() {
+        if (this.snapCompleteCallback) {
+            const callback = this.snapCompleteCallback;
+            this.snapCompleteCallback = null;
+            callback();
+        }
+    }
+
+    /**
      * Transition to a new state
      */
     setState(newState) {
@@ -326,10 +344,14 @@ export class AnimationSequenceBuilder {
             {
                 state: WordState.SNAPPING,
                 action: (context, onComplete) => {
-                    // Snap animation is running in parallel, wait for it
-                    // The snap tween will call clearSnapTween() when done
-                    // For now, just continue - snap completes on its own
-                    onComplete();
+                    // Wait for snap tween to complete
+                    const stateMachine = wordContainer.getData('stateMachine');
+                    if (stateMachine) {
+                        stateMachine.setSnapCompleteCallback(onComplete);
+                    } else {
+                        // Fallback if no state machine
+                        onComplete();
+                    }
                 }
             },
             {
@@ -368,6 +390,9 @@ export class AnimationSequenceBuilder {
                 state: WordState.SNAP_BACK,
                 action: (context, onComplete) => {
                     if (context.validationFailed) {
+                        // Play invalid sound for constraint mismatch
+                        scene.sound.play('invalidSound', { volume: 0.6 });
+                        
                         // Return to bank
                         scene.tweenBackToBottom(wordContainer);
                         // After tween starts, update state
@@ -388,6 +413,9 @@ export class AnimationSequenceBuilder {
                 state: WordState.ACCEPTED_ANIMATION,
                 action: (context, onComplete) => {
                     if (!context.validationFailed) {
+                        // Play tap sound - word is confirmed fit
+                        scene.sound.play('fillSound');
+                        
                         // Play placement animation
                         scene.playPlacementAnimation(wordContainer, onComplete);
                     } else {
@@ -446,8 +474,14 @@ export class AnimationSequenceBuilder {
             {
                 state: WordState.SNAPPING,
                 action: (context, onComplete) => {
-                    // Snap animation handled outside, just continue
-                    onComplete();
+                    // Wait for snap tween to complete
+                    const stateMachine = wordContainer.getData('stateMachine');
+                    if (stateMachine) {
+                        stateMachine.setSnapCompleteCallback(onComplete);
+                    } else {
+                        // Fallback if no state machine
+                        onComplete();
+                    }
                 }
             },
             {
@@ -472,6 +506,9 @@ export class AnimationSequenceBuilder {
                 state: WordState.SNAP_BACK,
                 action: (context, onComplete) => {
                     if (context.validationFailed) {
+                        // Play invalid sound for constraint mismatch
+                        scene.sound.play('invalidSound', { volume: 0.6 });
+                        
                         // Return to bank
                         scene.tweenBackToBottom(wordContainer);
                         // After tween starts, update state
@@ -491,6 +528,9 @@ export class AnimationSequenceBuilder {
                 state: WordState.ACCEPTED_ANIMATION,
                 action: (context, onComplete) => {
                     if (!context.validationFailed) {
+                        // Play tap sound - word is confirmed fit
+                        scene.sound.play('fillSound');
+                        
                         // Play placement animation
                         scene.playPlacementAnimation(wordContainer, onComplete);
                     } else {
