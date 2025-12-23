@@ -1,6 +1,7 @@
 import * as Utils from './utils.js';
 import WinScene from './WinScene.js';
 import TutorialManager from './TutorialManager.js';
+import { WordAnimationStateMachine, AnimationSequenceBuilder, WordState } from './WordAnimationStateMachine.js';
 
 // Main Phaser game logic for Word Web
 // Loads level data, renders slots, words, and handles drag-drop
@@ -247,9 +248,10 @@ class WordWebGame extends Phaser.Scene {
             });
         });
 
-        // Global drop handler for slots
+        // Global drop handler for slots - using state machine
         this.input.on('drop', (pointer, gameObject, dropZone) => {
-            // Only handle if dropZone is   a slot square
+            console.log('*******drop');
+            // Only handle if dropZone is a slot square
             if (!dropZone || dropZone.getData('slotIdx') === undefined) {
                 console.assert.log('No drop zone or slotIdx');
                 return;
@@ -272,21 +274,14 @@ class WordWebGame extends Phaser.Scene {
                 this.tweenBackToBottom(gameObject);
                 return;
             }
+            
             const word = gameObject.getData('word');
             if (slotCells.length !== word.length) {
                 console.log('length mismatch, going back');
                 this.tweenBackToBottom(gameObject);
                 return;
-                // Animate back to original position
-                this.tweens.add({
-                    targets: gameObject,
-                    x: 0,
-                    y: 0,
-                    duration: 300,
-                    ease: 'Power2'
-                });
-                return;
             }
+            
             // Check if slot is already filled
             let slotFilled = slotCells.some(cell => cell.squareContainer.getData('filled'));
             if (slotFilled) {
@@ -294,125 +289,69 @@ class WordWebGame extends Phaser.Scene {
                 this.tweenBackToBottom(gameObject);
                 return;
             }
-            // Get transformed word for later use
+            
+            // Get transformed word and slot rule
             const transformedWord = this.getTransformedWord(word, slotIdx);
-
-            // Note: Constraint checking now happens AFTER transformation animation
-            // This provides visual feedback to the user about why a word was rejected
-
-            // Proceed to snap and potentially transform the word
-            const firstSquareContainer = slotCells[0].squareContainer;
-            const offset = 0;
-            const snapDuration = 200;
-
-            // Check if we need to apply transformation (opposite, reverse, or swap)
             const slotRule = this.getSlotRule(slotIdx);
             const willTransform = slotRule && (slotRule.op === 'opposite' || slotRule.op === 'reverse' || slotRule.op === 'swap') && transformedWord !== word;
 
-            // Store original word before any transformation (for reverting if dragged mid-animation)
+            // Store original word before any transformation
             if (willTransform) {
                 gameObject.setData('originalWordBeforeTransform', word);
             }
             gameObject.setData('animationsComplete', false);
 
-            this.tweens.add({
+            // Get state machine
+            const stateMachine = gameObject.getData('stateMachine');
+            if (!stateMachine) {
+                console.error('No state machine found on word container');
+                return;
+            }
+
+            // Build appropriate animation sequence
+            let sequence;
+            if (willTransform) {
+                sequence = AnimationSequenceBuilder.buildTransformationSequence(
+                    this, gameObject, slotIdx, transformedWord, slotRule
+                );
+            } else {
+                sequence = AnimationSequenceBuilder.buildSimplePlacementSequence(
+                    this, gameObject, slotIdx, word
+                );
+            }
+
+            // Start the animation sequence NOW (before snap completes)
+            stateMachine.startSequence(sequence, {
+                originalWord: word,
+                transformedWord: transformedWord,
+                slotIdx: slotIdx,
+                slotContainer: slotContainer,
+                slotCells: slotCells
+            });
+
+            // Snap to slot position
+            const offset = 0;
+            const snapDuration = 200;
+            
+            const snapTween = this.tweens.add({
                 targets: gameObject,
                 x: dropZone.x + offset,
                 y: dropZone.y - offset,
                 duration: snapDuration,
                 ease: 'Power2',
                 onComplete: () => {
-                    if (willTransform) {
-                        // First: Apply transformation animation
-                        this.applyWordTransformation(gameObject, word, transformedWord, slotIdx, slotRule, () => {
-                            // After transformation, check constraints with transformed word
-                            const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
-                            if (violationResult.violated) {
-                                console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
-                                
-                                // Instantly reset word to original (no animation)
-                                this.resetWordToOriginal(gameObject, word);
-                                
-                                // Show violation feedback
-                                this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
-                                
-                                // Tween back to word bank
-                                this.tweenBackToBottom(gameObject);
-                                return;
-                            }
-
-                            // Transformation successful and constraints met - mark as placed
-                            this.markWordAsPlaced(gameObject, slotIdx, slotContainer, slotCells, word, transformedWord, true);
-
-                            // Second: Play placement animation with transformed word
-                            this.playPlacementAnimation(gameObject, () => {
-                                // Third: Update hints and show arrows ONCE
-                                this.updateAllConstraintHints(true);
-                                this.updateConnectionHighlights();
-                                this.showConnectionValidationFeedback(slotIdx);
-
-                                // Mark all animations as complete - word is now locked in transformed state
-                                gameObject.setData('animationsComplete', true);
-                                gameObject.setData('originalWordBeforeTransform', null); // No longer needed
-
-                                // Check if autopilot can place an obvious word
-                                if (this.autopilotEnabled && !this.autopilotInProgress) {
-                                    this.time.delayedCall(800, () => {
-                                        this.tryAutopilotPlacement();
-                                    });
-                                }
-
-                                // Check win condition
-                                this.time.delayedCall(500, () => {
-                                    this.checkWinCondition();
-                                });
-                            });
-                        });
-                    } else {
-                        // No transformation: Check constraints immediately
-                        const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
-                        if (violationResult.violated) {
-                            console.log(`Constraint violation at square ${violationResult.squareIdx}: expected "${violationResult.expectedLetter}", got "${violationResult.actualLetter}"`);
-                            this.showConstraintViolationFeedback(slotIdx, violationResult.squareIdx);
-                            this.tweenBackToBottom(gameObject);
-                            return;
-                        }
-
-                        // Constraints met - mark as placed
-                        this.markWordAsPlaced(gameObject, slotIdx, slotContainer, slotCells, word, transformedWord, false);
-
-                        // No transformation: Play placement animation then show hints
-                        this.playPlacementAnimation(gameObject, () => {
-                            // After placement animation, update hints and show arrows
-                            this.updateAllConstraintHints(true);
-                            this.updateConnectionHighlights();
-                            this.showConnectionValidationFeedback(slotIdx);
-
-                            // Mark all animations as complete
-                            gameObject.setData('animationsComplete', true);
-
-                            // Check if autopilot can place an obvious word
-                            if (this.autopilotEnabled && !this.autopilotInProgress) {
-                                this.time.delayedCall(800, () => {
-                                    this.tryAutopilotPlacement();
-                                });
-                            }
-
-                            // Check win condition
-                            this.time.delayedCall(500, () => {
-                                this.checkWinCondition();
-                            });
-                        });
-                    }
+                    // Clear snap tween reference and continue with sequence
+                    stateMachine.clearSnapTween();
+                    // The sequence will continue automatically via playNextSequence
                 }
             });
 
-            // Note: Square strokes are now baked into the texture
-            // No need to reset stroke colors
+            // Register the snap tween with state machine for cancellation tracking
+            stateMachine.setSnapTween(snapTween);
 
-            // Reset connection lines connected to this slot
+            // Reset connection line highlights
             this.connectionLines.forEach(line => {
-                if (line.setStrokeStyle) { // Only for line objects, not text labels
+                if (line.setStrokeStyle) {
                     const lineSlotIdx = line.getData('slotIdx');
                     const lineToSlotIdx = line.getData('toSlotIdx');
                     if (lineSlotIdx === slotIdx || lineToSlotIdx === slotIdx) {
@@ -1258,6 +1197,11 @@ class WordWebGame extends Phaser.Scene {
             wordContainer.setData('initPosition', { x: startX, y: baseY });
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
             wordContainer.setData('wordCells', wordCells); // Store wordCells array
+            
+            // Create and attach state machine to word container
+            const stateMachine = new WordAnimationStateMachine(this, wordContainer);
+            wordContainer.setData('stateMachine', stateMachine);
+            
             wordContainer.setInteractive(
                 new Phaser.Geom.Rectangle(
                     -this.gridSize / 2,
@@ -1269,6 +1213,8 @@ class WordWebGame extends Phaser.Scene {
             this.input.setDraggable(wordContainer);
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
+                console.log('=== DRAGSTART EVENT FIRED ===');
+                
                 // Ignore if autopilot is in progress
                 if (this.autopilotInProgress) return;
 
@@ -1283,27 +1229,37 @@ class WordWebGame extends Phaser.Scene {
                 // Bring to front while dragging
                 wordContainer.setDepth(2000);
 
-                // If this word was placed on a slot, remove it from that slot temporarily
+                // Get state machine to handle drag start
+                const stateMachine = wordContainer.getData('stateMachine');
+                console.log('State machine exists:', !!stateMachine);
+                
+                if (stateMachine) {
+                    console.log('Current state:', stateMachine.getState());
+                    console.log('Is placing:', stateMachine.isPlacing());
+                    console.log('Is animating:', stateMachine.isAnimating());
+                    
+                    // If word is being placed, cancel all animations and reset
+                    if (stateMachine.isPlacing()) {
+                        console.log('Word is being placed - cancelling animations');
+                        const originalWord = wordContainer.getData('originalWordBeforeTransform');
+                        if (originalWord) {
+                            console.log('Resetting to original word:', originalWord);
+                            this.resetWordToOriginal(wordContainer, originalWord);
+                        }
+                    }
+                    
+                    // Notify state machine of drag start (will cancel animations)
+                    const wasCancelled = stateMachine.onDragStart();
+                    console.log('Animations were cancelled:', wasCancelled);
+                }
+
+                // If this word was placed on a slot, remove it from that slot
                 if (wordContainer.getData('placed')) {
                     const slotIdx = wordContainer.getData('slotIdx');
-                    console.log(`Dragging word from slot ${slotIdx}, removing temporarily`);
-
-                    // Check if all animations are complete
-                    const animationsComplete = wordContainer.getData('animationsComplete');
-                    const originalWord = wordContainer.getData('originalWordBeforeTransform');
-                    
-                    if (!animationsComplete && originalWord) {
-                        // Animations not complete - reset to original word
-                        console.log('Animations incomplete, resetting to original word:', originalWord);
-                        this.resetWordToOriginal(wordContainer, originalWord);
-                    }
-                    // If animations complete, keep the transformed word
-
-                    // Cancel all ongoing animations (transformation, placement, hints)
-                    this.cancelAllWordAnimations(wordContainer);
+                    console.log(`Dragging placed word from slot ${slotIdx}`);
 
                     this.removeWordFromSlot(slotIdx);
-                    // Clear placement data immediately to prevent phantom connections
+                    // Clear placement data
                     wordContainer.setData('placed', false);
                     wordContainer.setData('slotIdx', null);
                     wordContainer.setData('animationsComplete', false);
@@ -1315,6 +1271,7 @@ class WordWebGame extends Phaser.Scene {
                 wordContainer.y = pointer.y - dragOffset.y;
             });
             wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
+                console.log('88888dragend event fired, dropped=', dropped);
                 // Restore normal depth
                 wordContainer.setDepth(100);
 
