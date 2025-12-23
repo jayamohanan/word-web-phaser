@@ -204,8 +204,13 @@ class WordWebGame extends Phaser.Scene {
             const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
             if (violationResult.violated) return;
 
-            // Note: Square strokes are now baked into the texture
-            // Highlighting is handled by connection highlights and tinting
+            // Highlight slot cells with blue tint
+            slotCells.forEach(cell => {
+                const square = cell.squareContainer.getData('square');
+                if (square) {
+                    square.setTint(0x2196F3); // Blue highlight
+                }
+            });
 
             // Highlight connection lines connected to this slot
             this.connectionLines.forEach(line => {
@@ -227,8 +232,13 @@ class WordWebGame extends Phaser.Scene {
             const slotContainer = this.slotSprites[slotIdx];
             const slotCells = slotContainer.getData('slotCells');
 
-            // Note: Square strokes are now baked into the texture
-            // No need to reset stroke colors
+            // Clear blue tint from slot cells
+            slotCells.forEach(cell => {
+                const square = cell.squareContainer.getData('square');
+                if (square) {
+                    square.clearTint(); // Remove highlight
+                }
+            });
 
             // Reset connection lines connected to this slot
             this.connectionLines.forEach(line => {

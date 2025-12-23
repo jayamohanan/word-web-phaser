@@ -1,5 +1,6 @@
 {
   "levels": [
+
      {
       "slots": [
         {
@@ -35,6 +36,19 @@
         }
       ]
     },
+        {
+  "slots": [
+    {
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -2
+    }
+  ],
+  "words": [
+    "JAYA"
+  ],
+  "rules": []
+},
     {
       "slots": [
         {
