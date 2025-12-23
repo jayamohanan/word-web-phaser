@@ -192,17 +192,11 @@ class WordWebGame extends Phaser.Scene {
             const slotContainer = this.slotSprites[slotIdx];
             const slotCells = slotContainer.getData('slotCells');
 
-            // Check if word length matches and slot is not filled
+            // Only check length constraint and if slot is filled during hover
+            // Other constraints (hints/connections) will be checked after drop and snap
             if (slotCells.length !== word.length) return;
             const slotFilled = slotCells.some(cell => cell.squareContainer.getData('filled'));
             if (slotFilled) return;
-
-            // Get transformed word for constraint checking
-            const transformedWord = this.getTransformedWord(word, slotIdx);
-
-            // Check constraint violations using transformed word
-            const violationResult = this.checkConstraintViolation(slotIdx, transformedWord);
-            if (violationResult.violated) return;
 
             // Highlight slot cells with blue tint
             slotCells.forEach(cell => {
@@ -263,10 +257,20 @@ class WordWebGame extends Phaser.Scene {
             const slotIdx = dropZone.getData('slotIdx');
             const slotContainer = this.slotSprites[slotIdx];
             const slotCells = slotContainer.getData('slotCells');
+            
+            // Clear hover highlight immediately on drop
+            slotCells.forEach(cell => {
+                const square = cell.squareContainer.getData('square');
+                if (square) {
+                    square.clearTint();
+                }
+            });
+            
             // Only allow drop if slot is not filled and word length matches slot length
             if (!gameObject || !gameObject.getData('word')) {
                 console.assert.log('No gameObject or word data');
                 this.tweenBackToBottom(gameObject);
+                return;
             }
             const word = gameObject.getData('word');
             if (slotCells.length !== word.length) {
