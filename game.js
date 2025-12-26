@@ -1008,7 +1008,7 @@ class WordWebGame extends Phaser.Scene {
                 // Bottom-right inner shadow (dark) - creates depth
                 let shadowDark = this.add.rectangle(5, 5, this.squareWidth, this.squareWidth, 0x000000, 0.35);
                 // Secondary softer shadow for more depth
-                let shadowMid = this.add.rectangle(15, 15, this.squareWidth, this.squareWidth, 0x666666, 0.2);
+                let shadowMid = this.add.rectangle(12, 12, this.squareWidth, this.squareWidth, 0x666666, 0.2);
                 // Top-left edge highlight for beveled look
                 let highlightEdge = this.add.rectangle(-2, -2, this.squareWidth - 4, this.squareWidth - 4, 0xffffff, 0.6);
 
