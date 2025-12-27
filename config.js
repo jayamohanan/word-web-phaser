@@ -33,6 +33,18 @@ var CONFIG = {
     SLOT_MARKER_FONT_FAMILY: 'Poppins-LightItalic',
     SLOT_MARKER_FONT_WEIGHT: '300', // Font weight for slot markers (use '300', '400', '500', or '700' as string)
 
+    // Background gradients (Poki gaming style)
+    // Outer background gradient (full canvas)
+    OUTER_BG_GRADIENT_TOP: '#7B2CBF',    // Deep purple (top)
+    OUTER_BG_GRADIENT_BOTTOM: '#FF6B9D', // Pink (bottom)
+    
+    // Portrait area gradient (720x1280 game area)
+    // PORTRAIT_BG_GRADIENT_TOP: '#5390D9',    // Blue (top)
+    // PORTRAIT_BG_GRADIENT_BOTTOM: '#48BFE3', // Cyan (bottom)
+
+     PORTRAIT_BG_GRADIENT_TOP: '#FFEE91',    // Blue (top)
+    PORTRAIT_BG_GRADIENT_BOTTOM: '#ABE0F0', // Cyan (bottom)
+
     
     // Connection highlight color
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells

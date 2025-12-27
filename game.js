@@ -83,6 +83,10 @@ class WordWebGame extends Phaser.Scene {
         this.totalLevels = levels.levels.length;
         // Use modulo to loop levels
         this.level = levels.levels[this.currentLevelIndex % this.totalLevels];
+        
+        // Create gradient backgrounds
+        this.createGradientBackgrounds();
+        
         this.slotSprites = [];
         this.bankSprites = [];
         this.connectionLines = [];
@@ -963,6 +967,27 @@ class WordWebGame extends Phaser.Scene {
             duration: 200,
             ease: 'Power2'
         });
+    }
+
+    createGradientBackgrounds() {
+        const { width, height } = this.sys.game.canvas;
+        
+        // Convert hex colors to integers
+        const portraitTopColor = parseInt(CONFIG.PORTRAIT_BG_GRADIENT_TOP.replace('#', '0x'));
+        const portraitBottomColor = parseInt(CONFIG.PORTRAIT_BG_GRADIENT_BOTTOM.replace('#', '0x'));
+        
+        // Portrait area gradient (covers entire 720x1280 canvas)
+        // The outer gradient is handled by HTML body CSS for the flanks
+        const portraitGradient = this.add.graphics();
+        portraitGradient.fillGradientStyle(
+            portraitTopColor,
+            portraitTopColor,
+            portraitBottomColor,
+            portraitBottomColor,
+            1 // Alpha
+        );
+        portraitGradient.fillRect(0, 0, width, height);
+        portraitGradient.setDepth(-999); // Behind game elements
     }
 
     createAreas() {
@@ -3020,7 +3045,7 @@ export default WordWebGame;
 const config = {
     type: Phaser.WEBGL, // Use WebGL for better rendering quality
     parent: 'game-container',
-    backgroundColor: '#f0f8ff',
+    backgroundColor: 'transparent', // Using gradient backgrounds instead
     scene: [WordWebGame, WinScene],
 
     // Crisp rendering settings
