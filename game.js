@@ -371,6 +371,7 @@ class WordWebGame extends Phaser.Scene {
         const wordCells = wordContainer.getData('wordCells');
         const letters = wordCells.map(cell => cell.letter);
         const squares = wordCells.map(cell => cell.square);
+        const slotIdx = wordContainer.getData('slotIdx');
 
         if (letters.length === 0) {
             if (onComplete) onComplete();
@@ -405,6 +406,11 @@ class WordWebGame extends Phaser.Scene {
                     // Reset scale to ensure it's back to normal
                     letter.setScale(1);
                     if (square) square.setScale(1);
+
+                    // Show induced letter in correlated slot(s) as this letter completes
+                    if (slotIdx !== undefined) {
+                        this.showInducedLetter(slotIdx, i);
+                    }
 
                     // If this is the last letter, call onComplete
                     if (i === letters.length - 1) {
@@ -723,6 +729,224 @@ class WordWebGame extends Phaser.Scene {
             // Restore full opacity for placed words
             if (cell.letterText) {
                 cell.letterText.setAlpha(1.0);
+            }
+        });
+
+        // Check for words rules and trigger induced placements
+        this.triggerInducedPlacements(slotIdx, transformedWord);
+    }
+
+    // Trigger induced word placements based on words rules
+    triggerInducedPlacements(sourceSlotIdx, sourceWord) {
+        const wordsRule = this.getWordsRule(sourceSlotIdx);
+        if (!wordsRule) return;
+
+        const correlatedSlots = this.getCorrelatedSlots(sourceSlotIdx);
+        
+        correlatedSlots.forEach(targetSlotIdx => {
+            // Check if target slot is already filled
+            const targetSlotContainer = this.slotSprites[targetSlotIdx];
+            if (targetSlotContainer.getData('filled')) {
+                return; // Skip if already filled
+            }
+
+            // Apply words transformation to get the induced word
+            let inducedWord = this.applyWordsTransformation(sourceWord, wordsRule);
+
+            // Setup induced placement - letters will appear as source slot letters animate
+            this.setupInducedPlacement(targetSlotIdx, sourceWord, inducedWord);
+        });
+    }
+
+    // Setup induced placement - creates actual word container at target slot
+    setupInducedPlacement(targetSlotIdx, originalWord, finalWord) {
+        const targetSlotContainer = this.slotSprites[targetSlotIdx];
+        
+        // Mark slot as being filled (but not fully filled yet)
+        targetSlotContainer.setData('filling', true);
+        targetSlotContainer.setData('targetWord', finalWord);
+        
+        // Create an actual word container (identical twin) at the target slot position
+        const targetSlotCells = targetSlotContainer.getData('slotCells');
+        const slotX = targetSlotCells[0].squareContainer.getWorldTransformMatrix().tx;
+        const slotY = targetSlotCells[0].squareContainer.getWorldTransformMatrix().ty;
+        
+        // Create word container
+        let wordContainer = this.add.container(slotX, slotY);
+        let wordCells = [];
+        
+        // Create all background squares first (hidden initially)
+        for (let i = 0; i < finalWord.length; i++) {
+            let x = i * this.gridSize;
+            let y = 0;
+            let square = this.add.image(x, y, 'wordCellTexture');
+            square.setDisplaySize(this.squareWidth, this.squareWidth);
+            square.setData({ wordIdx: -1, letterIdx: i });
+            square.setAlpha(0); // Start hidden
+            wordContainer.add(square);
+            wordCells.push({ square: square, letter: null, index: i });
+        }
+        
+        // Create all letters (initially hidden)
+        for (let i = 0; i < finalWord.length; i++) {
+            let x = i * this.gridSize;
+            let y = 0;
+            let letter = this.add.text(x, y, finalWord[i], {
+                fontFamily: this.letterFontFamily,
+                fontWeight: this.letterFontWeight,
+                fontSize: this.wordCellFontSize,
+                color: '#222',
+                resolution: window.devicePixelRatio || 2
+            }).setOrigin(0.5);
+            letter.setAlpha(0); // Start hidden
+            wordContainer.add(letter);
+            wordCells[i].letter = letter;
+        }
+        
+        wordContainer.setDepth(100);
+        wordContainer.setData('word', finalWord);
+        wordContainer.setData('placed', true);
+        wordContainer.setData('slotIdx', targetSlotIdx);
+        wordContainer.setData('isInduced', true);
+        wordContainer.setData('wordCells', wordCells);
+        wordContainer.setData('initPosition', { x: slotX, y: slotY });
+        
+        // Create state machine
+        const stateMachine = new WordAnimationStateMachine(this, wordContainer);
+        wordContainer.setData('stateMachine', stateMachine);
+        
+        // Make it draggable (identical behavior to original word)
+        wordContainer.setInteractive(
+            new Phaser.Geom.Rectangle(
+                -this.gridSize / 2,
+                -this.gridSize / 2,
+                this.gridSize * finalWord.length,
+                this.gridSize
+            ),
+            Phaser.Geom.Rectangle.Contains
+        );
+        this.input.setDraggable(wordContainer);
+        
+        let dragOffset = { x: 0, y: 0 };
+        wordContainer.on('dragstart', (pointer) => {
+            if (this.autopilotInProgress) return;
+            
+            if (this.tutorialManager) {
+                this.tutorialManager.cleanup();
+            }
+            
+            dragOffset.x = pointer.x - wordContainer.x;
+            dragOffset.y = pointer.y - wordContainer.y;
+            wordContainer.setDepth(2000);
+            
+            const stateMachine = wordContainer.getData('stateMachine');
+            if (stateMachine && stateMachine.isPlacing()) {
+                const originalWord = wordContainer.getData('originalWordBeforeTransform');
+                if (originalWord) {
+                    this.resetWordToOriginal(wordContainer, originalWord);
+                }
+                stateMachine.onDragStart();
+            }
+            
+            // Remove from slot and delete correlated words
+            if (wordContainer.getData('placed')) {
+                const slotIdx = wordContainer.getData('slotIdx');
+                this.removeWordFromSlot(slotIdx);
+                wordContainer.setData('placed', false);
+                wordContainer.setData('slotIdx', null);
+                wordContainer.setData('isInduced', false);
+            }
+        });
+        
+        wordContainer.on('drag', (pointer, dragX, dragY) => {
+            wordContainer.x = pointer.x - dragOffset.x;
+            wordContainer.y = pointer.y - dragOffset.y;
+        });
+        
+        wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
+            wordContainer.setDepth(100);
+            if (!dropped) {
+                // Get first unused word from bank with same text as fallback position
+                const matchingWord = this.bankSprites.find(wc => 
+                    wc.getData('word') === finalWord && !wc.getData('placed')
+                );
+                const fallbackPos = matchingWord ? 
+                    matchingWord.getData('initPosition') : 
+                    { x: this.sys.game.canvas.width / 2, y: this.bankAreaY + 40 };
+                
+                this.tweens.add({
+                    targets: wordContainer,
+                    x: fallbackPos.x,
+                    y: fallbackPos.y,
+                    duration: 300,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        // Destroy the induced word container when it returns
+                        wordContainer.destroy();
+                    }
+                });
+            }
+        });
+        
+        // Add to bankSprites for tracking
+        this.bankSprites.push(wordContainer);
+        
+        // Store reference in slot data
+        targetSlotContainer.setData('inducedWordContainer', wordContainer);
+    }
+
+    // Show induced letter at specific index (called during animation)
+    showInducedLetter(sourceSlotIdx, letterIndex) {
+        const wordsRule = this.getWordsRule(sourceSlotIdx);
+        if (!wordsRule) return;
+
+        const correlatedSlots = this.getCorrelatedSlots(sourceSlotIdx);
+        
+        correlatedSlots.forEach(targetSlotIdx => {
+            const targetSlotContainer = this.slotSprites[targetSlotIdx];
+            if (!targetSlotContainer.getData('filling')) return;
+            
+            const wordContainer = targetSlotContainer.getData('inducedWordContainer');
+            if (!wordContainer) return;
+            
+            const wordCells = wordContainer.getData('wordCells');
+            const finalWord = targetSlotContainer.getData('targetWord');
+            if (!wordCells || !finalWord) return;
+            
+            // Reveal both background square and letter together
+            if (letterIndex >= 0 && letterIndex < wordCells.length) {
+                const square = wordCells[letterIndex].square;
+                const letter = wordCells[letterIndex].letter;
+                
+                // Show background cell texture
+                if (square) {
+                    square.setAlpha(1.0);
+                }
+                
+                // Show letter
+                if (letter) {
+                    letter.setAlpha(1.0);
+                }
+                
+                // Also update slot cell data
+                const targetSlotCells = targetSlotContainer.getData('slotCells');
+                const cell = targetSlotCells[letterIndex];
+                cell.squareContainer.setData('filled', true);
+                cell.squareContainer.setData('letter', finalWord[letterIndex]);
+            }
+            
+            // Check if all letters are done
+            if (letterIndex === finalWord.length - 1) {
+                // All letters placed, finalize the slot
+                targetSlotContainer.setData('filled', true);
+                targetSlotContainer.setData('word', finalWord);
+                targetSlotContainer.setData('filling', false);
+                
+                // DON'T play sound here (already played for source word)
+                
+                // Update hints and connections
+                this.updateAllConstraintHints(true);
+                this.updateConnectionHighlights();
             }
         });
     }
@@ -1123,6 +1347,50 @@ class WordWebGame extends Phaser.Scene {
         return rules.find(rule => rule.type === 'word' && rule.slot === slotIdx);
     }
 
+    // Check if a slot has a words-level rule (correlation between slots)
+    getWordsRule(slotIdx) {
+        const rules = this.level.rules || [];
+        return rules.find(rule => rule.type === 'words' && rule.slots && rule.slots.includes(slotIdx));
+    }
+
+    // Get other slots in a words rule
+    getCorrelatedSlots(slotIdx) {
+        const wordsRule = this.getWordsRule(slotIdx);
+        if (wordsRule && wordsRule.slots) {
+            return wordsRule.slots.filter(s => s !== slotIdx);
+        }
+        return [];
+    }
+
+    // Apply words transformation (correlation between slots)
+    applyWordsTransformation(word, wordsRule) {
+        if (!wordsRule || !wordsRule.op) return word;
+
+        if (wordsRule.op === 'same') {
+            return word;
+        } else if (wordsRule.op === 'opposite') {
+            const antonym = this.wordAntonymMap.get(word);
+            return antonym || word;
+        } else if (wordsRule.op === 'reverse') {
+            return word.split('').reverse().join('');
+        } else if (wordsRule.op.startsWith('swap')) {
+            // Parse swap operation like "swap 3-4"
+            const match = wordsRule.op.match(/swap\s+(\d+)-(\d+)/);
+            if (match) {
+                const letters = word.split('');
+                const idx1 = parseInt(match[1]) - 1;
+                const idx2 = parseInt(match[2]) - 1;
+                if (idx1 >= 0 && idx1 < letters.length && idx2 >= 0 && idx2 < letters.length) {
+                    const temp = letters[idx1];
+                    letters[idx1] = letters[idx2];
+                    letters[idx2] = temp;
+                }
+                return letters.join('');
+            }
+        }
+        return word;
+    }
+
     // Get the transformed word for a slot (apply opposite, reverse, or swap if rule exists)
     getTransformedWord(word, slotIdx) {
         const slotRule = this.getSlotRule(slotIdx);
@@ -1353,27 +1621,15 @@ class WordWebGame extends Phaser.Scene {
 
                 // Get the label text based on operation
                 let labelText = '';
-                // if (rule.op === 'opposite') {
-                //     labelText = 'Opposite';
-                // } else if (rule.op === 'reverse') {
-                //     labelText = 'Reverse';
-                // } else if (rule.op === 'swap') {
-                //     labelText = 'Swap';
-                // } else {
-                //     labelText = rule.op; // fallback to operation name
-                // }
                 labelText = rule.op.charAt(0).toUpperCase() + rule.op.slice(1).toLowerCase();
                 
                 const swapArrow = '⇄'; // Unicode arrow
-                // const swapArrow = '🔁'; // Unicode arrow
-                // const swapArrow = '-'; // fallback if you ever need ASCII only
 
                 // Add pairs information for swap operation
                 if (rule.op === 'swap' && rule.pairs && rule.pairs.length > 0) {
                     const pairsText = rule.pairs.map(pair => `${pair[0]} ${swapArrow} ${pair[1]}`).join(' ');
                     labelText += ' ' + pairsText;
                 }
-
 
                 // Get slot bounds for positioning
                 const bounds = slotContainer.getBounds();
@@ -1438,6 +1694,61 @@ class WordWebGame extends Phaser.Scene {
         // Support both 'rules' (new) and 'connections' (legacy)
         const rules = this.level.rules || this.level.connections || [];
 
+        // Render words rules (correlation lines between slots)
+        rules.forEach(rule => {
+            if (rule.type === 'words' && rule.slots && rule.slots.length >= 2) {
+                // Draw lines between correlated slots
+                const color = 0xFF6B6B; // Red/orange color to distinguish from cell connections
+                
+                for (let i = 0; i < rule.slots.length - 1; i++) {
+                    const slot1Idx = rule.slots[i];
+                    const slot2Idx = rule.slots[i + 1];
+                    
+                    const slot1Container = this.slotSprites[slot1Idx];
+                    const slot2Container = this.slotSprites[slot2Idx];
+                    
+                    if (!slot1Container || !slot2Container) continue;
+                    
+                    const bounds1 = slot1Container.getBounds();
+                    const bounds2 = slot2Container.getBounds();
+                    
+                    // Draw line from center to center
+                    const line = this.add.line(
+                        0, 0,
+                        bounds1.centerX, bounds1.centerY,
+                        bounds2.centerX, bounds2.centerY,
+                        color
+                    ).setOrigin(0, 0).setLineWidth(2);
+                    line.setDepth(-101); // Below cell connections
+                    line.setAlpha(0.5); // Semi-transparent
+                    this.connectionLines.push(line);
+                }
+                
+                // Add label for the words rule
+                if (rule.slots.length > 0) {
+                    const firstSlotContainer = this.slotSprites[rule.slots[0]];
+                    const bounds = firstSlotContainer.getBounds();
+                    
+                    let labelText = rule.op.charAt(0).toUpperCase() + rule.op.slice(1).toLowerCase();
+                    
+                    const label = this.add.text(
+                        bounds.left - 10,
+                        bounds.centerY,
+                        `↔ ${labelText}`,
+                        {
+                            fontFamily: 'Arial, sans-serif',
+                            fontSize: '20px',
+                            color: '#FF6B6B',
+                            resolution: window.devicePixelRatio || 2
+                        }
+                    ).setOrigin(1, 0.5);
+                    label.setDepth(15);
+                    this.connectionLines.push(label);
+                }
+            }
+        });
+
+        // Render cell rules
         rules.forEach(rule => {
             const ruleInfo = this.parseRule(rule);
             if (!ruleInfo) return; // Skip invalid rules
@@ -1858,12 +2169,13 @@ class WordWebGame extends Phaser.Scene {
             });
         });
 
-        // Clear all hint texts
+        // Clear all hint texts (but not filled cells)
         this.slotSprites.forEach(slotContainer => {
             const slotSquares = slotContainer.list;
             slotSquares.forEach(squareContainer => {
                 const letterText = squareContainer.getData('letterText');
-                if (letterText) {
+                const isFilled = squareContainer.getData('filled');
+                if (letterText && !isFilled) {
                     letterText.setText('');
                     letterText.setScale(1); // Reset scale
                 }
@@ -2162,9 +2474,21 @@ class WordWebGame extends Phaser.Scene {
 
         // Cancel any active arrow animations originating from this slot
         this.cancelArrowAnimationsFromSlot(slotIdx);
+        
+        // Also cancel arrow animations from correlated slots (if this is part of a words rule)
+        const wordsRule = this.getWordsRule(slotIdx);
+        if (wordsRule) {
+            const correlatedSlots = this.getCorrelatedSlots(slotIdx);
+            correlatedSlots.forEach(correlatedSlotIdx => {
+                this.cancelArrowAnimationsFromSlot(correlatedSlotIdx);
+            });
+        }
 
         // Cancel any bouncing hint animations in all target slots
         this.cancelBouncingHintAnimations();
+
+        // Remove correlated induced words if this slot is part of a words rule
+        this.removeCorrelatedInducedWords(slotIdx);
 
         // Mark slot as empty
         slotContainer.setData('filled', false);
@@ -2182,6 +2506,49 @@ class WordWebGame extends Phaser.Scene {
 
         // Update connection highlights
         this.updateConnectionHighlights();
+    }
+
+    // Remove correlated words (works bidirectionally - removes twins)
+    removeCorrelatedInducedWords(sourceSlotIdx) {
+        const wordsRule = this.getWordsRule(sourceSlotIdx);
+        if (!wordsRule) return;
+
+        const sourceSlotContainer = this.slotSprites[sourceSlotIdx];
+        const correlatedSlots = this.getCorrelatedSlots(sourceSlotIdx);
+
+        correlatedSlots.forEach(targetSlotIdx => {
+            const targetSlotContainer = this.slotSprites[targetSlotIdx];
+            
+            // Find the word in the target slot (could be induced or original)
+            const wordContainer = this.bankSprites.find(wc => 
+                wc.getData('placed') && 
+                wc.getData('slotIdx') === targetSlotIdx
+            );
+
+            if (wordContainer) {
+                // Remove from bankSprites array
+                const index = this.bankSprites.indexOf(wordContainer);
+                if (index > -1) {
+                    this.bankSprites.splice(index, 1);
+                }
+                
+                // Destroy the word container immediately (delete the twin)
+                wordContainer.destroy();
+                
+                // Clear slot data
+                targetSlotContainer.setData('filled', false);
+                targetSlotContainer.setData('word', null);
+                targetSlotContainer.setData('originalWord', null);
+                targetSlotContainer.setData('filling', false);
+                targetSlotContainer.setData('inducedWordContainer', null);
+
+                const targetSlotCells = targetSlotContainer.getData('slotCells');
+                targetSlotCells.forEach(cell => {
+                    cell.squareContainer.setData('filled', false);
+                    cell.squareContainer.setData('letter', null);
+                });
+            }
+        });
     }
 
     // Cancel all arrow animations originating from a specific slot

@@ -29,6 +29,10 @@ var CONFIG = {
     // Use 'default' for Arial sans-serif, or 'Petita' for custom font
     LETTER_FONT_FAMILY: 'Poppins-Medium',
     LETTER_FONT_WEIGHT: '500', // Font weight for letters in squares (use '400', '500', or '700' as string)
+
+    SLOT_MARKER_FONT_FAMILY: 'Poppins-LightItalic',
+    SLOT_MARKER_FONT_WEIGHT: '300', // Font weight for slot markers (use '300', '400', '500', or '700' as string)
+
     
     // Connection highlight color
     CONNECTION_HIGHLIGHT_COLOR: 0xC8E6C9,  // Light green for connected cells
