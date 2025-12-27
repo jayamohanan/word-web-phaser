@@ -78,6 +78,8 @@ class WordWebGame extends Phaser.Scene {
             console.error('Available JSON cache keys:', this.cache.json.getKeys());
             return;
         }
+        this.input.dragDistanceThreshold = 8;
+
         this.totalLevels = levels.levels.length;
         // Use modulo to loop levels
         this.level = levels.levels[this.currentLevelIndex % this.totalLevels];
@@ -154,38 +156,39 @@ class WordWebGame extends Phaser.Scene {
         // Removed debug red square at canvas center
 
         // Add right-click handler to remove words from slots
-        this.input.on('pointerdown', (pointer) => {
-            console.log('jaya');
-            if (pointer.rightButtonDown()) {
-                console.log('rightButtonDown');
-                // Check if clicking on a filled slot to remove the word
-                this.slotSprites.forEach((slotContainer, slotIdx) => {
-                    console.log(`Checking slot ${slotIdx}`);
-                    if (slotContainer.getData('filled')) {
-                        const bounds = slotContainer.getBounds();
-                        if (bounds.contains(pointer.worldX, pointer.worldY)) {
-                            console.log(`Removing word from slot ${slotIdx}`);
-                            // Find the word container that was placed here
-                            this.bankSprites.forEach(wordContainer => {
-                                if (wordContainer.getData('placed') && wordContainer.getData('slotIdx') === slotIdx) {
-                                    // Animate word back to its original position
-                                    this.tweenBackToBottom(wordContainer);
-                                    // Clear placement data immediately
-                                    wordContainer.setData('placed', false);
-                                    wordContainer.setData('slotIdx', null);
-                                }
-                            });
-                            // Remove word from slot and update hints
-                            this.removeWordFromSlot(slotIdx);
-                        }
-                    }
-                });
-            }
-        });
+        // this.input.on('pointerdown', (pointer) => {
+        //     console.log('jaya');
+        //     if (pointer.rightButtonDown()) {
+        //         console.log('rightButtonDown');
+        //         // Check if clicking on a filled slot to remove the word
+        //         this.slotSprites.forEach((slotContainer, slotIdx) => {
+        //             console.log(`Checking slot ${slotIdx}`);
+        //             if (slotContainer.getData('filled')) {
+        //                 const bounds = slotContainer.getBounds();
+        //                 if (bounds.contains(pointer.worldX, pointer.worldY)) {
+        //                     console.log(`Removing word from slot ${slotIdx}`);
+        //                     // Find the word container that was placed here
+        //                     this.bankSprites.forEach(wordContainer => {
+        //                         if (wordContainer.getData('placed') && wordContainer.getData('slotIdx') === slotIdx) {
+        //                             // Animate word back to its original position
+        //                             this.tweenBackToBottom(wordContainer);
+        //                             // Clear placement data immediately
+        //                             wordContainer.setData('placed', false);
+        //                             wordContainer.setData('slotIdx', null);
+        //                         }
+        //                     });
+        //                     // Remove word from slot and update hints
+        //                     this.removeWordFromSlot(slotIdx);
+        //                 }
+        //             }
+        //         });
+        //     }
+        // });
 
 
         // Highlight slot squares when dragging over drop zone
         this.input.on('dragenter', (pointer, gameObject, dropZone) => {
+            console.log('*******dragenter');
             if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
             if (!gameObject || !gameObject.getData('word')) return;
 
@@ -222,6 +225,7 @@ class WordWebGame extends Phaser.Scene {
 
         // Remove highlight when dragging out of drop zone
         this.input.on('dragleave', (pointer, gameObject, dropZone) => {
+            console.log('*******dragleave');
             if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
 
             const slotIdx = dropZone.getData('slotIdx');
