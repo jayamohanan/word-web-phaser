@@ -733,11 +733,11 @@ class WordWebGame extends Phaser.Scene {
         });
 
         // Check for words rules and trigger induced placements
-        this.triggerInducedPlacements(slotIdx, transformedWord);
+        this.triggerInducedPlacements(slotIdx, transformedWord, gameObject);
     }
 
     // Trigger induced word placements based on words rules
-    triggerInducedPlacements(sourceSlotIdx, sourceWord) {
+    triggerInducedPlacements(sourceSlotIdx, sourceWord, sourceWordContainer) {
         const wordsRule = this.getWordsRule(sourceSlotIdx);
         if (!wordsRule) return;
 
@@ -754,17 +754,20 @@ class WordWebGame extends Phaser.Scene {
             let inducedWord = this.applyWordsTransformation(sourceWord, wordsRule);
 
             // Setup induced placement - letters will appear as source slot letters animate
-            this.setupInducedPlacement(targetSlotIdx, sourceWord, inducedWord);
+            this.setupInducedPlacement(targetSlotIdx, sourceWord, inducedWord, sourceWordContainer);
         });
     }
 
     // Setup induced placement - creates actual word container at target slot
-    setupInducedPlacement(targetSlotIdx, originalWord, finalWord) {
+    setupInducedPlacement(targetSlotIdx, originalWord, finalWord, sourceWordContainer) {
         const targetSlotContainer = this.slotSprites[targetSlotIdx];
         
         // Mark slot as being filled (but not fully filled yet)
         targetSlotContainer.setData('filling', true);
         targetSlotContainer.setData('targetWord', finalWord);
+        
+        // Copy the exact bank position from the source word container (identical twin)
+        const bankPosition = sourceWordContainer.getData('initPosition');
         
         // Create an actual word container (identical twin) at the target slot position
         const targetSlotCells = targetSlotContainer.getData('slotCells');
@@ -809,7 +812,7 @@ class WordWebGame extends Phaser.Scene {
         wordContainer.setData('slotIdx', targetSlotIdx);
         wordContainer.setData('isInduced', true);
         wordContainer.setData('wordCells', wordCells);
-        wordContainer.setData('initPosition', { x: slotX, y: slotY });
+        wordContainer.setData('initPosition', bankPosition); // Use exact same bank position as source
         
         // Create state machine
         const stateMachine = new WordAnimationStateMachine(this, wordContainer);
@@ -866,23 +869,20 @@ class WordWebGame extends Phaser.Scene {
         wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
             wordContainer.setDepth(100);
             if (!dropped) {
-                // Get first unused word from bank with same text as fallback position
-                const matchingWord = this.bankSprites.find(wc => 
-                    wc.getData('word') === finalWord && !wc.getData('placed')
-                );
-                const fallbackPos = matchingWord ? 
-                    matchingWord.getData('initPosition') : 
-                    { x: this.sys.game.canvas.width / 2, y: this.bankAreaY + 40 };
+                // Not dropped on a slot - return to exact same bank position as original
+                const initPos = wordContainer.getData('initPosition');
                 
                 this.tweens.add({
                     targets: wordContainer,
-                    x: fallbackPos.x,
-                    y: fallbackPos.y,
+                    x: initPos.x,
+                    y: initPos.y,
                     duration: 300,
                     ease: 'Power2',
                     onComplete: () => {
-                        // Destroy the induced word container when it returns
-                        wordContainer.destroy();
+                        // Convert to normal bank word instead of destroying
+                        wordContainer.setData('isInduced', false);
+                        wordContainer.setData('placed', false);
+                        wordContainer.setData('slotIdx', null);
                     }
                 });
             }
@@ -1364,7 +1364,7 @@ class WordWebGame extends Phaser.Scene {
                 
                 // Add italic letter marker to the left of the slot
                 const marker = this.add.text(
-                    bounds.left - 15,
+                    bounds.left - 7.5,
                     bounds.centerY,
                     markerLetter,
                     {
@@ -1843,6 +1843,11 @@ class WordWebGame extends Phaser.Scene {
 
         // Word-level rules (like 'opposite') are handled separately by getSlotRule
         if (rule.type === 'word') {
+            return null; // Not an error - these rules don't define cell connections
+        }
+
+        // Words-level rules (like correlation between slots) are handled separately by getWordsRule
+        if (rule.type === 'words') {
             return null; // Not an error - these rules don't define cell connections
         }
 
