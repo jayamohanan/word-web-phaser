@@ -1339,6 +1339,51 @@ class WordWebGame extends Phaser.Scene {
             slotContainer.setData('slotIdx', slotIdx);
             this.slotSprites.push(slotContainer);
         });
+        
+        // Add italic letter markers for correlated slots (words rules)
+        this.addWordsRuleMarkers();
+    }
+    
+    // Add italic letter markers to slots that are part of words rules
+    addWordsRuleMarkers() {
+        const rules = this.level.rules || [];
+        const wordsRules = rules.filter(rule => rule.type === 'words' && rule.slots && rule.slots.length >= 2);
+        
+        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']; // Support up to 8 different groups
+        
+        wordsRules.forEach((rule, ruleIndex) => {
+            if (ruleIndex >= letters.length) return; // Skip if too many rules
+            
+            const markerLetter = letters[ruleIndex];
+            
+            rule.slots.forEach(slotIdx => {
+                const slotContainer = this.slotSprites[slotIdx];
+                if (!slotContainer) return;
+                
+                const bounds = slotContainer.getBounds();
+                
+                // Add italic letter marker to the left of the slot
+                const marker = this.add.text(
+                    bounds.left - 15,
+                    bounds.centerY,
+                    markerLetter,
+                    {
+                        fontFamily: CONFIG.SLOT_MARKER_FONT_FAMILY,
+                        fontWeight: CONFIG.SLOT_MARKER_FONT_WEIGHT,
+                        fontSize: '32px',
+                        color: '#666666',
+                        resolution: window.devicePixelRatio || 2
+                    }
+                ).setOrigin(1, 0.5);
+                marker.setDepth(15);
+                
+                // Store marker for cleanup
+                if (!this.slotMarkers) {
+                    this.slotMarkers = [];
+                }
+                this.slotMarkers.push(marker);
+            });
+        });
     }
 
     // Check if a slot has a word-level rule (like opposite)
@@ -1694,59 +1739,7 @@ class WordWebGame extends Phaser.Scene {
         // Support both 'rules' (new) and 'connections' (legacy)
         const rules = this.level.rules || this.level.connections || [];
 
-        // Render words rules (correlation lines between slots)
-        rules.forEach(rule => {
-            if (rule.type === 'words' && rule.slots && rule.slots.length >= 2) {
-                // Draw lines between correlated slots
-                const color = 0xFF6B6B; // Red/orange color to distinguish from cell connections
-                
-                for (let i = 0; i < rule.slots.length - 1; i++) {
-                    const slot1Idx = rule.slots[i];
-                    const slot2Idx = rule.slots[i + 1];
-                    
-                    const slot1Container = this.slotSprites[slot1Idx];
-                    const slot2Container = this.slotSprites[slot2Idx];
-                    
-                    if (!slot1Container || !slot2Container) continue;
-                    
-                    const bounds1 = slot1Container.getBounds();
-                    const bounds2 = slot2Container.getBounds();
-                    
-                    // Draw line from center to center
-                    const line = this.add.line(
-                        0, 0,
-                        bounds1.centerX, bounds1.centerY,
-                        bounds2.centerX, bounds2.centerY,
-                        color
-                    ).setOrigin(0, 0).setLineWidth(2);
-                    line.setDepth(-101); // Below cell connections
-                    line.setAlpha(0.5); // Semi-transparent
-                    this.connectionLines.push(line);
-                }
-                
-                // Add label for the words rule
-                if (rule.slots.length > 0) {
-                    const firstSlotContainer = this.slotSprites[rule.slots[0]];
-                    const bounds = firstSlotContainer.getBounds();
-                    
-                    let labelText = rule.op.charAt(0).toUpperCase() + rule.op.slice(1).toLowerCase();
-                    
-                    const label = this.add.text(
-                        bounds.left - 10,
-                        bounds.centerY,
-                        `↔ ${labelText}`,
-                        {
-                            fontFamily: 'Arial, sans-serif',
-                            fontSize: '20px',
-                            color: '#FF6B6B',
-                            resolution: window.devicePixelRatio || 2
-                        }
-                    ).setOrigin(1, 0.5);
-                    label.setDepth(15);
-                    this.connectionLines.push(label);
-                }
-            }
-        });
+        // Words rules are now marked with italic letters on slots (no lines/labels)
 
         // Render cell rules
         rules.forEach(rule => {

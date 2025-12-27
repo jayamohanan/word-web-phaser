@@ -28,13 +28,23 @@
         "DUEL"
       ],
       "rules": [
-        
-        {
+         {
           "type": "words",
-          "slots": [1,2],
+          "slots": [
+            0,3
+          ],
           "op": "same"
         },
-         {
+        {
+          "type": "words",
+          "slots": [
+            1,
+            2
+          ],
+          "op": "same"
+        },
+       
+        {
           "type": "cell",
           "a": {
             "slot": 0,
@@ -172,8 +182,7 @@
         }
       ]
     },
-
-     {
+    {
       "slots": [
         {
           "length": 4,
@@ -208,20 +217,19 @@
         }
       ]
     },
-        {
-  "slots": [
     {
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -2
-    }
-  ],
-  "words": [
-    "JAYA"
-  ],
-  "rules": []
-},
-    
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        "JAYA"
+      ],
+      "rules": []
+    },
     {
       "slots": [
         {
@@ -268,7 +276,6 @@
         }
       ]
     },
-    
     {
       "slots": [
         {
