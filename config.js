@@ -35,14 +35,14 @@ var CONFIG = {
 
     // Background gradients (Poki gaming style)
     // Outer background gradient (full canvas)
-    OUTER_BG_GRADIENT_TOP: '#7B2CBF',    // Deep purple (top)
-    OUTER_BG_GRADIENT_BOTTOM: '#FF6B9D', // Pink (bottom)
+    OUTER_BG_GRADIENT_TOP: '#ABE0F0',    // Deep purple (top)
+    OUTER_BG_GRADIENT_BOTTOM: '#FFEE91', // Pink (bottom)
     
     // Portrait area gradient (720x1280 game area)
     // PORTRAIT_BG_GRADIENT_TOP: '#5390D9',    // Blue (top)
     // PORTRAIT_BG_GRADIENT_BOTTOM: '#48BFE3', // Cyan (bottom)
 
-     PORTRAIT_BG_GRADIENT_TOP: '#FFEE91',    // Blue (top)
+     PORTRAIT_BG_GRADIENT_TOP: '#d3e8eeff',    // Blue (top)
     PORTRAIT_BG_GRADIENT_BOTTOM: '#ABE0F0', // Cyan (bottom)
 
     
