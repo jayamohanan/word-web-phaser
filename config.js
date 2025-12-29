@@ -3,6 +3,7 @@ var CONFIG = {
     SQUARE_WIDTH: 60,
     SQUARE_GAP: 4,
     SQUARE_RADIUS: 5,
+    
     get GRID_SIZE() { return this.SQUARE_WIDTH + this.SQUARE_GAP; },
     SLOT_AREA_BG: 0xe3f2fd,
     BANK_AREA_BG: 0xfce4ec,
