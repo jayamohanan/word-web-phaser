@@ -1,14 +1,15 @@
 // Shared config for dimensions and layout
 var CONFIG = {
     SQUARE_WIDTH: 60,
-    SQUARE_GAP: 5,
+    SQUARE_GAP: 4,
+    SQUARE_RADIUS: 5,
     get GRID_SIZE() { return this.SQUARE_WIDTH + this.SQUARE_GAP; },
     SLOT_AREA_BG: 0xe3f2fd,
     BANK_AREA_BG: 0xfce4ec,
     GRID_COLOR: 0xcfd8dc,
     GRID_LINE_WIDTH: 1,
     SLOT_AREA_HEIGHT_FACTOR: 0.7, // Fraction of canvas height for slot area (portrait mode)
-    WORD_GAP: 16,
+    WORD_GAP: 12,
     ORIGIN_X_FACTOR: 0.5,  // 50% of canvas width (horizontal center)
     ORIGIN_Y_FACTOR: 0.50,  // 50% of canvas height (closer to words in portrait mode)
     

@@ -1000,6 +1000,7 @@ class WordWebGame extends Phaser.Scene {
 
     createCellTextures() {
         const size = this.squareWidth;
+        const radius = CONFIG.SQUARE_RADIUS;
         const color1 = CONFIG.CELL_BG1_COLOR;
         const color2 = CONFIG.CELL_BG2_COLOR;
 
@@ -1015,16 +1016,15 @@ class WordWebGame extends Phaser.Scene {
         const wordTexture = this.textures.createCanvas('wordCellTexture', size, size);
         const wordCtx = wordTexture.getSourceImage().getContext('2d');
 
-        // Draw top-left triangle (color1)
+        // Draw rounded rectangle background with color1
         wordCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
-        wordCtx.beginPath();
-        wordCtx.moveTo(0, 0);        // top-left
-        wordCtx.lineTo(size, 0);    // top-right
-        wordCtx.lineTo(0, size);    // bottom-left
-        wordCtx.closePath();
+        this.drawRoundedRect(wordCtx, 0, 0, size, size, radius);
         wordCtx.fill();
 
-        // Draw bottom-right triangle (color2)
+        // Draw diagonal triangle overlay (color2) with clipping to rounded rectangle
+        wordCtx.save();
+        this.drawRoundedRect(wordCtx, 0, 0, size, size, radius);
+        wordCtx.clip();
         wordCtx.fillStyle = '#' + color2.toString(16).padStart(6, '0');
         wordCtx.beginPath();
         wordCtx.moveTo(size, size); // bottom-right
@@ -1032,26 +1032,47 @@ class WordWebGame extends Phaser.Scene {
         wordCtx.lineTo(0, size);    // bottom-left
         wordCtx.closePath();
         wordCtx.fill();
+        wordCtx.restore();
 
-        // Add stroke to the texture
+        // Add stroke to the rounded texture
         wordCtx.strokeStyle = '#' + this.wordStrokeColor.toString(16).padStart(6, '0');
         wordCtx.lineWidth = this.wordStrokeWidth;
-        wordCtx.strokeRect(this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, size - this.wordStrokeWidth, size - this.wordStrokeWidth);
+        this.drawRoundedRect(wordCtx, this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, 
+            size - this.wordStrokeWidth, size - this.wordStrokeWidth, radius);
+        wordCtx.stroke();
 
         wordTexture.refresh();
 
-        // Create slot cell texture with uniform color1
+        // Create slot cell texture with uniform color1 and rounded corners
         const slotTexture = this.textures.createCanvas('slotCellTexture', size, size);
         const slotCtx = slotTexture.getSourceImage().getContext('2d');
         slotCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
-        slotCtx.fillRect(0, 0, size, size);
+        this.drawRoundedRect(slotCtx, 0, 0, size, size, radius);
+        slotCtx.fill();
         
-        // Add stroke to the texture
+        // Add stroke to the rounded texture
         slotCtx.strokeStyle = '#' + this.slotStrokeColor.toString(16).padStart(6, '0');
         slotCtx.lineWidth = this.slotStrokeWidth;
-        slotCtx.strokeRect(this.slotStrokeWidth / 2, this.slotStrokeWidth / 2, size - this.slotStrokeWidth, size - this.slotStrokeWidth);
+        this.drawRoundedRect(slotCtx, this.slotStrokeWidth / 2, this.slotStrokeWidth / 2, 
+            size - this.slotStrokeWidth, size - this.slotStrokeWidth, radius);
+        slotCtx.stroke();
         
         slotTexture.refresh();
+    }
+
+    // Helper function to draw rounded rectangle path
+    drawRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.arcTo(x + width, y, x + width, y + radius, radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        ctx.lineTo(x + radius, y + height);
+        ctx.arcTo(x, y + height, x, y + height - radius, radius);
+        ctx.lineTo(x, y + radius);
+        ctx.arcTo(x, y, x + radius, y, radius);
+        ctx.closePath();
     }
 
     // Calculate maximum number of swap pairs in level
@@ -1081,6 +1102,7 @@ class WordWebGame extends Phaser.Scene {
         }
         
         // Create grayscale textures with incrementing intensity
+        const radius = CONFIG.SQUARE_RADIUS;
         for (let i = 0; i < this.maxSwapPairs; i++) {
             const textureName = `swapHighlight${i}`;
             const texture = this.textures.createCanvas(textureName, size, size);
@@ -1090,14 +1112,17 @@ class WordWebGame extends Phaser.Scene {
             const grayValue = Phaser.Math.Clamp(0.7 - i * 0.2, 0, 1);
             const gray = Math.floor(255 * grayValue);
             
-            // Fill with grayscale color
+            // Fill with grayscale color using rounded rectangle
             ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
-            ctx.fillRect(0, 0, size, size);
+            this.drawRoundedRect(ctx, 0, 0, size, size, radius);
+            ctx.fill();
             
-            // Add stroke to match original texture
+            // Add stroke to match original texture with rounded corners
             ctx.strokeStyle = '#' + this.wordStrokeColor.toString(16).padStart(6, '0');
             ctx.lineWidth = this.wordStrokeWidth;
-            ctx.strokeRect(this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, size - this.wordStrokeWidth, size - this.wordStrokeWidth);
+            this.drawRoundedRect(ctx, this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, 
+                size - this.wordStrokeWidth, size - this.wordStrokeWidth, radius);
+            ctx.stroke();
             
             texture.refresh();
         }
@@ -1257,13 +1282,26 @@ class WordWebGame extends Phaser.Scene {
                 // Create a sub-container for each square to hold both graphics and text
                 let squareContainer = this.add.container(x, y);
 
-                // Create shadow layers for depth effect - inset appearance (keep as rectangles)
+                // Create shadow layers for depth effect using graphics with rounded corners
+                const radius = CONFIG.SQUARE_RADIUS;
+                
                 // Bottom-right inner shadow (dark) - creates depth
-                let shadowDark = this.add.rectangle(5, 5, this.squareWidth, this.squareWidth, 0x000000, 0.35);
+                let shadowDark = this.add.graphics();
+                shadowDark.fillStyle(0x000000, 0.35);
+                shadowDark.fillRoundedRect(-this.squareWidth / 2 + 2, -this.squareWidth / 2 + 2, 
+                    this.squareWidth, this.squareWidth, radius);
+                
                 // Secondary softer shadow for more depth
-                let shadowMid = this.add.rectangle(12, 12, this.squareWidth, this.squareWidth, 0x666666, 0.2);
+                let shadowMid = this.add.graphics();
+                shadowMid.fillStyle(0x666666, 0.2);
+                shadowMid.fillRoundedRect(-this.squareWidth / 2 + 5, -this.squareWidth / 2 + 5, 
+                    this.squareWidth, this.squareWidth, radius);
+                
                 // Top-left edge highlight for beveled look
-                let highlightEdge = this.add.rectangle(-2, -2, this.squareWidth - 4, this.squareWidth - 4, 0xffffff, 0.6);
+                // let highlightEdge = this.add.graphics();
+                // highlightEdge.fillStyle(0xffffff, 0);
+                // highlightEdge.fillRoundedRect(-this.squareWidth / 2 - 2, -this.squareWidth / 2 - 2, 
+                //     this.squareWidth - 4, this.squareWidth - 4, radius);
 
                 // Create the image (square) centered at (0, 0) within the squareContainer using slot texture (includes stroke)
                 let square = this.add.image(0, 0, 'slotCellTexture');
@@ -1273,7 +1311,7 @@ class WordWebGame extends Phaser.Scene {
                 squareContainer.add(shadowDark);
                 squareContainer.add(shadowMid);
                 squareContainer.add(square);
-                squareContainer.add(highlightEdge);
+                // squareContainer.add(highlightEdge);
 
                 // Store data on the squareContainer (not the rectangle)
                 squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
@@ -1287,7 +1325,7 @@ class WordWebGame extends Phaser.Scene {
                     squareContainer: squareContainer,
                     shadowDark: shadowDark,
                     shadowMid: shadowMid,
-                    highlightEdge: highlightEdge,
+                    // highlightEdge: highlightEdge,
                     square: square,
                     letterText: null, // Will be set in second pass
                     index: i
