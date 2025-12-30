@@ -1,6 +1,47 @@
 {
   "levels": [
     {
+  "slots": [
+    {
+      "length": 4,
+      "anchorCol": -3,
+      "anchorRow": -4
+    },
+    {
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -1
+    }
+  ],
+  "words": [
+    "GAME",
+    "MEAT"
+  ],
+  "rules": [
+    {
+      "type":"word",
+      "op":"swap",
+      "pairs":[[1,4]],
+      "slot":0
+
+    },
+    {
+      "type": "cell",
+      "a": {
+        "slot": 0,
+        "cell": 3,
+        "side": 2
+      },
+      "b": {
+        "slot": 1,
+        "cell": 2,
+        "side": 0
+      },
+      "op": "same"
+    }
+  ]
+},
+    {
       "slots": [
         {
           "length": 4,

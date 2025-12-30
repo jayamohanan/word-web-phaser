@@ -7,21 +7,21 @@ class WinScene extends Phaser.Scene {
         
         // Random congratulatory messages
         this.winMessages = [
-            'Boom',
-            'Clean Win',
-            'Perfect',
-            'So Smooth',
-            'Great Job',
-            'Well Done',
-            'Nailed It',
-            'Awesome',
-            'Brilliant',
-            'Success',
-            'Cool',
-            'Clever',
-            'Fantastic',
-            'Amazing',
-            'Bravo'
+            'Boom!',
+            'Clean Win!',
+            'Perfect!',
+            'So Smooth!',
+            'Great Job!',
+            'Well Done!',
+            'Nailed It!',
+            'Awesome!',
+            'Brilliant!',
+            'Success!',
+            'Cool!',
+            'Clever!',
+            'Fantastic!',
+            'Amazing!',
+            'Bravo!'
         ];
     }
 
@@ -29,6 +29,7 @@ class WinScene extends Phaser.Scene {
         this.currentLevelIndex = data.currentLevelIndex || 0;
         this.totalLevels = data.totalLevels || 1;
         this.undoCount = data.undoCount || 0;
+        this.mistakeCount = data.mistakeCount || 0;
     }
 
     create() {
@@ -63,7 +64,7 @@ class WinScene extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Create mistake count text
-        const mistakeText = this.add.text(0, -80, `Mistake ${this.undoCount}`, {
+        const mistakeText = this.add.text(0, -80, `Mistake${this.mistakeCount !== 1 ? 's' : ''}: ${this.mistakeCount}`, {
             fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
             fontSize: '28px',
             color: '#666',
@@ -157,14 +158,14 @@ class WinScene extends Phaser.Scene {
         const hitArea = new Phaser.Geom.Rectangle(-totalWidth / 2, -cellSize / 2, totalWidth, cellSize);
         container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { useHandCursor: true });
         
-        // Button hover effects
+        // Button hover effects - scale entire container to preserve gaps
         container.on('pointerover', () => {
             buttonElements.forEach(element => {
                 if (element.type === 'Rectangle') {
                     element.setFillStyle(0xe0e0e0);
                 }
-                element.setScale(1.05);
             });
+            container.setScale(1.05);
         });
 
         container.on('pointerout', () => {
@@ -172,20 +173,16 @@ class WinScene extends Phaser.Scene {
                 if (element.type === 'Rectangle') {
                     element.setFillStyle(0xf7f7f7);
                 }
-                element.setScale(1);
             });
+            container.setScale(1);
         });
 
         container.on('pointerdown', () => {
-            buttonElements.forEach(element => {
-                element.setScale(0.95);
-            });
+            container.setScale(0.95);
         });
 
         container.on('pointerup', () => {
-            buttonElements.forEach(element => {
-                element.setScale(1.05);
-            });
+            container.setScale(1.05);
             
             // Go to next level (loop back to first level if at the end)
             const nextLevelIndex = (this.currentLevelIndex + 1) % this.totalLevels;

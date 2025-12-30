@@ -27,6 +27,7 @@ class WordWebGame extends Phaser.Scene {
         this.autopilotInProgress = false; // Track if autopilot is currently running
         this.placementAnimationMode = CONFIG.PLACEMENT_ANIMATION_MODE || 'cell';
         this.undoCount = 0; // Track number of times words are dragged back from slots
+        this.mistakeCount = 0; // Track mistakes according to game rules
     }
 
     preload() {
@@ -747,8 +748,18 @@ class WordWebGame extends Phaser.Scene {
 
     // Mark word as placed and slot as filled - only called after constraint validation
     markWordAsPlaced(gameObject, slotIdx, slotContainer, slotCells, originalWord, transformedWord, wasTransformed) {
+        // Check if this is a mistake (word was in a different slot before)
+        const draggedFromSlotIdx = gameObject.getData('draggedFromSlotIdx');
+        if (draggedFromSlotIdx !== undefined && draggedFromSlotIdx !== null && draggedFromSlotIdx !== slotIdx) {
+            this.mistakeCount++;
+            console.log(`Mistake: Word moved from slot ${draggedFromSlotIdx} to slot ${slotIdx}. Mistakes: ${this.mistakeCount}`);
+        }
+        // Clear the drag tracking
+        gameObject.setData('draggedFromSlotIdx', null);
+        
         gameObject.setData('placed', true);
         gameObject.setData('slotIdx', slotIdx);
+        gameObject.setData('lastPlacedSlotIdx', slotIdx);
 
         // Mark slot as filled with the final word (transformed or original)
         slotContainer.setData('filled', true);
@@ -886,6 +897,8 @@ class WordWebGame extends Phaser.Scene {
             // Remove from slot and delete correlated words
             if (wordContainer.getData('placed')) {
                 const slotIdx = wordContainer.getData('slotIdx');
+                // Store which slot this word is being dragged FROM for mistake tracking
+                wordContainer.setData('draggedFromSlotIdx', slotIdx);
                 this.removeWordFromSlot(slotIdx);
                 wordContainer.setData('placed', false);
                 wordContainer.setData('slotIdx', null);
@@ -905,6 +918,14 @@ class WordWebGame extends Phaser.Scene {
             if (!dropped) {
                 // Not dropped on a slot - return to exact same bank position as original
                 const initPos = wordContainer.getData('initPosition');
+                
+                // Check if this is a mistake (word was dragged from a slot and dropped outside)
+                const draggedFromSlotIdx = wordContainer.getData('draggedFromSlotIdx');
+                if (draggedFromSlotIdx !== undefined && draggedFromSlotIdx !== null) {
+                    this.mistakeCount++;
+                    console.log(`Mistake: Word dragged from slot ${draggedFromSlotIdx} and dropped outside. Mistakes: ${this.mistakeCount}`);
+                    wordContainer.setData('draggedFromSlotIdx', null);
+                }
                 
                 this.tweens.add({
                     targets: wordContainer,
@@ -1661,6 +1682,8 @@ class WordWebGame extends Phaser.Scene {
                 if (wordContainer.getData('placed')) {
                     const slotIdx = wordContainer.getData('slotIdx');
                     console.log(`Dragging placed word from slot ${slotIdx}`);
+                    // Store which slot this word is being dragged FROM for mistake tracking
+                    wordContainer.setData('draggedFromSlotIdx', slotIdx);
 
                     this.removeWordFromSlot(slotIdx);
                     // Clear placement data
@@ -1681,6 +1704,13 @@ class WordWebGame extends Phaser.Scene {
 
                 if (!dropped) {
                     // Not dropped on a valid slot, animate back to original position
+                    // Check if this is a mistake (word was dragged from a slot and dropped outside)
+                    const draggedFromSlotIdx = wordContainer.getData('draggedFromSlotIdx');
+                    if (draggedFromSlotIdx !== undefined && draggedFromSlotIdx !== null) {
+                        this.mistakeCount++;
+                        console.log(`Mistake: Word dragged from slot ${draggedFromSlotIdx} and dropped outside. Mistakes: ${this.mistakeCount}`);
+                        wordContainer.setData('draggedFromSlotIdx', null);
+                    }
                     // Make sure placement flags are cleared
                     wordContainer.setData('placed', false);
                     wordContainer.setData('slotIdx', null);
@@ -3094,7 +3124,8 @@ class WordWebGame extends Phaser.Scene {
             this.scene.launch('WinScene', {
                 currentLevelIndex: this.currentLevelIndex,
                 totalLevels: this.totalLevels,
-                undoCount: this.undoCount
+                undoCount: this.undoCount,
+                mistakeCount: this.mistakeCount
             });
             // Pause the game scene
             this.scene.pause();
