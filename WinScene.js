@@ -4,6 +4,25 @@
 class WinScene extends Phaser.Scene {
     constructor() {
         super('WinScene');
+        
+        // Random congratulatory messages
+        this.winMessages = [
+            'Boom!',
+            'Clean Win!',
+            'Perfect!',
+            'So Smooth!',
+            'Great Job!',
+            'Well Done!',
+            'Nailed It!',
+            'Awesome!',
+            'Brilliant!',
+            'Success!',
+            'Cool!',
+            'Clever!',
+            'Fantastic!',
+            'Amazing!',
+            'Bravo!'
+        ];
     }
 
     init(data) {
@@ -21,76 +40,23 @@ class WinScene extends Phaser.Scene {
         // Main container for win UI
         const winContainer = this.add.container(width / 2, height / 2);
 
-        // Background panel for win message
-        const panelWidth = 400;
-        const panelHeight = 300;
+        // Background panel for win message (larger)
+        const panelWidth = 600;
+        const panelHeight = 500;
         const panel = this.add.rectangle(0, 0, panelWidth, panelHeight, 0xffffff);
         panel.setStrokeStyle(4, 0x333333);
 
-        // Win title text
-        const titleText = this.add.text(0, -80, '🎉 Level Complete! 🎉', {
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '36px',
-            color: '#222',
-            fontStyle: 'bold',
-            resolution: window.devicePixelRatio || 2
-        }).setOrigin(0.5);
-
-        // Congratulations message
-        const messageText = this.add.text(0, -20, 'All slots filled successfully!\nGreat job!', {
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '20px',
-            color: '#555',
-            align: 'center',
-            resolution: window.devicePixelRatio || 2
-        }).setOrigin(0.5);
-
-        // Next button
-        const buttonWidth = 200;
-        const buttonHeight = 60;
-        const nextButton = this.add.rectangle(0, 60, buttonWidth, buttonHeight, 0x4CAF50);
-        nextButton.setStrokeStyle(3, 0x2E7D32);
-        nextButton.setInteractive({ useHandCursor: true });
-
-        const nextButtonText = this.add.text(0, 60, 'Next Level', {
-            fontFamily: 'Arial, sans-serif',
-            fontSize: '24px',
-            color: '#ffffff',
-            fontStyle: 'bold',
-            resolution: window.devicePixelRatio || 2
-        }).setOrigin(0.5);
-
-        // Button hover effects
-        nextButton.on('pointerover', () => {
-            nextButton.setFillStyle(0x66BB6A);
-            nextButton.setScale(1.05);
-            nextButtonText.setScale(1.05);
-        });
-
-        nextButton.on('pointerout', () => {
-            nextButton.setFillStyle(0x4CAF50);
-            nextButton.setScale(1);
-            nextButtonText.setScale(1);
-        });
-
-        nextButton.on('pointerdown', () => {
-            nextButton.setScale(0.95);
-            nextButtonText.setScale(0.95);
-        });
-
-        nextButton.on('pointerup', () => {
-            nextButton.setScale(1.05);
-            nextButtonText.setScale(1.05);
-            
-            // Go to next level (loop back to first level if at the end)
-            const nextLevelIndex = (this.currentLevelIndex + 1) % this.totalLevels;
-            
-            // Restart the game scene with the next level
-            this.scene.start('WordWebGame', { levelIndex: nextLevelIndex });
-        });
+        // Random win message
+        const randomMessage = Phaser.Utils.Array.GetRandom(this.winMessages);
+        
+        // Create heading with square cells (game style)
+        const headingContainer = this.createWordInCells(randomMessage, 0, -120, 50, 4);
+        
+        // Create NEXT button with square cells (game style)
+        const nextButtonContainer = this.createNextButton(0, 100);
 
         // Add all elements to the container
-        winContainer.add([panel, titleText, messageText, nextButton, nextButtonText]);
+        winContainer.add([panel, headingContainer, nextButtonContainer]);
 
         // Animate the win container (scale up effect)
         winContainer.setScale(0);
@@ -103,6 +69,114 @@ class WinScene extends Phaser.Scene {
 
         // Handle window resize
         this.scale.on('resize', this.resize, this);
+    }
+
+    createWordInCells(text, x, y, cellSize, gap) {
+        const container = this.add.container(x, y);
+        const letters = text.toUpperCase().split('');
+        
+        // Calculate total width to center the word
+        const totalWidth = letters.length * cellSize + (letters.length - 1) * gap;
+        const startX = -totalWidth / 2 + cellSize / 2;
+        
+        letters.forEach((letter, index) => {
+            const cellX = startX + index * (cellSize + gap);
+            
+            // Create square cell (skip for spaces)
+            if (letter !== ' ') {
+                const square = this.add.rectangle(cellX, 0, cellSize, cellSize, 0xf7f7f7);
+                square.setStrokeStyle(2, 0x333333);
+                
+                // Add letter text
+                const letterText = this.add.text(cellX, 0, letter, {
+                    fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+                    fontSize: `${cellSize * 0.6}px`,
+                    color: '#333',
+                    fontStyle: 'bold',
+                    resolution: window.devicePixelRatio || 2
+                }).setOrigin(0.5);
+                
+                container.add([square, letterText]);
+            }
+        });
+        
+        return container;
+    }
+
+    createNextButton(x, y) {
+        const container = this.add.container(x, y);
+        const buttonLetters = ['N', 'E', 'X', 'T'];
+        const cellSize = 60;
+        const gap = 4;
+        
+        // Calculate total width to center the button
+        const totalWidth = buttonLetters.length * cellSize + (buttonLetters.length - 1) * gap;
+        const startX = -totalWidth / 2 + cellSize / 2;
+        
+        const buttonElements = [];
+        
+        buttonLetters.forEach((letter, index) => {
+            const cellX = startX + index * (cellSize + gap);
+            
+            // Create square cell
+            const square = this.add.rectangle(cellX, 0, cellSize, cellSize, 0x4CAF50);
+            square.setStrokeStyle(3, 0x2E7D32);
+            
+            // Add letter text
+            const letterText = this.add.text(cellX, 0, letter, {
+                fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+                fontSize: `${cellSize * 0.5}px`,
+                color: '#ffffff',
+                fontStyle: 'bold',
+                resolution: window.devicePixelRatio || 2
+            }).setOrigin(0.5);
+            
+            buttonElements.push(square, letterText);
+            container.add([square, letterText]);
+        });
+        
+        // Make the entire container interactive
+        const hitArea = new Phaser.Geom.Rectangle(-totalWidth / 2, -cellSize / 2, totalWidth, cellSize);
+        container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { useHandCursor: true });
+        
+        // Button hover effects
+        container.on('pointerover', () => {
+            buttonElements.forEach(element => {
+                if (element.type === 'Rectangle') {
+                    element.setFillStyle(0x66BB6A);
+                }
+                element.setScale(1.05);
+            });
+        });
+
+        container.on('pointerout', () => {
+            buttonElements.forEach(element => {
+                if (element.type === 'Rectangle') {
+                    element.setFillStyle(0x4CAF50);
+                }
+                element.setScale(1);
+            });
+        });
+
+        container.on('pointerdown', () => {
+            buttonElements.forEach(element => {
+                element.setScale(0.95);
+            });
+        });
+
+        container.on('pointerup', () => {
+            buttonElements.forEach(element => {
+                element.setScale(1.05);
+            });
+            
+            // Go to next level (loop back to first level if at the end)
+            const nextLevelIndex = (this.currentLevelIndex + 1) % this.totalLevels;
+            
+            // Restart the game scene with the next level
+            this.scene.start('WordWebGame', { levelIndex: nextLevelIndex });
+        });
+        
+        return container;
     }
 
     resize(gameSize) {
