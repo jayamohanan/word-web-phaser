@@ -454,9 +454,8 @@ export class AnimationSequenceBuilder {
                             });
                         }
                         
-                        scene.time.delayedCall(500, () => {
-                            scene.checkWinCondition();
-                        });
+                        // Check win condition immediately after animations complete
+                        scene.checkWinCondition();
                     }
                     onComplete();
                 }
@@ -568,9 +567,8 @@ export class AnimationSequenceBuilder {
                             });
                         }
                         
-                        scene.time.delayedCall(500, () => {
-                            scene.checkWinCondition();
-                        });
+                        // Check win condition immediately after animations complete
+                        scene.checkWinCondition();
                     }
                     onComplete();
                 }

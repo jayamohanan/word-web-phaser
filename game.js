@@ -3059,17 +3059,15 @@ class WordWebGame extends Phaser.Scene {
         this.input.enabled = true;
         this.autopilotInProgress = false;
 
-        // Check win condition
-        this.time.delayedCall(500, () => {
-            this.checkWinCondition();
+        // Check win condition immediately after autopilot placement
+        this.checkWinCondition();
 
-            // Try to place another obvious word if available
-            if (this.autopilotEnabled && !this.checkAllSlotsFilled()) {
-                this.time.delayedCall(600, () => {
-                    this.tryAutopilotPlacement();
-                });
-            }
-        });
+        // Try to place another obvious word if available
+        if (this.autopilotEnabled && !this.checkAllSlotsFilled()) {
+            this.time.delayedCall(600, () => {
+                this.tryAutopilotPlacement();
+            });
+        }
     }
 
     // Helper to check if all slots are filled without triggering win
