@@ -13,18 +13,13 @@ class WordWebGame extends Phaser.Scene {
     init(data) {
         this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
         this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
-        this.currentLevelIndex = data.levelIndex !== undefined ? data.levelIndex : 0;
+        this.currentLevelIndex = data.levelIndex !== undefined ? data.levelIndex : 0;  
 
-        // Cache CONFIG variables for performance
-        this.squareWidth = CONFIG.SQUARE_WIDTH;
-        this.squareGap = CONFIG.SQUARE_GAP;
-        this.gridSize = CONFIG.GRID_SIZE;
-        this.slotStrokeWidth = CONFIG.SLOT_STROKE_WIDTH;
+        this.largeConfigSize = CONFIG.SIZE.LARGE;
+        this.smallConfigSize = CONFIG.SIZE.SMALL;
+       
         this.slotStrokeColor = CONFIG.SLOT_STROKE_COLOR;
-        this.wordStrokeWidth = CONFIG.WORD_STROKE_WIDTH;
-        this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
-        this.wordCellFontSize = CONFIG.WORD_CELL_FONT_SIZE;
-        this.slotCellFontSize = CONFIG.SLOT_CELL_FONT_SIZE;
+        this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;        
         this.letterFontFamily = CONFIG.LETTER_FONT_FAMILY === 'default' ? 'Arial, sans-serif' : CONFIG.LETTER_FONT_FAMILY;
         this.letterFontWeight = CONFIG.LETTER_FONT_WEIGHT;
         this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
@@ -78,12 +73,26 @@ class WordWebGame extends Phaser.Scene {
             console.error('Available JSON cache keys:', this.cache.json.getKeys());
             return;
         }
+
         this.input.dragDistanceThreshold = 8;
 
         this.totalLevels = levels.levels.length;
         // Use modulo to loop levels
         this.level = levels.levels[this.currentLevelIndex % this.totalLevels];
+
+        this.configSize = this.level.size === 'small' ? this.smallConfigSize : this.largeConfigSize;
         
+         // Cache CONFIG variables for performance
+        this.squareWidth = this.configSize.SQUARE_WIDTH;
+        this.squareGap = this.configSize.SQUARE_GAP;
+        this.gridSize = this.configSize.SQUARE_WIDTH + this.configSize.SQUARE_GAP;
+        this.slotStrokeWidth = this.configSize.SLOT_STROKE_WIDTH;
+        this.wordStrokeWidth = this.configSize.WORD_STROKE_WIDTH;
+        this.slotCellFontSize = this.configSize.SLOT_CELL_FONT_SIZE;
+        this.wordCellFontSize = this.configSize.WORD_CELL_FONT_SIZE;
+
+
+
         // Create gradient backgrounds
         this.createGradientBackgrounds();
         
