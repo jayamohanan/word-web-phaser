@@ -88,6 +88,9 @@ var CONFIG = {
     // Placement animation mode
     PLACEMENT_ANIMATION_MODE: 'cell',  // 'letter' = letters only, 'cell' = letters + squares
 
+    // Level start animations - animate slots and lines on level load
+    LEVEL_START_ANIMATIONS: false,  // Set to false to disable entrance animations
+
     // Debug mode - show portrait boundary (720x1280 area) on desktop
     SHOW_PORTRAIT_BOUNDARY: true,  // Set to false to hide portrait boundary in debug
 

@@ -28,6 +28,7 @@ class WinScene extends Phaser.Scene {
     init(data) {
         this.currentLevelIndex = data.currentLevelIndex || 0;
         this.totalLevels = data.totalLevels || 1;
+        this.undoCount = data.undoCount || 0;
     }
 
     create() {
@@ -52,14 +53,28 @@ class WinScene extends Phaser.Scene {
         // Random win message
         const randomMessage = Phaser.Utils.Array.GetRandom(this.winMessages);
         
-        // Create heading with square cells (game style)
-        const headingContainer = this.createWordInCells(randomMessage, 0, -120, 50, 6);
+        // Create heading as plain text
+        const headingText = this.add.text(0, -140, randomMessage, {
+            fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+            fontSize: '48px',
+            color: '#333',
+            fontStyle: 'bold',
+            resolution: window.devicePixelRatio || 2
+        }).setOrigin(0.5);
+        
+        // Create mistake count text
+        const mistakeText = this.add.text(0, -80, `Mistake ${this.undoCount}`, {
+            fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+            fontSize: '28px',
+            color: '#666',
+            resolution: window.devicePixelRatio || 2
+        }).setOrigin(0.5);
         
         // Create NEXT button with square cells (game style)
-        const nextButtonContainer = this.createNextButton(0, 100);
+        const nextButtonContainer = this.createNextButton(0, 60);
 
         // Add all elements to the container
-        winContainer.add([panel, headingContainer, nextButtonContainer]);
+        winContainer.add([panel, headingText, mistakeText, nextButtonContainer]);
 
         // Animate the win container (scale up effect)
         winContainer.setScale(0);

@@ -26,6 +26,7 @@ class WordWebGame extends Phaser.Scene {
         this.autopilotEnabled = CONFIG.AUTOPILOT_ENABLED;
         this.autopilotInProgress = false; // Track if autopilot is currently running
         this.placementAnimationMode = CONFIG.PLACEMENT_ANIMATION_MODE || 'cell';
+        this.undoCount = 0; // Track number of times words are dragged back from slots
     }
 
     preload() {
@@ -165,6 +166,10 @@ class WordWebGame extends Phaser.Scene {
 
         // Create UI elements (level display and buttons)
         this.createUIElements();
+
+        // Disable input initially and start entrance animations
+        this.input.enabled = false;
+        this.playEntranceAnimations();
 
         // Removed debug red square at canvas center
 
@@ -885,6 +890,8 @@ class WordWebGame extends Phaser.Scene {
                 wordContainer.setData('placed', false);
                 wordContainer.setData('slotIdx', null);
                 wordContainer.setData('isInduced', false);
+                // Increment undo count when user drags word back from slot
+                this.undoCount++;
             }
         });
         
@@ -3086,11 +3093,82 @@ class WordWebGame extends Phaser.Scene {
             // Launch win scene immediately (animations removed)
             this.scene.launch('WinScene', {
                 currentLevelIndex: this.currentLevelIndex,
-                totalLevels: this.totalLevels
+                totalLevels: this.totalLevels,
+                undoCount: this.undoCount
             });
             // Pause the game scene
             this.scene.pause();
         }
+    }
+
+    // Play entrance animations for level start
+    playEntranceAnimations() {
+        // Check if entrance animations are enabled
+        if (!CONFIG.LEVEL_START_ANIMATIONS) {
+            this.input.enabled = true;
+            return;
+        }
+        
+        // Set connection lines to 0.3 alpha initially
+        this.connectionLines.forEach(line => {
+            line.setAlpha(0.3);
+        });
+
+        // Set all slot cells to 0.3 alpha initially
+        this.slotSprites.forEach(slotContainer => {
+            slotContainer.list.forEach(squareContainer => {
+                squareContainer.setAlpha(0.3);
+            });
+        });
+
+        // Start slot cells animations
+        this.animateSlotCells();
+    }
+
+    // Animate slot cells all at once (fade-in animation)
+    animateSlotCells() {
+        const animDuration = 200;
+
+        // All slots and all cells animate simultaneously
+        this.slotSprites.forEach((slotContainer, slotIdx) => {
+            slotContainer.list.forEach((squareContainer, cellIdx) => {
+                this.tweens.add({
+                    targets: squareContainer,
+                    alpha: 1,
+                    duration: animDuration,
+                    ease: 'Linear'
+                });
+            });
+        });
+
+        // After all slot cells are animated, show connection lines
+        this.time.delayedCall(animDuration + 100, () => {
+            this.animateConnectionLines();
+        });
+    }
+
+    // Animate connection lines appearing
+    animateConnectionLines() {
+        let maxLineDelay = 0;
+        
+        this.connectionLines.forEach((line, idx) => {
+            const delay = idx * 30;
+            maxLineDelay = Math.max(maxLineDelay, delay);
+            
+            this.time.delayedCall(delay, () => {
+                this.tweens.add({
+                    targets: line,
+                    alpha: 1,
+                    duration: 200,
+                    ease: 'Linear'
+                });
+            });
+        });
+        
+        // After lines are complete, enable input
+        this.time.delayedCall(maxLineDelay + 200 + 50, () => {
+            this.input.enabled = true;
+        });
     }
 }
 
