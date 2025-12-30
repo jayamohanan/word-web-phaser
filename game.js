@@ -245,11 +245,21 @@ class WordWebGame extends Phaser.Scene {
             const slotContainer = this.slotSprites[slotIdx];
             const slotCells = slotContainer.getData('slotCells');
 
-            // Clear blue tint from slot cells
+            // Clear blue tint from slot cells, but restore green tint for hint cells
             slotCells.forEach(cell => {
                 const square = cell.squareContainer.getData('square');
                 if (square) {
-                    square.clearTint(); // Remove highlight
+                    // Check if this cell has a hint
+                    const letterText = cell.squareContainer.getData('letterText');
+                    const hasHint = letterText && letterText.text && letterText.text.trim() !== '';
+                    
+                    if (hasHint) {
+                        // Restore green tint for hint cells
+                        square.setTint(this.connectionHighlightColor);
+                    } else {
+                        // Clear tint for non-hint cells
+                        square.clearTint();
+                    }
                 }
             });
 
