@@ -69,6 +69,9 @@ var CONFIG = {
     SLOT_MARKER_FONT_FAMILY: 'Poppins-LightItalic',
     SLOT_MARKER_FONT_WEIGHT: '300', // Font weight for slot markers (use '300', '400', '500', or '700' as string)
 
+    // Feature toggles
+    ENABLE_LINE_CLICK_HIGHLIGHTING: true, // Enable click on connection lines to highlight matching word bank cells
+
     // Background gradients (Poki gaming style)
     // Outer background gradient (full canvas)
     OUTER_BG_GRADIENT_TOP: '#ABE0F0',    // Deep purple (top)
@@ -108,7 +111,8 @@ var CONFIG = {
     // Hover Effects
     HOVER_SCALE_ENABLED: false,  // Set to false to disable scale highlight on hover
     HOVER_TINT_ENABLED: true,   // Set to false to disable tint highlight on hover
-    HOVER_TINT_COLOR: 0xe3f2fd, // Tint color for hover effect (light blue)
+    HOVER_TINT_COLOR: 0xd3e4fd, // Tint color for hover effect (slightly darker blue for visibility)
+    WORD_CLICK_FEEDBACK_COLOR: 0xb8d4f7, // Darker blue tint for click feedback on words
     
    SASHA_PALETTE: [
     { name: 'Red', hex: '#e6194b', tint: '#fad1da' },

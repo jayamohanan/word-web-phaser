@@ -28,6 +28,7 @@ class WordWebGame extends Phaser.Scene {
         this.placementAnimationMode = CONFIG.PLACEMENT_ANIMATION_MODE || 'cell';
         this.undoCount = 0; // Track number of times words are dragged back from slots
         this.mistakeCount = 0; // Track mistakes according to game rules
+        this.activeHighlightLine = null; // Track currently highlighted line for toggle behavior
         
         // Initialize score system
         this.currentScore = 0;
@@ -177,6 +178,50 @@ class WordWebGame extends Phaser.Scene {
 
         // Create UI elements (level display and buttons)
         this.createUIElements();
+
+        // Add background click handler to clear highlights (if feature enabled)
+        if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
+            this.input.on('pointerdown', (pointer) => {
+                console.log('Background pointerdown');
+                // Check what objects were hit
+                const hitObjects = this.input.hitTestPointer(pointer);
+                console.log('Hit objects:', hitObjects.length, hitObjects);
+                
+                // Check if we clicked on a connection line zone
+                let clickedZone = null;
+                let lineGraphics = null;
+                for (let obj of hitObjects) {
+                    if (this.connectionLines.includes(obj) && obj.getData) {
+                        const ruleInfo = obj.getData('ruleInfo');
+                        if (ruleInfo) {
+                            clickedZone = obj;
+                            lineGraphics = obj.getData('connectionLine');
+                            console.log('Found zone with ruleInfo!');
+                            break;
+                        }
+                    }
+                }
+                
+                if (clickedZone) {
+                    // Handle line click
+                    const ruleInfo = clickedZone.getData('ruleInfo');
+                    console.log('Handling line click from background handler');
+                    this.handleConnectionLineClick(ruleInfo, lineGraphics);
+                } else {
+                    // Check if we clicked on a word container
+                    const clickedWord = hitObjects.some(obj => 
+                        this.bankSprites && this.bankSprites.includes(obj)
+                    );
+                    
+                    if (!clickedWord) {
+                        // Clear highlights when clicking on background
+                        this.clearWordBankHighlights();
+                        this.clearLineHighlight();
+                        this.activeHighlightLine = null;
+                    }
+                }
+            });
+        }
 
         // Disable input initially and start entrance animations
         this.input.enabled = false;
@@ -944,12 +989,16 @@ class WordWebGame extends Phaser.Scene {
                     });
                 }
                 
-                // Apply tint to all cells if enabled
+                // Apply tint to all cells if enabled (but don't override line-click highlights)
                 if (CONFIG.HOVER_TINT_ENABLED) {
                     const cells = wordContainer.getData('wordCells');
                     if (cells) {
                         cells.forEach(cell => {
-                            if (cell.square) cell.square.setTint(CONFIG.HOVER_TINT_COLOR);
+                            // Only tint if not already highlighted by line click
+                            if (cell.square && !cell.square.getData('highlighted')) {
+                                cell.square.setTint(CONFIG.HOVER_TINT_COLOR);
+                                cell.square.setData('hoverTinted', true);
+                            }
                         });
                     }
                 }
@@ -968,12 +1017,15 @@ class WordWebGame extends Phaser.Scene {
                     });
                 }
                 
-                // Clear tint from all cells if it was enabled
+                // Clear tint only from cells that were hover-tinted (not line-click highlighted)
                 if (CONFIG.HOVER_TINT_ENABLED) {
                     const cells = wordContainer.getData('wordCells');
                     if (cells) {
                         cells.forEach(cell => {
-                            if (cell.square) cell.square.clearTint();
+                            if (cell.square && cell.square.getData('hoverTinted') && !cell.square.getData('highlighted')) {
+                                cell.square.clearTint();
+                                cell.square.setData('hoverTinted', false);
+                            }
                         });
                     }
                 }
@@ -1848,12 +1900,16 @@ class WordWebGame extends Phaser.Scene {
                         });
                     }
                     
-                    // Apply tint to all cells if enabled
+                    // Apply tint to all cells if enabled (but don't override line-click highlights)
                     if (CONFIG.HOVER_TINT_ENABLED) {
                         const cells = wordContainer.getData('wordCells');
                         if (cells) {
                             cells.forEach(cell => {
-                                if (cell.square) cell.square.setTint(CONFIG.HOVER_TINT_COLOR);
+                                // Only tint if not already highlighted by line click
+                                if (cell.square && !cell.square.getData('highlighted')) {
+                                    cell.square.setTint(CONFIG.HOVER_TINT_COLOR);
+                                    cell.square.setData('hoverTinted', true);
+                                }
                             });
                         }
                     }
@@ -1872,12 +1928,15 @@ class WordWebGame extends Phaser.Scene {
                         });
                     }
                     
-                    // Clear tint from all cells if it was enabled
+                    // Clear tint only from cells that were hover-tinted (not line-click highlighted)
                     if (CONFIG.HOVER_TINT_ENABLED) {
                         const cells = wordContainer.getData('wordCells');
                         if (cells) {
                             cells.forEach(cell => {
-                                if (cell.square) cell.square.clearTint();
+                                if (cell.square && cell.square.getData('hoverTinted') && !cell.square.getData('highlighted')) {
+                                    cell.square.clearTint();
+                                    cell.square.setData('hoverTinted', false);
+                                }
                             });
                         }
                     }
@@ -1887,6 +1946,11 @@ class WordWebGame extends Phaser.Scene {
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
                 console.log('=== DRAGSTART EVENT FIRED ===');
+                
+                // Clear connection line highlights when dragging starts (if feature enabled)
+                if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
+                    this.clearWordBankHighlights();
+                }
                 
                 // Reset scale and clear tint when dragging starts
                 wordContainer.setScale(1.0);
@@ -2125,7 +2189,7 @@ class WordWebGame extends Phaser.Scene {
         // Words rules are now marked with italic letters on slots (no lines/labels)
 
         // Render cell rules
-        rules.forEach(rule => {
+        rules.forEach((rule, ruleIndex) => {
             const ruleInfo = this.parseRule(rule);
             if (!ruleInfo) return; // Skip invalid rules
 
@@ -2140,7 +2204,51 @@ class WordWebGame extends Phaser.Scene {
             line.setData('slotIdx', ruleInfo.slotIdx);
             line.setData('toSlotIdx', ruleInfo.toSlotIdx);
             line.setData('originalColor', connectionColor);
+            line.setData('ruleInfo', ruleInfo); // Store the complete rule info
+            line.setData('ruleIndex', ruleIndex); // Store the rule index
+            
             this.connectionLines.push(line);
+            
+            // Make line interactive for click handling if feature is enabled
+            if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
+                // Create an invisible interactive zone over the line for click detection
+                const hitWidth = 20; // Width of the clickable area
+                const lineLength = Math.sqrt(Math.pow(toPt.x - fromPt.x, 2) + Math.pow(toPt.y - fromPt.y, 2));
+                const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
+                
+                // Create an invisible rectangle zone for interaction
+                const zone = this.add.zone(fromPt.x, fromPt.y, lineLength, hitWidth).setOrigin(0, 0.5);
+                zone.setRotation(angle);
+                zone.setInteractive({ useHandCursor: true });
+                zone.setDepth(-99); // Just above the line
+                
+                // Store reference to the line
+                zone.setData('connectionLine', line);
+                zone.setData('ruleInfo', ruleInfo);
+                
+                console.log('Setting up zone click handler for line', ruleIndex);
+                
+                // Add click handler - use pointerup which is more reliable than pointerdown
+                zone.on('pointerup', (pointer) => {
+                    console.log('ZONE POINTERUP FIRED!', ruleInfo);
+                    // Stop event propagation so background handler doesn't clear highlights
+                    if (pointer.event) pointer.event.stopPropagation();
+                    this.handleConnectionLineClick(ruleInfo);
+                });
+                
+                // Add hover effect for visual feedback
+                zone.on('pointerover', () => {
+                    console.log('Zone hover');
+                    line.setLineWidth(5);
+                });
+                zone.on('pointerout', () => {
+                    console.log('Zone hover out');
+                    line.setLineWidth(3);
+                });
+                
+                // Store zone for cleanup if needed
+                this.connectionLines.push(zone);
+            }
 
             // Draw directional arrows for incremental rules only (type 1)
             if (ruleInfo.type === 1 && ruleInfo.increment !== 0) {
@@ -3435,6 +3543,230 @@ class WordWebGame extends Phaser.Scene {
         // After all slot cells are animated, show connection lines
         this.time.delayedCall(animDuration + 100, () => {
             this.animateConnectionLines();
+        });
+    }
+
+    // Handle connection line click - highlight matching word bank cells
+    handleConnectionLineClick(ruleInfo, lineGraphics) {
+        console.log('=== LINE CLICK HANDLER ===');
+        console.log('Rule info:', ruleInfo);
+        
+        // Check if this line is already highlighted (toggle behavior)
+        if (this.activeHighlightLine === lineGraphics) {
+            console.log('Toggling OFF - same line clicked');
+            // Clear highlights and remove line emphasis
+            this.clearWordBankHighlights();
+            this.clearLineHighlight();
+            this.activeHighlightLine = null;
+            return;
+        }
+        
+        // Clear any previous highlights
+        this.clearWordBankHighlights();
+        this.clearLineHighlight();
+        
+        // Store the active line
+        this.activeHighlightLine = lineGraphics;
+        
+        // Highlight the clicked line visually
+        this.highlightLine(lineGraphics);
+        
+        // Decode the line rule to determine positions
+        const pos1 = ruleInfo.squareIdx;  // Position in first slot
+        const pos2 = ruleInfo.toSquareIdx; // Position in second slot
+        
+        console.log('Checking positions:', pos1, pos2);
+        
+        // Get all words in the bank (not placed)
+        const bankWords = this.bankSprites.filter(wordContainer => 
+            !wordContainer.getData('placed')
+        );
+        
+        console.log('Bank words count:', bankWords.length);
+        if (bankWords.length === 0) {
+            console.log('No words in bank to highlight');
+            return; // No words to highlight
+        }
+        
+        // Group words by matching letters at the specified positions
+        const groups = this.groupWordsByMatchingLetters(bankWords, pos1, pos2);
+        
+        console.log('Groups found:', groups.length);
+        groups.forEach((group, idx) => {
+            console.log(`Group ${idx}:`, group.map(w => `${w.wordContainer.getData('word')}[${w.position}]=${w.letter}`));
+        });
+        
+        // Highlight each group with a different color from the palette
+        groups.forEach((group, groupIndex) => {
+            if (group.length < 2) {
+                console.log(`Skipping group ${groupIndex} - only ${group.length} items`);
+                return; // Only highlight groups with 2+ words
+            }
+            
+            const colorIndex = groupIndex % CONFIG.SASHA_PALETTE.length;
+            const tintColor = CONFIG.SASHA_PALETTE[colorIndex].tint;
+            const tintColorHex = parseInt(tintColor.replace('#', ''), 16);
+            
+            console.log(`Applying color ${tintColor} (${tintColorHex}) to group ${groupIndex}`);
+            
+            // Highlight cells for each word in the group
+            group.forEach(wordInfo => {
+                this.highlightWordCell(wordInfo.wordContainer, wordInfo.position, tintColorHex);
+            });
+        });
+    }
+    
+    // Group words by matching letters at specified positions
+    // pos1 = position in first slot (x), pos2 = position in second slot (y)
+    // Logic: For a line connecting position x to position y,
+    // find all words where letter at position x matches letter at position y in another word
+    groupWordsByMatchingLetters(bankWords, pos1, pos2) {
+        console.log(`Grouping words for positions x=${pos1}, y=${pos2}`);
+        
+        // Step 1: Collect all letters at both positions
+        const lettersAtPos1 = new Map(); // letter -> array of {wordContainer, wordIdx}
+        const lettersAtPos2 = new Map(); // letter -> array of {wordContainer, wordIdx}
+        
+        bankWords.forEach((wordContainer, wordIdx) => {
+            const word = wordContainer.getData('word');
+            
+            // Collect letter at pos1 (x position)
+            if (pos1 < word.length) {
+                const letter = word[pos1];
+                if (!lettersAtPos1.has(letter)) {
+                    lettersAtPos1.set(letter, []);
+                }
+                lettersAtPos1.get(letter).push({ wordContainer, wordIdx, position: pos1 });
+            }
+            
+            // Collect letter at pos2 (y position)
+            if (pos2 < word.length) {
+                const letter = word[pos2];
+                if (!lettersAtPos2.has(letter)) {
+                    lettersAtPos2.set(letter, []);
+                }
+                lettersAtPos2.get(letter).push({ wordContainer, wordIdx, position: pos2 });
+            }
+        });
+        
+        console.log('Letters at pos1:', Array.from(lettersAtPos1.keys()));
+        console.log('Letters at pos2:', Array.from(lettersAtPos2.keys()));
+        
+        // Step 2: For each letter, find groups where:
+        // - One or more words have this letter at pos1
+        // - One or more words have this letter at pos2
+        // - These form a valid matching group
+        const groups = [];
+        const allLetters = new Set([...lettersAtPos1.keys(), ...lettersAtPos2.keys()]);
+        
+        allLetters.forEach(letter => {
+            const wordsWithLetterAtPos1 = lettersAtPos1.get(letter) || [];
+            const wordsWithLetterAtPos2 = lettersAtPos2.get(letter) || [];
+            
+            // Only include groups where:
+            // 1. At least one word has this letter at pos1 
+            // 2. At least one DIFFERENT word has this letter at pos2
+            // This ensures we only highlight letters that can actually match across the connection
+            
+            if (wordsWithLetterAtPos1.length === 0 || wordsWithLetterAtPos2.length === 0) {
+                // No match possible - need words at both positions
+                return;
+            }
+            
+            // Check if we have at least 2 different words involved
+            const uniqueWordIndices = new Set();
+            wordsWithLetterAtPos1.forEach(item => uniqueWordIndices.add(item.wordIdx));
+            wordsWithLetterAtPos2.forEach(item => uniqueWordIndices.add(item.wordIdx));
+            
+            if (uniqueWordIndices.size < 2) {
+                // Only one word has this letter at either position - not worth highlighting
+                console.log(`Skipping letter '${letter}' - only appears in ${uniqueWordIndices.size} word(s)`);
+                return;
+            }
+            
+            // Create a group containing all cells with this letter at either position
+            const group = [];
+            
+            // Add all words with this letter at pos1
+            wordsWithLetterAtPos1.forEach(item => {
+                group.push({
+                    wordContainer: item.wordContainer,
+                    position: item.position,
+                    letter: letter,
+                    wordIdx: item.wordIdx
+                });
+            });
+            
+            // Add all words with this letter at pos2
+            wordsWithLetterAtPos2.forEach(item => {
+                group.push({
+                    wordContainer: item.wordContainer,
+                    position: item.position,
+                    letter: letter,
+                    wordIdx: item.wordIdx
+                });
+            });
+            
+            console.log(`Group for letter '${letter}': ${wordsWithLetterAtPos1.length} at pos1, ${wordsWithLetterAtPos2.length} at pos2, ${uniqueWordIndices.size} unique words`);
+            groups.push(group);
+        });
+        
+        return groups;
+    }
+    
+    // Highlight a specific cell in a word container
+    highlightWordCell(wordContainer, letterIdx, tintColor) {
+        console.log(`Highlighting word ${wordContainer.getData('word')} cell ${letterIdx} with color ${tintColor.toString(16)}`);
+        const wordCells = wordContainer.getData('wordCells');
+        if (!wordCells || letterIdx >= wordCells.length) {
+            console.log('No wordCells or invalid letterIdx');
+            return;
+        }
+        
+        const cell = wordCells[letterIdx];
+        if (cell && cell.square) {
+            console.log('Applying tint to cell square');
+            cell.square.setTint(tintColor);
+            // Store that this cell is highlighted for later clearing
+            cell.square.setData('highlighted', true);
+        } else {
+            console.log('Cell or cell.square not found');
+        }
+    }
+    
+    // Highlight the clicked line visually
+    highlightLine(lineGraphics) {
+        if (!lineGraphics) return;
+        
+        // Make the line thicker and change color to show it's active
+        lineGraphics.setLineWidth(6);
+        lineGraphics.setStrokeStyle(6, 0x4a90e2); // Blue color for active line
+    }
+    
+    // Clear line highlight
+    clearLineHighlight() {
+        if (this.activeHighlightLine) {
+            // Reset to original width and color
+            const originalColor = this.activeHighlightLine.getData('originalColor');
+            this.activeHighlightLine.setLineWidth(3);
+            if (originalColor !== undefined) {
+                this.activeHighlightLine.setStrokeStyle(3, originalColor);
+            }
+        }
+    }
+    
+    // Clear all word bank cell highlights
+    clearWordBankHighlights() {
+        this.bankSprites.forEach(wordContainer => {
+            const wordCells = wordContainer.getData('wordCells');
+            if (!wordCells) return;
+            
+            wordCells.forEach(cell => {
+                if (cell.square && cell.square.getData('highlighted')) {
+                    cell.square.clearTint();
+                    cell.square.setData('highlighted', false);
+                }
+            });
         });
     }
 
