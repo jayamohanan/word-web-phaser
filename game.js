@@ -29,6 +29,7 @@ class WordWebGame extends Phaser.Scene {
         this.undoCount = 0; // Track number of times words are dragged back from slots
         this.mistakeCount = 0; // Track mistakes according to game rules
         this.activeHighlightLine = null; // Track currently highlighted line for toggle behavior
+        this.hoveredZone = null; // Track currently hovered zone for reliable click detection
         
         // Initialize score system
         this.currentScore = 0;
@@ -183,42 +184,31 @@ class WordWebGame extends Phaser.Scene {
         if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
             this.input.on('pointerdown', (pointer) => {
                 console.log('Background pointerdown');
-                // Check what objects were hit
-                const hitObjects = this.input.hitTestPointer(pointer);
-                console.log('Hit objects:', hitObjects.length, hitObjects);
                 
-                // Check if we clicked on a connection line zone
-                let clickedZone = null;
-                let lineGraphics = null;
-                for (let obj of hitObjects) {
-                    if (this.connectionLines.includes(obj) && obj.getData) {
-                        const ruleInfo = obj.getData('ruleInfo');
-                        if (ruleInfo) {
-                            clickedZone = obj;
-                            lineGraphics = obj.getData('connectionLine');
-                            console.log('Found zone with ruleInfo!');
-                            break;
-                        }
+                // If a zone is hovered, the user clicked on a line
+                if (this.hoveredZone) {
+                    const lineGraphics = this.hoveredZone.getData('connectionLine');
+                    const ruleInfo = this.hoveredZone.getData('ruleInfo');
+                    console.log('Click on hovered zone, line graphics:', lineGraphics);
+                    
+                    if (ruleInfo && lineGraphics) {
+                        console.log('Handling line click from hovered zone');
+                        this.handleConnectionLineClick(ruleInfo, lineGraphics);
+                        return; // Don't clear highlights
                     }
                 }
                 
-                if (clickedZone) {
-                    // Handle line click
-                    const ruleInfo = clickedZone.getData('ruleInfo');
-                    console.log('Handling line click from background handler');
-                    this.handleConnectionLineClick(ruleInfo, lineGraphics);
-                } else {
-                    // Check if we clicked on a word container
-                    const clickedWord = hitObjects.some(obj => 
-                        this.bankSprites && this.bankSprites.includes(obj)
-                    );
-                    
-                    if (!clickedWord) {
-                        // Clear highlights when clicking on background
-                        this.clearWordBankHighlights();
-                        this.clearLineHighlight();
-                        this.activeHighlightLine = null;
-                    }
+                // Check if we clicked on a word container
+                const hitObjects = this.input.hitTestPointer(pointer);
+                const clickedWord = hitObjects.some(obj => 
+                    this.bankSprites && this.bankSprites.includes(obj)
+                );
+                
+                if (!clickedWord) {
+                    // Clear highlights when clicking on background
+                    this.clearWordBankHighlights();
+                    this.clearLineHighlight();
+                    this.activeHighlightLine = null;
                 }
             });
         }
@@ -2239,11 +2229,19 @@ class WordWebGame extends Phaser.Scene {
                 // Add hover effect for visual feedback
                 zone.on('pointerover', () => {
                     console.log('Zone hover');
-                    line.setLineWidth(5);
+                    this.hoveredZone = zone; // Track hovered zone
+                    // Only change width if line is not actively highlighted
+                    if (this.activeHighlightLine !== line) {
+                        line.setLineWidth(5);
+                    }
                 });
                 zone.on('pointerout', () => {
                     console.log('Zone hover out');
-                    line.setLineWidth(3);
+                    this.hoveredZone = null; // Clear hovered zone
+                    // Only reset if line is not actively highlighted
+                    if (this.activeHighlightLine !== line) {
+                        line.setLineWidth(3);
+                    }
                 });
                 
                 // Store zone for cleanup if needed
@@ -3550,9 +3548,10 @@ class WordWebGame extends Phaser.Scene {
     handleConnectionLineClick(ruleInfo, lineGraphics) {
         console.log('=== LINE CLICK HANDLER ===');
         console.log('Rule info:', ruleInfo);
+        console.log('Line graphics:', lineGraphics);
         
         // Check if this line is already highlighted (toggle behavior)
-        if (this.activeHighlightLine === lineGraphics) {
+        if (this.activeHighlightLine === lineGraphics && lineGraphics) {
             console.log('Toggling OFF - same line clicked');
             // Clear highlights and remove line emphasis
             this.clearWordBankHighlights();
@@ -3565,11 +3564,14 @@ class WordWebGame extends Phaser.Scene {
         this.clearWordBankHighlights();
         this.clearLineHighlight();
         
-        // Store the active line
-        this.activeHighlightLine = lineGraphics;
-        
-        // Highlight the clicked line visually
-        this.highlightLine(lineGraphics);
+        // Store the active line and highlight it
+        if (lineGraphics) {
+            this.activeHighlightLine = lineGraphics;
+            this.highlightLine(lineGraphics);
+            console.log('Line highlighted successfully');
+        } else {
+            console.warn('lineGraphics is null/undefined - cannot highlight line visually');
+        }
         
         // Decode the line rule to determine positions
         const pos1 = ruleInfo.squareIdx;  // Position in first slot
@@ -3736,11 +3738,16 @@ class WordWebGame extends Phaser.Scene {
     
     // Highlight the clicked line visually
     highlightLine(lineGraphics) {
-        if (!lineGraphics) return;
+        if (!lineGraphics) {
+            console.warn('highlightLine called with null/undefined lineGraphics');
+            return;
+        }
         
+        console.log('Highlighting line - current width:', lineGraphics.lineWidth);
         // Make the line thicker and change color to show it's active
         lineGraphics.setLineWidth(6);
         lineGraphics.setStrokeStyle(6, 0x4a90e2); // Blue color for active line
+        console.log('Line set to width 6, color blue');
     }
     
     // Clear line highlight
