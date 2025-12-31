@@ -49,10 +49,13 @@ var CONFIG = {
     ORIGIN_Y_FACTOR: 0.50,  // 50% of canvas height (closer to words in portrait mode)
 
     // Stroke styles for slots and words
+    USE_GRAY_STROKES: true,  // Set to false to use black strokes for cells and lines
 
-    SLOT_STROKE_COLOR: 0x000000,  // Black
+    get SLOT_STROKE_COLOR() { return this.USE_GRAY_STROKES ? 0x808080 : 0x000000; },  // Gray or Black
 
-    WORD_STROKE_COLOR: 0x333333,   // Dark gray
+    get WORD_STROKE_COLOR() { return this.USE_GRAY_STROKES ? 0x808080 : 0x333333; },   // Gray or Dark gray
+
+    get LINE_COLOR() { return this.USE_GRAY_STROKES ? 0x808080 : 0x000000; },  // Gray or Black for connection lines
 
     CELL_BG1_COLOR: 0xf7f7f7,  // White for normal cells
     CELL_BG2_COLOR: 0xededed,  // Light gray for special cells (e.g., starting letters)

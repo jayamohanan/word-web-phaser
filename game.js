@@ -2117,7 +2117,7 @@ class WordWebGame extends Phaser.Scene {
 
     renderConnections() {
         // Use the same color as slot square outline: black (0x000000)
-        const connectionColor = 0x000000;
+        const connectionColor = CONFIG.LINE_COLOR;
 
         // Support both 'rules' (new) and 'connections' (legacy)
         const rules = this.level.rules || this.level.connections || [];
