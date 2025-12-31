@@ -9,8 +9,8 @@ var CONFIG = {
             SLOT_STROKE_WIDTH: 2,
             WORD_STROKE_WIDTH: 2,
             // Font sizes
-            WORD_CELL_FONT_SIZE: '40px',   // Font size for letters in word cells
-            SLOT_CELL_FONT_SIZE: '40px',    // Font size for hints in slot cells
+            WORD_CELL_FONT_SIZE: '36px',   // Font size for letters in word cells
+            SLOT_CELL_FONT_SIZE: '36px',    // Font size for hints in slot cells
             WORD_GAP: 12,
         },
         SMALL: {
@@ -60,8 +60,8 @@ var CONFIG = {
 
     // Font family for letters in squares (both slots and words)
     // Use 'default' for Arial sans-serif, or 'Petita' for custom font
-    LETTER_FONT_FAMILY: 'Poppins-Medium',
-    LETTER_FONT_WEIGHT: '500', // Font weight for letters in squares (use '400', '500', or '700' as string)
+    LETTER_FONT_FAMILY: 'Poppins-Regular',
+    LETTER_FONT_WEIGHT: '300', // Font weight for letters in squares (use '400', '500', or '700' as string)
 
     SLOT_MARKER_FONT_FAMILY: 'Poppins-LightItalic',
     SLOT_MARKER_FONT_WEIGHT: '300', // Font weight for slot markers (use '300', '400', '500', or '700' as string)
