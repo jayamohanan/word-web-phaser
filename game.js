@@ -28,6 +28,12 @@ class WordWebGame extends Phaser.Scene {
         this.placementAnimationMode = CONFIG.PLACEMENT_ANIMATION_MODE || 'cell';
         this.undoCount = 0; // Track number of times words are dragged back from slots
         this.mistakeCount = 0; // Track mistakes according to game rules
+        
+        // Initialize score system
+        this.currentScore = 0;
+        this.targetScore = 0;
+        this.pointsPerCell = CONFIG.POINTS_PER_CELL_ON_HINT;
+        this.scoreText = null;
     }
 
     preload() {
@@ -160,6 +166,10 @@ class WordWebGame extends Phaser.Scene {
         this.renderBank();
         this.renderConnections();
         this.renderSlotLabels();
+
+        // Calculate target score based on number of lines/slots
+        this.targetScore = this.level.slots.length * this.pointsPerCell;
+        this.currentScore = 0;
 
         // Initialize tutorial manager and create tutorial elements if level has tutorial data
         this.tutorialManager = new TutorialManager(this);
@@ -367,9 +377,14 @@ class WordWebGame extends Phaser.Scene {
             const offset = 0;
             const snapDuration = 200;
             
+            // Since word children are offset to center in container,
+            // we need to adjust snap position by half word width minus half cell
+            const wordWidth = word.length * this.gridSize;
+            const snapAdjustment = (wordWidth / 2) - (this.gridSize / 2);
+            
             const snapTween = this.tweens.add({
                 targets: gameObject,
-                x: dropZone.x + offset,
+                x: dropZone.x + offset + snapAdjustment,
                 y: dropZone.y - offset,
                 duration: snapDuration,
                 ease: 'Power2',
@@ -753,9 +768,48 @@ class WordWebGame extends Phaser.Scene {
         if (draggedFromSlotIdx !== undefined && draggedFromSlotIdx !== null && draggedFromSlotIdx !== slotIdx) {
             this.mistakeCount++;
             console.log(`Mistake: Word moved from slot ${draggedFromSlotIdx} to slot ${slotIdx}. Mistakes: ${this.mistakeCount}`);
+            
+            // Decrement score if the word had earned points in the previous slot
+            const previousPointsEarned = gameObject.getData('pointsEarnedInSlot') || 0;
+            if (previousPointsEarned > 0) {
+                this.currentScore = Math.max(0, this.currentScore - previousPointsEarned);
+                this.updateScoreDisplay();
+            }
         }
         // Clear the drag tracking
         gameObject.setData('draggedFromSlotIdx', null);
+        
+        // Check for cells placed over hints and award points
+        let pointsEarned = 0;
+        slotCells.forEach((cell, i) => {
+            const letterText = cell.squareContainer.getData('letterText');
+            // Check if this cell had a hint (letterText with content and not filled)
+            if (letterText && letterText.text && letterText.text.trim() !== '' && !cell.squareContainer.getData('filled')) {
+                const hintLetter = letterText.text.trim().toUpperCase();
+                const placedLetter = transformedWord[i].toUpperCase();
+                
+                // Only award points if the placed letter matches the hint
+                if (hintLetter === placedLetter) {
+                    pointsEarned += this.pointsPerCell;
+                    
+                    // Get world position of this cell for animation
+                    const matrix = cell.squareContainer.getWorldTransformMatrix();
+                    const worldPos = matrix.transformPoint(0, 0);
+                    
+                    // Show +10 animation at this cell
+                    this.showPointAnimation(worldPos.x, worldPos.y, this.pointsPerCell);
+                }
+            }
+        });
+        
+        // Store points earned in this placement for future reference
+        gameObject.setData('pointsEarnedInSlot', pointsEarned);
+        
+        // Update score if points were earned
+        if (pointsEarned > 0) {
+            this.currentScore += pointsEarned;
+            this.updateScoreDisplay();
+        }
         
         gameObject.setData('placed', true);
         gameObject.setData('slotIdx', slotIdx);
@@ -862,20 +916,85 @@ class WordWebGame extends Phaser.Scene {
         wordContainer.setData('stateMachine', stateMachine);
         
         // Make it draggable (identical behavior to original word)
+        // Calculate word dimensions for proper centering when scaling
+        const wordWidth = finalWord.length * this.gridSize;
+        const halfWordWidth = wordWidth / 2;
+        
         wordContainer.setInteractive(
             new Phaser.Geom.Rectangle(
+                -halfWordWidth,
                 -this.gridSize / 2,
-                -this.gridSize / 2,
-                this.gridSize * finalWord.length,
+                wordWidth,
                 this.gridSize
             ),
             Phaser.Geom.Rectangle.Contains
         );
         this.input.setDraggable(wordContainer);
         
+        // Add hover effects for desktop (only when word is in bank, not placed)
+        wordContainer.on('pointerover', () => {
+            if (!wordContainer.getData('placed')) {
+                // Apply scale effect if enabled
+                if (CONFIG.HOVER_SCALE_ENABLED) {
+                    this.tweens.add({
+                        targets: wordContainer,
+                        scale: 1.1,
+                        duration: 150,
+                        ease: 'Power2'
+                    });
+                }
+                
+                // Apply tint to all cells if enabled
+                if (CONFIG.HOVER_TINT_ENABLED) {
+                    const cells = wordContainer.getData('wordCells');
+                    if (cells) {
+                        cells.forEach(cell => {
+                            if (cell.square) cell.square.setTint(CONFIG.HOVER_TINT_COLOR);
+                        });
+                    }
+                }
+            }
+        });
+        
+        wordContainer.on('pointerout', () => {
+            if (!wordContainer.getData('placed')) {
+                // Remove scale effect if it was enabled
+                if (CONFIG.HOVER_SCALE_ENABLED) {
+                    this.tweens.add({
+                        targets: wordContainer,
+                        scale: 1.0,
+                        duration: 150,
+                        ease: 'Power2'
+                    });
+                }
+                
+                // Clear tint from all cells if it was enabled
+                if (CONFIG.HOVER_TINT_ENABLED) {
+                    const cells = wordContainer.getData('wordCells');
+                    if (cells) {
+                        cells.forEach(cell => {
+                            if (cell.square) cell.square.clearTint();
+                        });
+                    }
+                }
+            }
+        });
+        
         let dragOffset = { x: 0, y: 0 };
         wordContainer.on('dragstart', (pointer) => {
             if (this.autopilotInProgress) return;
+            
+            // Reset scale and clear tint when dragging starts
+            wordContainer.setScale(1.0);
+            this.tweens.killTweensOf(wordContainer);
+            
+            // Clear tint from all cells
+            const cells = wordContainer.getData('wordCells');
+            if (cells) {
+                cells.forEach(cell => {
+                    if (cell.square) cell.square.clearTint();
+                });
+            }
             
             if (this.tutorialManager) {
                 this.tutorialManager.cleanup();
@@ -924,7 +1043,17 @@ class WordWebGame extends Phaser.Scene {
                 if (draggedFromSlotIdx !== undefined && draggedFromSlotIdx !== null) {
                     this.mistakeCount++;
                     console.log(`Mistake: Word dragged from slot ${draggedFromSlotIdx} and dropped outside. Mistakes: ${this.mistakeCount}`);
+                    
+                    // Decrement score if the word had earned points in that slot
+                    const pointsEarnedInSlot = wordContainer.getData('pointsEarnedInSlot') || 0;
+                    if (pointsEarnedInSlot > 0) {
+                        this.currentScore = Math.max(0, this.currentScore - pointsEarnedInSlot);
+                        this.updateScoreDisplay();
+                    }
+                    
+                    // Clear the tracking data
                     wordContainer.setData('draggedFromSlotIdx', null);
+                    wordContainer.setData('pointsEarnedInSlot', 0);
                 }
                 
                 this.tweens.add({
@@ -1006,7 +1135,59 @@ class WordWebGame extends Phaser.Scene {
         });
     }
 
+    // Show +10 point animation at cell position
+    showPointAnimation(x, y, points) {
+        // Skip animation if score system is disabled
+        if (!CONFIG.ENABLE_SCORE_SYSTEM) return;
+        
+        // Create text at the exact cell position
+        const pointText = this.add.text(x, y, `+${points}`, {
+            fontFamily: 'Poppins-Bold',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#000000',
+            stroke: '#ffffff',
+            strokeThickness: 6,
+            resolution: window.devicePixelRatio || 2
+        }).setOrigin(0.5, 0.5).setDepth(10002);
+
+        // Animate: move up slightly and fade out
+        this.tweens.add({
+            targets: pointText,
+            y: y - 100, // Move up 100 pixels (2x height)
+            alpha: 0,  // Fade out
+            duration: 2400,
+            ease: 'Cubic.easeOut',
+            onComplete: () => {
+                pointText.destroy();
+            }
+        });
+    }
+
+    // Update score display
+    updateScoreDisplay() {
+        if (CONFIG.ENABLE_SCORE_SYSTEM && this.scoreText) {
+            this.scoreText.setText(`${this.currentScore}/${this.targetScore}`);
+        }
+    }
+
     tweenBackToBottom(gameObject) {
+        // Check if this word was dragged from a slot and is being rejected
+        const draggedFromSlotIdx = gameObject.getData('draggedFromSlotIdx');
+        if (draggedFromSlotIdx !== undefined && draggedFromSlotIdx !== null) {
+            // Word was dragged from a slot and rejected by another slot
+            // Decrement score if the word had earned points in the previous slot
+            const pointsEarnedInSlot = gameObject.getData('pointsEarnedInSlot') || 0;
+            if (pointsEarnedInSlot > 0) {
+                this.currentScore = Math.max(0, this.currentScore - pointsEarnedInSlot);
+                this.updateScoreDisplay();
+            }
+            
+            // Clear the tracking data
+            gameObject.setData('draggedFromSlotIdx', null);
+            gameObject.setData('pointsEarnedInSlot', 0);
+        }
+        
         this.tweens.add({
             targets: gameObject,
             x: gameObject.getData('initPosition').x,
@@ -1188,7 +1369,18 @@ class WordWebGame extends Phaser.Scene {
             resolution: window.devicePixelRatio || 2
         }).setOrigin(0.5, 0).setDepth(10001);
 
-        // 2. UI Buttons
+        // 2. Score display below level number (only if score system is enabled)
+        if (CONFIG.ENABLE_SCORE_SYSTEM) {
+            this.scoreText = this.add.text(width / 2, 65, `${this.currentScore}/${this.targetScore}`, {
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '24px',
+                fontWeight: '500',
+                color: '#555555',
+                resolution: window.devicePixelRatio || 2
+            }).setOrigin(0.5, 0).setDepth(10001);
+        }
+
+        // 3. UI Buttons
         const buttonSize = 80; // Button display size
         const buttonGap = 50; // Gap between buttons
         const sideMargin = 20; // Distance from screen edge
@@ -1581,14 +1773,20 @@ class WordWebGame extends Phaser.Scene {
         const startY = this.bankAreaY + 40;
         const verticalGap = this.squareWidth + 24;
         this.level.words.forEach((word, wordIdx) => {
-            let startX = this.sys.game.canvas.width / 2 - Utils.getFrameWidth(word.length) / 2;
+            // Calculate word dimensions
+            const wordWidth = word.length * this.gridSize;
+            const halfWordWidth = wordWidth / 2;
+            
+            // Position container so word is centered
+            let startX = this.sys.game.canvas.width / 2;
             let baseY = startY + wordIdx * verticalGap;
-            let wordContainer = this.add.container(0, 0);
+            let wordContainer = this.add.container(startX, baseY);
             let wordCells = [];
             
             // First, create all background squares and add them to container
+            // Position children relative to container with offset for centering
             for (let i = 0; i < word.length; i++) {
-                let x = i * this.gridSize;
+                let x = i * this.gridSize - halfWordWidth + this.gridSize / 2;
                 let y = 0;
                 // Create image object for word cell at position x,y using word texture (includes stroke)
                 let square = this.add.image(x, y, 'wordCellTexture');
@@ -1602,7 +1800,7 @@ class WordWebGame extends Phaser.Scene {
             
             // Then, create all letters and add them to container (so they render above all squares)
             for (let i = 0; i < word.length; i++) {
-                let x = i * this.gridSize;
+                let x = i * this.gridSize - halfWordWidth + this.gridSize / 2;
                 let y = 0;
                 let letter = this.add.text(x, y, word[i], {
                     fontFamily: this.letterFontFamily,
@@ -1617,7 +1815,6 @@ class WordWebGame extends Phaser.Scene {
                 wordCells[i].letter = letter;
             }
             
-            wordContainer.setPosition(startX, baseY);
             wordContainer.setDepth(100);
             wordContainer.setData('initPosition', { x: startX, y: baseY });
             wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
@@ -1627,18 +1824,81 @@ class WordWebGame extends Phaser.Scene {
             const stateMachine = new WordAnimationStateMachine(this, wordContainer);
             wordContainer.setData('stateMachine', stateMachine);
             
+            // Interactive area centered on container
             wordContainer.setInteractive(
                 new Phaser.Geom.Rectangle(
+                    -halfWordWidth,
                     -this.gridSize / 2,
-                    -this.gridSize / 2,
-                    this.gridSize * word.length,
+                    wordWidth,
                     this.gridSize
                 ),
                 Phaser.Geom.Rectangle.Contains);
             this.input.setDraggable(wordContainer);
+            
+            // Add hover effects for desktop (only when word is in bank, not placed)
+            wordContainer.on('pointerover', () => {
+                if (!wordContainer.getData('placed')) {
+                    // Apply scale effect if enabled
+                    if (CONFIG.HOVER_SCALE_ENABLED) {
+                        this.tweens.add({
+                            targets: wordContainer,
+                            scale: 1.1,
+                            duration: 150,
+                            ease: 'Power2'
+                        });
+                    }
+                    
+                    // Apply tint to all cells if enabled
+                    if (CONFIG.HOVER_TINT_ENABLED) {
+                        const cells = wordContainer.getData('wordCells');
+                        if (cells) {
+                            cells.forEach(cell => {
+                                if (cell.square) cell.square.setTint(CONFIG.HOVER_TINT_COLOR);
+                            });
+                        }
+                    }
+                }
+            });
+            
+            wordContainer.on('pointerout', () => {
+                if (!wordContainer.getData('placed')) {
+                    // Remove scale effect if it was enabled
+                    if (CONFIG.HOVER_SCALE_ENABLED) {
+                        this.tweens.add({
+                            targets: wordContainer,
+                            scale: 1.0,
+                            duration: 150,
+                            ease: 'Power2'
+                        });
+                    }
+                    
+                    // Clear tint from all cells if it was enabled
+                    if (CONFIG.HOVER_TINT_ENABLED) {
+                        const cells = wordContainer.getData('wordCells');
+                        if (cells) {
+                            cells.forEach(cell => {
+                                if (cell.square) cell.square.clearTint();
+                            });
+                        }
+                    }
+                }
+            });
+            
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
                 console.log('=== DRAGSTART EVENT FIRED ===');
+                
+                // Reset scale and clear tint when dragging starts
+                wordContainer.setScale(1.0);
+                this.tweens.killTweensOf(wordContainer);
+                
+                // Clear tint from all cells
+                const cells = wordContainer.getData('wordCells');
+                if (cells) {
+                    cells.forEach(cell => {
+                        if (cell.square) cell.square.clearTint();
+                    });
+                }
                 
                 // Ignore if autopilot is in progress
                 if (this.autopilotInProgress) return;

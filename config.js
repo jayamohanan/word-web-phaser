@@ -96,6 +96,15 @@ var CONFIG = {
 
     //Game Scores
     HINT_SCORE_1: '5',
-    HINT_SCORE_2: '10'
+    HINT_SCORE_2: '10',
+
+    // Point System
+    ENABLE_SCORE_SYSTEM: false,  // Set to false to disable score display and animations
+    POINTS_PER_CELL_ON_HINT: 10,  // Points awarded for placing a word cell correctly over a hint
+
+    // Hover Effects
+    HOVER_SCALE_ENABLED: false,  // Set to false to disable scale highlight on hover
+    HOVER_TINT_ENABLED: true,   // Set to false to disable tint highlight on hover
+    HOVER_TINT_COLOR: 0xe3f2fd, // Tint color for hover effect (light blue)
 
 };
