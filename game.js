@@ -190,7 +190,7 @@ class WordWebGame extends Phaser.Scene {
                     const lineGraphics = this.hoveredZone.getData('connectionLine');
                     const ruleInfo = this.hoveredZone.getData('ruleInfo');
                     console.log('Click on hovered zone, line graphics:', lineGraphics);
-                    
+                    console.log('1***********************************');
                     if (ruleInfo && lineGraphics) {
                         console.log('Handling line click from hovered zone');
                         this.handleConnectionLineClick(ruleInfo, lineGraphics);
@@ -2218,13 +2218,7 @@ class WordWebGame extends Phaser.Scene {
                 
                 console.log('Setting up zone click handler for line', ruleIndex);
                 
-                // Add click handler - use pointerup which is more reliable than pointerdown
-                zone.on('pointerup', (pointer) => {
-                    console.log('ZONE POINTERUP FIRED!', ruleInfo);
-                    // Stop event propagation so background handler doesn't clear highlights
-                    if (pointer.event) pointer.event.stopPropagation();
-                    this.handleConnectionLineClick(ruleInfo);
-                });
+
                 
                 // Add hover effect for visual feedback
                 zone.on('pointerover', () => {
