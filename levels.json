@@ -3,6 +3,19 @@
     {
   "slots": [
     {
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -2
+    }
+  ],
+  "words": [
+    "JAYAM"
+  ],
+  "rules": []
+},
+    {
+  "slots": [
+    {
       "length": 3,
       "anchorCol": -2,
       "anchorRow": -8
