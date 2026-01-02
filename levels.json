@@ -1,6 +1,419 @@
 {
-  "levels": [
+  "test": [
 
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "TEST",
+        "GAME"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    }
+  ],
+  "main": [
+    {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "RED"
+      ],
+      "rules": [],
+      "tutorial": {
+        "elements": [
+          {
+            "type": "text",
+            "text": "Drop here",
+            "target": "slot",
+            "slotIndex": 0,
+            "offsetY": -60,
+            "style": {
+              "fontSize": "28px",
+              "fontFamily": "Arial, sans-serif",
+              "color": "#444",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "type": "handAnimation",
+            "from": "word",
+            "to": "slot",
+            "wordIndex": 0,
+            "slotIndex": 0,
+            "duration": 2000,
+            "repeat": -1,
+            "delay": 500
+          }
+        ]
+      }
+    },
+     {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "ONE",
+        "TWO"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "FAN",
+        "SPA"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+     {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "FIT",
+        "OFT"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+     {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -5
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -3
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "TEN",
+        "SUN",
+        "MEN"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+         {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -3,
+          "anchorRow": -5
+        },
+        {
+          "length": 3,
+          "anchorCol": -3,
+          "anchorRow": -3
+        },
+        {
+          "length": 3,
+          "anchorCol": 0,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "FAR",
+        "TAR",
+        "FAX"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        }
+      ]
+    },
+    
+     {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -1
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "GUY",
+        "GAP",
+        "AGE",
+        "GYM"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    }
+     
+      
+
+  ],
+  "reserve": [
     {
       "slots": [
         {
@@ -13,7 +426,7 @@
           "anchorCol": -2,
           "anchorRow": -3
         },
-         {
+        {
           "length": 4,
           "anchorCol": -2,
           "anchorRow": -1
@@ -39,7 +452,7 @@
           },
           "op": "same"
         },
-         {
+        {
           "type": "cell",
           "a": {
             "slot": 1,
@@ -53,10 +466,9 @@
           },
           "op": "same"
         }
-        
       ]
     },
-     {
+    {
       "slots": [
         {
           "length": 3,
@@ -68,12 +480,11 @@
           "anchorCol": -2,
           "anchorRow": -4
         },
-         {
+        {
           "length": 3,
           "anchorCol": -2,
           "anchorRow": -1
         }
-
       ],
       "words": [
         "TRV",
@@ -146,113 +557,117 @@
       ]
     },
     {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -8
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -8
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -5
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        "JTM",
+        "JUK",
+        "JKT",
+        "JEK",
+        "KIT",
+        "KOM",
+        "LOM"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
     },
     {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -5
+      "slots": [
+        {
+          "group": 1,
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -10
+        },
+        {
+          "group": 2,
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -8
+        },
+        {
+          "group": 3,
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -6
+        },
+        {
+          "group": 4,
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -4
+        },
+        {
+          "group": 5,
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -2
+        },
+        {
+          "group": 6,
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -0
+        }
+      ],
+      "words": [
+        "JAYAM",
+        {
+          "word": "MOHA",
+          "group": 1
+        },
+        "GUMA",
+        {
+          "word": "OYAM",
+          "group": 6
+        }
+      ],
+      "rules": []
     },
     {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -2
-    }
-  ],
-  "words": [
-    "JTM",
-    "JUK",
-    "JKT",
-    "JEK",
-    "KIT",
-    "KOM",
-    "LOM"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    
-    
-    {
-  "slots": [
-    {
-      "group": 1,
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -10
-    },
-    {
-      "group": 2,
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -8
-    },
-    {
-      "group": 3,
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -6
-    },
-    {
-      "group": 4,
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -4
-    },
-    {
-      "group": 5,
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -2
-    },
-    {
-      "group": 6,
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -0
-    }
-  ],
-  "words": [
-    "JAYAM",
-    {"word":"MOHA", "group":1},
-    "GUMA",
-    {"word":"OYAM", "group":6}
-  ],  
-  "rules": []
-},
-{
       "slots": [
         {
           "length": 4,
@@ -266,10 +681,16 @@
         }
       ],
       "words": [
-        {"word": "LOVE", "opposite": "HATE" },
-        {"word": "WARM", "opposite": "COLD"}
+        {
+          "word": "LOVE",
+          "opposite": "HATE"
+        },
+        {
+          "word": "WARM",
+          "opposite": "COLD"
+        }
       ],
-      "rules": [  
+      "rules": [
         {
           "type": "cell",
           "a": {
@@ -291,1040 +712,956 @@
         }
       ]
     },
-    
     {
-  "slots": [
-    {
-      "length": 5,
-      "anchorCol": -3,
-      "anchorRow": -6
-    },
-    {
-      "length": 5,
-      "anchorCol": -3,
-      "anchorRow": -4
-    },
-    {
-      "length": 5,
-      "anchorCol": -3,
-      "anchorRow": -2
-    },
-    {
-      "length": 5,
-      "anchorCol": -3,
-      "anchorRow": 0
-    }
-  ],
-  "words": [
-    "LOCAL",
-    "CLOSE",
-    "LUNCH",
-    "CRASH"
-  ],
-  "rules": [
-    { "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 3,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 3,
-        "side": 0
-      },
-      "op": "same"
-
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 4,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 4,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 4,
-      "anchorCol": -1,
-      "anchorRow": -6
-    },
-    {
-      "length": 4,
-      "anchorCol": -4,
-      "anchorRow": -2
-    },
-    {
-      "length": 4,
-      "anchorCol": -4,
-      "anchorRow": 0
-    }
-  ],
-  "words": [
-    "TRUE",
-    "HOUR",
-    "HATE"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 3,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 3,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": 0
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -3
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": 0
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -3
-    }
-  ],
-  "words": [
-    "PAD",
-    "OLD",
-    "AGE",
-    "ANT"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 0,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 3,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -5
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -2
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -2
-    },
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": 0
-    }
-  ],
-  "words": [
-    "CRY",
-    "BUY",
-    "RIG",
-    "GUY"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 2,
-        "side": 1
-      },
-      "b": {
-        "slot": 2,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -6
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -3
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -3
-    },
-    {
-      "length": 3,
-      "anchorCol": -3,
-      "anchorRow": 0
-    }
-  ],
-  "words": [
-    "URN",
-    "MUG",
-    "MET",
-    "GOT"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 2,
-        "side": 1
-      },
-      "b": {
-        "slot": 2,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 1
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 3
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 4,
-      "anchorCol": -4,
-      "anchorRow": -6
-    },
-    {
-      "length": 4,
-      "anchorCol": -1,
-      "anchorRow": -3
-    },
-    {
-      "length": 4,
-      "anchorCol": -3,
-      "anchorRow": 0
-    }
-  ],
-  "words": [
-    "RULE",
-    "OVAL",
-    "LOCK"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 5,
-      "anchorCol": -2,
-      "anchorRow": -9
-    },
-    {
-      "length": 5,
-      "anchorCol": -2,
-      "anchorRow": -6
-    },
-    {
-      "length": 5,
-      "anchorCol": -2,
-      "anchorRow": -3
-    },
-    {
-      "length": 5,
-      "anchorCol": -2,
-      "anchorRow": 0
-    }
-  ],
-  "words": [
-    "GROSS",
-    "TRADE",
-    "TREAT",
-    "GRASS"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
+      "slots": [
+        {
+          "length": 5,
+          "anchorCol": -3,
+          "anchorRow": -6
+        },
+        {
+          "length": 5,
+          "anchorCol": -3,
+          "anchorRow": -4
+        },
+        {
+          "length": 5,
+          "anchorCol": -3,
+          "anchorRow": -2
+        },
+        {
+          "length": 5,
+          "anchorCol": -3,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "LOCAL",
+        "CLOSE",
+        "LUNCH",
+        "CRASH"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 4,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 4,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -1,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -2
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "TRUE",
+        "HOUR",
+        "HATE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -3
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "PAD",
+        "OLD",
+        "AGE",
+        "ANT"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 3,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -5
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -2
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -2
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "CRY",
+        "BUY",
+        "RIG",
+        "GUY"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -6
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -3
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -3
+        },
+        {
+          "length": 3,
+          "anchorCol": -3,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "URN",
+        "MUG",
+        "MET",
+        "GOT"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": -1,
+          "anchorRow": -3
+        },
+        {
+          "length": 4,
+          "anchorCol": -3,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "RULE",
+        "OVAL",
+        "LOCK"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 5,
+          "anchorCol": -2,
+          "anchorRow": -9
+        },
+        {
+          "length": 5,
+          "anchorCol": -2,
+          "anchorRow": -6
+        },
+        {
+          "length": 5,
+          "anchorCol": -2,
+          "anchorRow": -3
+        },
+        {
+          "length": 5,
+          "anchorCol": -2,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        "GROSS",
+        "TRADE",
+        "TREAT",
+        "GRASS"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 4,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 4,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": 0
+        },
+        {
+          "length": 4,
+          "anchorCol": -3,
+          "anchorRow": -3
+        },
+        {
+          "length": 4,
+          "anchorCol": -5,
+          "anchorRow": -6
+        }
+      ],
+      "words": [
+        "ZERO",
+        "ONCE",
+        "ZONE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 3,
+            "side": 1
+          },
+          "b": {
+            "slot": 0,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 5,
+          "anchorCol": -4,
+          "anchorRow": -8
+        },
+        {
+          "length": 5,
+          "anchorCol": -4,
+          "anchorRow": -6
+        },
+        {
+          "length": 5,
+          "anchorCol": -3,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": -3,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": -1,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        "SATIN",
+        "STAIN",
+        "SAINT",
+        "SIN",
+        "SIT"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 4,
+            "side": 2
+          },
+          "b": {
+            "slot": 4,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -6
+        }
+      ],
+      "words": [
+        "ICY",
+        "OAK",
+        "KID",
+        "BOY",
+        "BOB"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 4,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 3,
+            "cell": 2,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 2
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -1,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -3
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -8
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -5
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -7
+        },
+        {
+          "length": 3,
+          "anchorCol": 1,
+          "anchorRow": -4
+        }
+      ],
+      "words": [
+        "AWE",
+        "LED",
+        "PAW",
+        "LIP",
+        "LIE",
+        "LAP"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 4,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 5,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 4,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 5,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+   
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -3,
+          "anchorRow": -4
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "GAME",
+        "MEAT"
+      ],
+      "rules": [
+        {
+          "type": "word",
+          "op": "swap",
+          "pairs": [
+            [
+              1,
+              4
+            ]
+          ],
+          "slot": 0
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
     },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 3,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 3,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 4,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 4,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 4,
-      "anchorCol": 1,
-      "anchorRow": 0
-    },
-    {
-      "length": 4,
-      "anchorCol": -3,
-      "anchorRow": -3
-    },
-    {
-      "length": 4,
-      "anchorCol": -5,
-      "anchorRow": -6
-    }
-  ],
-  "words": [
-    "ZERO",
-    "ONCE",
-    "ZONE"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 3,
-        "side": 1
-      },
-      "b": {
-        "slot": 0,
-        "cell": 3,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 5,
-      "anchorCol": -4,
-      "anchorRow": -8
-    },
-    {
-      "length": 5,
-      "anchorCol": -4,
-      "anchorRow": -6
-    },
-    {
-      "length": 5,
-      "anchorCol": -3,
-      "anchorRow": -4
-    },
-    {
-      "length": 3,
-      "anchorCol": -3,
-      "anchorRow": 0
-    },
-    {
-      "length": 3,
-      "anchorCol": -1,
-      "anchorRow": -2
-    }
-  ],
-  "words": [
-    "SATIN",
-    "STAIN",
-    "SAINT",
-    "SIN",
-    "SIT"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 4,
-        "side": 2
-      },
-      "b": {
-        "slot": 4,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -4
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": 0
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -4
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": 0
-    },
-     {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -6
-    }
-  ],
-  "words": [
-    "ICY",
-    "OAK",
-    "KID",
-    "BOY",
-    "BOB"
-  ],
-  "rules": [
-    {
-       "type": "cell",
-      "a": {
-        "slot": 4,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 2,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 3,
-        "cell": 2,
-        "side": 1
-      },
-      "b": {
-        "slot": 2,
-        "cell": 2,
-        "side": 2
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -1,
-      "anchorRow": 0
-    },
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -3
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -8
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -5
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -7
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -4
-    }
-  ],
-  "words": [
-    "AWE",
-    "LED",
-    "PAW",
-    "LIP",
-    "LIE",
-    "LAP"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 0,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 0,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 4,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 5,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 4,
-        "cell": 2,
-        "side": 2
-      },
-      "b": {
-        "slot": 5,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -4
-    },
-    {
-      "length": 3,
-      "anchorCol": -4,
-      "anchorRow": -1
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -4
-    },
-    {
-      "length": 3,
-      "anchorCol": 1,
-      "anchorRow": -1
-    }
-  ],
-  "words": [
-    "GUY",
-    "GAP",
-    "AGE",
-    "GYM"
-  ],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 1,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 2,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 3,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    {
-  "slots": [
-    {
-      "length": 4,
-      "anchorCol": -3,
-      "anchorRow": -4
-    },
-    {
-      "length": 4,
-      "anchorCol": -2,
-      "anchorRow": -1
-    }
-  ],
-  "words": [
-    "GAME",
-    "MEAT"
-  ],
-  "rules": [
-    {
-      "type":"word",
-      "op":"swap",
-      "pairs":[[1,4]],
-      "slot":0
-
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 3,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
     {
       "slots": [
         {
@@ -3093,284 +3430,12 @@
         }
       ]
     },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -8
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -6
-        },
-        {
-          "length": 3,
-          "anchorCol": 1,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "FAR",
-        "TAR",
-        "FAX"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 1,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "RED"
-      ],
-      "rules": [],
-      "tutorial": {
-        "elements": [
-          {
-            "type": "text",
-            "text": "Drop here",
-            "target": "slot",
-            "slotIndex": 0,
-            "offsetY": -60,
-            "style": {
-              "fontSize": "28px",
-              "fontFamily": "Arial, sans-serif",
-              "color": "#444",
-              "fontStyle": "bold"
-            }
-          },
-          {
-            "type": "handAnimation",
-            "from": "word",
-            "to": "slot",
-            "wordIndex": 0,
-            "slotIndex": 0,
-            "duration": 2000,
-            "repeat": -1,
-            "delay": 500
-          }
-        ]
-      }
-    },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -6
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "ONE",
-        "TWO"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -6
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "FAN",
-        "SPA"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -6
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "FIT",
-        "OFT"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 0,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -7
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -5
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "TEN",
-        "SUN",
-        "MEN"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 1,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
+ 
+    
+   
+    
+   
+  
     {
       "slots": [
         {
@@ -4215,7 +4280,6 @@
         }
       ]
     },
-    
     {
       "slots": [
         {

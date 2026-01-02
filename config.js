@@ -3,7 +3,7 @@ var CONFIG = {
     SIZE: {
         LARGE: {
             SQUARE_WIDTH: 60,
-            SQUARE_GAP: 4,
+            SQUARE_GAP: 3,
             SQUARE_RADIUS: 5,
             GRID_LINE_WIDTH: 1,
             SLOT_STROKE_WIDTH: 3,
@@ -113,6 +113,14 @@ var CONFIG = {
     HOVER_TINT_ENABLED: true,   // Set to false to disable tint highlight on hover
     HOVER_TINT_COLOR: 0xd3e4fd, // Tint color for hover effect (slightly darker blue for visibility)
     WORD_CLICK_FEEDBACK_COLOR: 0xb8d4f7, // Darker blue tint for click feedback on words
+
+    //test, main, reserve
+    // "LEVEL_TYPE": 'test',
+    "LEVEL_TYPE": 'main',
+    // "LEVEL_TYPE": 'reserve',
+
+    SHADOW_MID_OFFSET : 9,
+    SHADOW_DARK_OFFSET : 2,
     
    SASHA_PALETTE: [
     { name: 'Red', hex: '#e6194b', tint: '#fad1da' },
@@ -138,4 +146,12 @@ var CONFIG = {
     { name: 'Cyan', hex: '#42d4f4', tint: '#d9f6fd' },
      { name: 'Lime', hex: '#bfef45', tint: '#f2fccd' }
 ]
+// SASHA_PALETTE: [
+//     { name: 'Red', hex: '#76A68B', tint: '#76A68B' },
+//     { name: 'Green', hex: '#F2D6B3', tint: '#F2D6B3' },
+//     { name: 'Blue', hex: '#D9725B', tint: '#D9725B' },
+//     { name: 'Orange', hex: '#D9665B', tint: '#D9665B' },
+//     { name: 'Purple', hex: '#3F3E59', tint: '#3F3E59' }
+// ]
+
 };
