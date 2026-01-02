@@ -134,19 +134,46 @@ class WordWebGame extends Phaser.Scene {
             });
         }
 
-        // Parse word pairs for antonym support (e.g., "LOVE-HATE")
+        // Parse word pairs for antonym support
+        // Support both object format {"word": "LOVE", "opposite": "HATE"} and legacy "LOVE-HATE" format
         // Make it bidirectional so both LOVE→HATE and HATE→LOVE work
         this.wordAntonymMap = new Map();
         if (this.level.words) {
-            this.level.words = this.level.words.map(wordPair => {
-                if (wordPair.includes('-')) {
-                    const [original, antonym] = wordPair.split('-');
+            this.level.words = this.level.words.map(wordData => {
+                // Handle both string and object formats
+                if (typeof wordData === 'object' && wordData.opposite) {
+                    // New format: {"word": "LOVE", "opposite": "HATE"}
+                    const word = wordData.word;
+                    const opposite = wordData.opposite;
+                    // Store both directions for bidirectional mapping
+                    this.wordAntonymMap.set(word, opposite);
+                    this.wordAntonymMap.set(opposite, word);
+                    // Return word object without opposite property (just word and group if present)
+                    const result = { word: word };
+                    if (wordData.group !== undefined) {
+                        result.group = wordData.group;
+                    }
+                    return result;
+                } else if (typeof wordData === 'string' && wordData.includes('-')) {
+                    // Legacy format: "LOVE-HATE"
+                    const [original, antonym] = wordData.split('-');
                     // Store both directions for bidirectional mapping
                     this.wordAntonymMap.set(original, antonym);
                     this.wordAntonymMap.set(antonym, original);
                     return original; // Use original word for rendering
+                } else if (typeof wordData === 'object' && wordData.word && wordData.word.includes('-')) {
+                    // Legacy format in object: {"word": "LOVE-HATE", "group": 1}
+                    const [original, antonym] = wordData.word.split('-');
+                    // Store both directions for bidirectional mapping
+                    this.wordAntonymMap.set(original, antonym);
+                    this.wordAntonymMap.set(antonym, original);
+                    // Return in original format with group if present
+                    if (wordData.group !== undefined) {
+                        return { word: original, group: wordData.group };
+                    }
+                    return original;
                 }
-                return wordPair;
+                return wordData; // Return as-is
             });
         }
 
@@ -258,8 +285,13 @@ class WordWebGame extends Phaser.Scene {
 
             const slotIdx = dropZone.getData('slotIdx');
             const word = gameObject.getData('word');
+            const wordGroup = gameObject.getData('group') !== undefined ? gameObject.getData('group') : 0;
             const slotContainer = this.slotSprites[slotIdx];
+            const slotGroup = slotContainer.getData('group') !== undefined ? slotContainer.getData('group') : 0;
             const slotCells = slotContainer.getData('slotCells');
+
+            // Check group constraint - word and slot must be in same group
+            if (wordGroup !== slotGroup) return;
 
             // Only check length constraint and if slot is filled during hover
             // Other constraints (hints/connections) will be checked after drop and snap
@@ -355,6 +387,16 @@ class WordWebGame extends Phaser.Scene {
             }
             
             const word = gameObject.getData('word');
+            const wordGroup = gameObject.getData('group') !== undefined ? gameObject.getData('group') : 0;
+            const slotGroup = slotContainer.getData('group') !== undefined ? slotContainer.getData('group') : 0;
+            
+            // Check group constraint - word and slot must be in same group
+            if (wordGroup !== slotGroup) {
+                console.log('group mismatch, going back');
+                this.tweenBackToBottom(gameObject);
+                return;
+            }
+            
             if (slotCells.length !== word.length) {
                 console.log('length mismatch, going back');
                 this.tweenBackToBottom(gameObject);
@@ -1274,16 +1316,78 @@ class WordWebGame extends Phaser.Scene {
         const color1 = CONFIG.CELL_BG1_COLOR;
         const color2 = CONFIG.CELL_BG2_COLOR;
 
+        // Detect distinct groups in level
+        const groups = this.detectLevelGroups();
+        console.log(`Detected level groups: ${groups}`);
         // Remove existing textures if they exist (for hot reload)
-        if (this.textures.exists('wordCellTexture')) {
-            this.textures.remove('wordCellTexture');
-        }
-        if (this.textures.exists('slotCellTexture')) {
-            this.textures.remove('slotCellTexture');
-        }
+        groups.forEach(group => {
+            if (this.textures.exists(`wordCellTexture_${group}`)) {
+                this.textures.remove(`wordCellTexture_${group}`);
+            }
+            if (this.textures.exists(`slotCellTexture_${group}`)) {
+                this.textures.remove(`slotCellTexture_${group}`);
+            }
+        });
 
+        // Create textures for each group
+        groups.forEach(group => {
+            this.createGroupTextures(group, size, radius, color1, color2);
+        });
+    }
+
+    // Detect all distinct groups in the level
+    detectLevelGroups() {
+        const groups = new Set();
+        groups.add(0); // Always include default group
+        
+        // Check slots for groups
+        if (this.level.slots) {
+            this.level.slots.forEach(slot => {
+                if (slot.group !== undefined) {
+                    groups.add(slot.group);
+                }
+            });
+        }
+        
+        // Check words for groups
+        if (this.level.words) {
+            this.level.words.forEach(word => {
+                // Words might be objects with group property
+                if (typeof word === 'object' && word.group !== undefined) {
+                    groups.add(word.group);
+                }
+            });
+        }
+        
+        return Array.from(groups).sort((a, b) => a - b);
+    }
+
+    // Get stroke color for a group
+    getGroupStrokeColor(group) {
+        if (group === 0 || group === undefined) {
+            // Default group uses standard colors
+            return {
+                word: this.wordStrokeColor,
+                slot: this.slotStrokeColor
+            };
+        }
+        
+        // Get color from SASHA_PALETTE (group 1 = index 0, group 2 = index 1, etc.)
+        const paletteIndex = (group - 1) % CONFIG.SASHA_PALETTE.length;
+        const tintColor = CONFIG.SASHA_PALETTE[paletteIndex].hex;
+        const colorHex = parseInt(tintColor.replace('#', ''), 16);
+        return {
+            word: colorHex,
+            slot: colorHex
+        };
+    }
+
+    // Create textures for a specific group
+    createGroupTextures(group, size, radius, color1, color2) {
+        const strokeColors = this.getGroupStrokeColor(group);
+        
         // Create word cell texture with diagonal split (top-right to bottom-left)
-        const wordTexture = this.textures.createCanvas('wordCellTexture', size, size);
+        const wordTexture = this.textures.createCanvas(`wordCellTexture_${group}`, size, size);
         const wordCtx = wordTexture.getSourceImage().getContext('2d');
 
         // Draw rounded rectangle background with color1
@@ -1304,9 +1408,12 @@ class WordWebGame extends Phaser.Scene {
         wordCtx.fill();
         wordCtx.restore();
 
-        // Add stroke to the rounded texture
-        wordCtx.strokeStyle = '#' + this.wordStrokeColor.toString(16).padStart(6, '0');
+        // Add stroke to the rounded texture (color based on group)
+        wordCtx.strokeStyle = '#' + strokeColors.word.toString(16).padStart(6, '0');
         wordCtx.lineWidth = this.wordStrokeWidth;
+        // if(group!==0){
+        //     wordCtx.lineWidth = this.wordStrokeWidth + 2;
+        // }
         this.drawRoundedRect(wordCtx, this.wordStrokeWidth / 2, this.wordStrokeWidth / 2, 
             size - this.wordStrokeWidth, size - this.wordStrokeWidth, radius);
         wordCtx.stroke();
@@ -1314,15 +1421,18 @@ class WordWebGame extends Phaser.Scene {
         wordTexture.refresh();
 
         // Create slot cell texture with uniform color1 and rounded corners
-        const slotTexture = this.textures.createCanvas('slotCellTexture', size, size);
+        const slotTexture = this.textures.createCanvas(`slotCellTexture_${group}`, size, size);
         const slotCtx = slotTexture.getSourceImage().getContext('2d');
         slotCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
         this.drawRoundedRect(slotCtx, 0, 0, size, size, radius);
         slotCtx.fill();
         
-        // Add stroke to the rounded texture
-        slotCtx.strokeStyle = '#' + this.slotStrokeColor.toString(16).padStart(6, '0');
+        // Add stroke to the rounded texture (color based on group)
+        slotCtx.strokeStyle = '#' + strokeColors.slot.toString(16).padStart(6, '0');
         slotCtx.lineWidth = this.slotStrokeWidth;
+        // if(group!==0){
+        //     slotCtx.lineWidth = this.slotStrokeWidth + 2;
+        // }
         this.drawRoundedRect(slotCtx, this.slotStrokeWidth / 2, this.slotStrokeWidth / 2, 
             size - this.slotStrokeWidth, size - this.slotStrokeWidth, radius);
         slotCtx.stroke();
@@ -1584,8 +1694,12 @@ class WordWebGame extends Phaser.Scene {
                 // highlightEdge.fillRoundedRect(-this.squareWidth / 2 - 2, -this.squareWidth / 2 - 2, 
                 //     this.squareWidth - 4, this.squareWidth - 4, radius);
 
+                // Get group from slot (default to 0)
+                const slotGroup = slot.group !== undefined ? slot.group : 0;
+                const textureName = `slotCellTexture_${slotGroup}`;
+                
                 // Create the image (square) centered at (0, 0) within the squareContainer using slot texture (includes stroke)
-                let square = this.add.image(0, 0, 'slotCellTexture');
+                let square = this.add.image(0, 0, textureName);
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
 
                 // Add shadows and square first (text will be added in second pass)
@@ -1595,7 +1709,7 @@ class WordWebGame extends Phaser.Scene {
                 // squareContainer.add(highlightEdge);
 
                 // Store data on the squareContainer (not the rectangle)
-                squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null });
+                squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null, group: slotGroup });
                 squareContainer.setData('square', square);
 
                 // Add squareContainer to the slotContainer
@@ -1684,7 +1798,11 @@ class WordWebGame extends Phaser.Scene {
             ), Phaser.Geom.Rectangle.Contains);
             slotContainer.input.dropZone = true;
 
+            const slotGroup = slot.group !== undefined ? slot.group : 0;
             slotContainer.setData('slotIdx', slotIdx);
+            slotContainer.setData('group', slotGroup);
+            slotContainer.setData('filled', false);
+            slotContainer.setData('word', null);
             this.slotSprites.push(slotContainer);
         });
         
@@ -1814,7 +1932,17 @@ class WordWebGame extends Phaser.Scene {
     renderBank() {
         const startY = this.bankAreaY + 40;
         const verticalGap = this.squareWidth + 24;
-        this.level.words.forEach((word, wordIdx) => {
+        this.level.words.forEach((wordData, wordIdx) => {
+            // Handle both string and object formats
+            let word, wordGroup;
+            if (typeof wordData === 'string') {
+                word = wordData;
+                wordGroup = 0; // Default group
+            } else if (typeof wordData === 'object') {
+                word = wordData.word || wordData.text || Object.keys(wordData)[0]; // Support various formats
+                wordGroup = wordData.group !== undefined ? wordData.group : 0;
+            }
+            
             // Calculate word dimensions
             const wordWidth = word.length * this.gridSize;
             const halfWordWidth = wordWidth / 2;
@@ -1825,13 +1953,15 @@ class WordWebGame extends Phaser.Scene {
             let wordContainer = this.add.container(startX, baseY);
             let wordCells = [];
             
+            const textureName = `wordCellTexture_${wordGroup}`;
+            
             // First, create all background squares and add them to container
             // Position children relative to container with offset for centering
             for (let i = 0; i < word.length; i++) {
                 let x = i * this.gridSize - halfWordWidth + this.gridSize / 2;
                 let y = 0;
                 // Create image object for word cell at position x,y using word texture (includes stroke)
-                let square = this.add.image(x, y, 'wordCellTexture');
+                let square = this.add.image(x, y, textureName);
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
@@ -1859,7 +1989,7 @@ class WordWebGame extends Phaser.Scene {
             
             wordContainer.setDepth(100);
             wordContainer.setData('initPosition', { x: startX, y: baseY });
-            wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX });
+            wordContainer.setData({ word, wordIdx, placed: false, origY: baseY, startX, group: wordGroup });
             wordContainer.setData('wordCells', wordCells); // Store wordCells array
             
             // Create and attach state machine to word container
@@ -1935,6 +2065,7 @@ class WordWebGame extends Phaser.Scene {
             
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
+                 this.clearLineHighlight();
                 console.log('=== DRAGSTART EVENT FIRED ===');
                 
                 // Clear connection line highlights when dragging starts (if feature enabled)
@@ -2175,14 +2306,17 @@ class WordWebGame extends Phaser.Scene {
 
         // Support both 'rules' (new) and 'connections' (legacy)
         const rules = this.level.rules || this.level.connections || [];
+        console.log('rules count ', rules.length);
 
         // Words rules are now marked with italic letters on slots (no lines/labels)
 
         // Render cell rules
+        
         rules.forEach((rule, ruleIndex) => {
+            //rule info ionly has cell rule(lines) and has type property 0 for 'same' and 1 for 'increment/decrement'
             const ruleInfo = this.parseRule(rule);
             if (!ruleInfo) return; // Skip invalid rules
-
+            
             // Get the squareContainer from the slot
             const fromSquareContainer = this.slotSprites[ruleInfo.slotIdx].list[ruleInfo.squareIdx];
             const toSquareContainer = this.slotSprites[ruleInfo.toSlotIdx].list[ruleInfo.toSquareIdx];
@@ -2200,14 +2334,21 @@ class WordWebGame extends Phaser.Scene {
             this.connectionLines.push(line);
             
             // Make line interactive for click handling if feature is enabled
-            if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
+            if(ruleInfo.type ===0){
+                 if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {                
+                
                 // Create an invisible interactive zone over the line for click detection
                 const hitWidth = 20; // Width of the clickable area
                 const lineLength = Math.sqrt(Math.pow(toPt.x - fromPt.x, 2) + Math.pow(toPt.y - fromPt.y, 2));
+                console.log('line length ', lineLength);
                 const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
                 
-                // Create an invisible rectangle zone for interaction
-                const zone = this.add.zone(fromPt.x, fromPt.y, lineLength, hitWidth).setOrigin(0, 0.5);
+                // Calculate midpoint of the line for proper zone centering
+                const midX = (fromPt.x + toPt.x) / 2;
+                const midY = (fromPt.y + toPt.y) / 2;
+                
+                // Create an invisible rectangle zone for interaction, centered on the line's midpoint
+                const zone = this.add.zone(midX, midY, lineLength, hitWidth).setOrigin(0.5, 0.5);
                 zone.setRotation(angle);
                 zone.setInteractive({ useHandCursor: true });
                 zone.setDepth(-99); // Just above the line
@@ -2240,7 +2381,11 @@ class WordWebGame extends Phaser.Scene {
                 
                 // Store zone for cleanup if needed
                 this.connectionLines.push(zone);
+            
             }
+
+            }
+           
 
             // Draw directional arrows for incremental rules only (type 1)
             if (ruleInfo.type === 1 && ruleInfo.increment !== 0) {
@@ -3553,6 +3698,7 @@ class WordWebGame extends Phaser.Scene {
             this.activeHighlightLine = null;
             return;
         }
+        
         
         // Clear any previous highlights
         this.clearWordBankHighlights();

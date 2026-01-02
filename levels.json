@@ -3,16 +3,179 @@
     {
   "slots": [
     {
-      "length": 4,
+      "length": 3,
       "anchorCol": -2,
-      "anchorRow": -2
+      "anchorRow": -3
+    },
+    {
+      "length": 3,
+      "anchorCol": -2,
+      "anchorRow": 0
     }
   ],
-  "words": [
-    "JAYAM"
-  ],
-  "rules": []
+  "words": [],
+  "rules": [
+    {
+      "type": "cell",
+      "a": {
+        "slot": 0,
+        "cell": 0,
+        "side": 2
+      },
+      "b": {
+        "slot": 1,
+        "cell": 0,
+        "side": 0
+      },
+      "op": "same"
+    }
+  ]
 },
+    
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        },
+         {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        "TRUE",
+        "LOVE",
+        "TRUE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+         {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+        
+      ]
+    },
+     {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -4
+        },
+         {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+
+      ],
+      "words": [
+        "TRV",
+        "VVG",
+        "BVT"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "TRVE",
+        "LOVE"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
     {
   "slots": [
     {
@@ -71,6 +234,95 @@
     }
   ]
 },
+    
+    
+    {
+  "slots": [
+    {
+      "group": 1,
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -10
+    },
+    {
+      "group": 2,
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -8
+    },
+    {
+      "group": 3,
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -6
+    },
+    {
+      "group": 4,
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -4
+    },
+    {
+      "group": 5,
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -2
+    },
+    {
+      "group": 6,
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -0
+    }
+  ],
+  "words": [
+    "JAYAM",
+    {"word":"MOHA", "group":1},
+    "GUMA",
+    {"word":"OYAM", "group":6}
+  ],  
+  "rules": []
+},
+{
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -7
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        {"word": "LOVE", "opposite": "HATE" },
+        {"word": "WARM", "opposite": "COLD"}
+      ],
+      "rules": [  
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "word",
+          "slot": 0,
+          "op": "opposite"
+        }
+      ]
+    },
+    
     {
   "slots": [
     {
@@ -3994,40 +4246,7 @@
         }
       ]
     },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -7
-        },
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "TRUE",
-        "LOVE"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "+1"
-        }
-      ]
-    },
+    
     {
       "slots": [
         {
@@ -4187,45 +4406,6 @@
             "side": 0
           },
           "op": "+2"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -7
-        },
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        "LOVE-HATE",
-        "WARM-COLD"
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "word",
-          "slot": 0,
-          "op": "opposite"
         }
       ]
     }

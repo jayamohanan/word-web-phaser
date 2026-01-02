@@ -6,8 +6,8 @@ var CONFIG = {
             SQUARE_GAP: 4,
             SQUARE_RADIUS: 5,
             GRID_LINE_WIDTH: 1,
-            SLOT_STROKE_WIDTH: 2,
-            WORD_STROKE_WIDTH: 2,
+            SLOT_STROKE_WIDTH: 3,
+            WORD_STROKE_WIDTH: 3,
             // Font sizes
             WORD_CELL_FONT_SIZE: '36px',   // Font size for letters in word cells
             SLOT_CELL_FONT_SIZE: '36px',    // Font size for hints in slot cells
@@ -117,23 +117,25 @@ var CONFIG = {
    SASHA_PALETTE: [
     { name: 'Red', hex: '#e6194b', tint: '#fad1da' },
     { name: 'Green', hex: '#3cb44b', tint: '#d8f0db' },
-    { name: 'Yellow', hex: '#ffe119', tint: '#fff9d1' },
     { name: 'Blue', hex: '#4363d8', tint: '#d9e0f7' },
     { name: 'Orange', hex: '#f58231', tint: '#fde6d6' },
     { name: 'Purple', hex: '#911eb4', tint: '#e9d2f0' },
-    { name: 'Cyan', hex: '#42d4f4', tint: '#d9f6fd' },
+   { name: 'Teal', hex: '#469990', tint: '#daebe9' },
+    { name: 'Olive', hex: '#808000', tint: '#e6e6cc' },
     { name: 'Magenta', hex: '#f032e6', tint: '#fcd6f6' },
-    { name: 'Lime', hex: '#bfef45', tint: '#f2fccd' },
     { name: 'Pink', hex: '#fabed4', tint: '#fef2f6' },
-    { name: 'Teal', hex: '#469990', tint: '#daebe9' },
+    
     { name: 'Lavender', hex: '#dcbeff', tint: '#f8f2ff' },
-    { name: 'Brown', hex: '#9a6324', tint: '#ebe0d3' },
     { name: 'Beige', hex: '#fffac8', tint: '#fffef4' },
     { name: 'Maroon', hex: '#800000', tint: '#e6cccc' },
     { name: 'Mint', hex: '#aaffc3', tint: '#eefff3' },
-    { name: 'Olive', hex: '#808000', tint: '#e6e6cc' },
+   
     { name: 'Apricot', hex: '#ffd8b1', tint: '#fff7ef' },
     { name: 'Navy', hex: '#000075', tint: '#ccccdf' },
-    { name: 'Grey', hex: '#a9a9a9', tint: '#eeeeee' }
+    { name: 'Grey', hex: '#a9a9a9', tint: '#eeeeee' },
+     { name: 'Brown', hex: '#9a6324', tint: '#ebe0d3' },
+    { name: 'Yellow', hex: '#ffe119', tint: '#fff9d1' },
+    { name: 'Cyan', hex: '#42d4f4', tint: '#d9f6fd' },
+     { name: 'Lime', hex: '#bfef45', tint: '#f2fccd' }
 ]
 };
