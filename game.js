@@ -1068,6 +1068,9 @@ class WordWebGame extends Phaser.Scene {
         wordContainer.on('dragstart', (pointer) => {
             if (this.autopilotInProgress) return;
             
+            // Enable slot drop zones for dragging
+            this.enableSlotDropZones();
+            
             // Reset scale and clear tint when dragging starts
             wordContainer.setScale(1.0);
             this.tweens.killTweensOf(wordContainer);
@@ -1117,6 +1120,9 @@ class WordWebGame extends Phaser.Scene {
         });
         
         wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
+            // Disable slot drop zones after dragging
+            this.disableSlotDropZones();
+            
             wordContainer.setDepth(100);
             if (!dropped) {
                 // Not dropped on a slot - return to exact same bank position as original
@@ -1797,6 +1803,8 @@ class WordWebGame extends Phaser.Scene {
                 -this.gridSize / 2 - extra / 2, -this.gridSize / 2 - extra / 2, slot.length * this.gridSize + extra, this.gridSize + extra
             ), Phaser.Geom.Rectangle.Contains);
             slotContainer.input.dropZone = true;
+            // Disable drop zone initially - will be enabled during dragging to prevent overlap with line zones
+            slotContainer.disableInteractive();
 
             const slotGroup = slot.group !== undefined ? slot.group : 0;
             slotContainer.setData('slotIdx', slotIdx);
@@ -2068,6 +2076,9 @@ class WordWebGame extends Phaser.Scene {
                  this.clearLineHighlight();
                 console.log('=== DRAGSTART EVENT FIRED ===');
                 
+                // Enable slot drop zones for dragging
+                this.enableSlotDropZones();
+                
                 // Clear connection line highlights when dragging starts (if feature enabled)
                 if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
                     this.clearWordBankHighlights();
@@ -2144,6 +2155,9 @@ class WordWebGame extends Phaser.Scene {
             });
             wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
                 console.log('88888dragend event fired, dropped=', dropped);
+                // Disable slot drop zones after dragging
+                this.disableSlotDropZones();
+                
                 // Restore normal depth
                 wordContainer.setDepth(100);
 
@@ -3899,6 +3913,24 @@ class WordWebGame extends Phaser.Scene {
             if (originalColor !== undefined) {
                 this.activeHighlightLine.setStrokeStyle(3, originalColor);
             }
+        }
+    }
+    
+    // Enable slot drop zones (called when dragging starts)
+    enableSlotDropZones() {
+        if (this.slotSprites) {
+            this.slotSprites.forEach(slotContainer => {
+                slotContainer.setInteractive();
+            });
+        }
+    }
+    
+    // Disable slot drop zones (called when dragging ends)
+    disableSlotDropZones() {
+        if (this.slotSprites) {
+            this.slotSprites.forEach(slotContainer => {
+                slotContainer.disableInteractive();
+            });
         }
     }
     

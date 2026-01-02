@@ -1,37 +1,6 @@
 {
   "levels": [
-    {
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -3
-    },
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": 0
-    }
-  ],
-  "words": [],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 0,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 1,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
-    
+
     {
       "slots": [
         {
@@ -52,7 +21,7 @@
       ],
       "words": [
         "TRUE",
-        "LOVE",
+        "LOUE",
         "TRUE"
       ],
       "rules": [
