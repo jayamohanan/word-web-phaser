@@ -37,6 +37,11 @@ class WordWebGame extends Phaser.Scene {
         this.pointsPerCell = CONFIG.POINTS_PER_CELL_ON_HINT;
         this.scoreText = null;
 
+        // Initialize sublevel tracking
+        this.currentSublevelIndex = 0;
+        this.totalSublevels = 0;
+        this.stepProgressBar = null;
+
     }
 
     preload() {
@@ -48,6 +53,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.image('hintButton', 'graphics/hint.png');
         this.load.image('skipButton', 'graphics/skip.png');
         this.load.image('retryButton', 'graphics/retry.png');
+        this.load.image('greenCheck', 'graphics/green_check.png');
 
         // Load WebFontLoader script
         this.load.script('webfont', 'fonts/webfontloader.js');
@@ -144,8 +150,31 @@ class WordWebGame extends Phaser.Scene {
         // Support both object format {"word": "LOVE", "opposite": "HATE"} and legacy "LOVE-HATE" format
         // Make it bidirectional so both LOVE→HATE and HATE→LOVE work
         this.wordAntonymMap = new Map();
-        if (this.level.words) {
-            this.level.words = this.level.words.map(wordData => {
+        
+        // Initialize sublevel system
+        // Words is now an array of arrays: [["PEW","PIE"], ["RAT","REA"], ...]
+        this.allSublevels = this.level.words || [[]];
+        // Use subLevelCount if specified, otherwise use all sublevels
+        this.totalSublevels = this.level.subLevelCount !== undefined 
+            ? Math.min(this.level.subLevelCount, this.allSublevels.length)
+            : this.allSublevels.length;
+        this.currentSublevelIndex = 0;
+        
+        // Get words for current sublevel
+        const currentSublevelWords = this.allSublevels[this.currentSublevelIndex];
+        
+        if (currentSublevelWords) {
+            console.log('------------------', (currentSublevelWords === null));
+            console.log('------------------',Array.isArray(currentSublevelWords));
+
+            console.log(
+  currentSublevelWords,
+  typeof currentSublevelWords,
+  Array.isArray(currentSublevelWords)
+);
+
+
+            this.level.words = currentSublevelWords.map(wordData => {
                 // Handle both string and object formats
                 if (typeof wordData === 'object' && wordData.opposite) {
                     // New format: {"word": "LOVE", "opposite": "HATE"}
@@ -1533,9 +1562,15 @@ class WordWebGame extends Phaser.Scene {
             resolution: window.devicePixelRatio || 2
         }).setOrigin(0.5, 0).setDepth(10001);
 
-        // 2. Score display below level number (only if score system is enabled)
+        // 2. Step progress bar (only if more than one sublevel)
+        if (this.totalSublevels > 1) {
+            this.createStepProgressBar(width / 2, 95); // 30 + 30 + 35 = 95 (Level text top + Level text height + gap)
+        }
+
+        // 3. Score display below level number (only if score system is enabled)
         if (CONFIG.ENABLE_SCORE_SYSTEM) {
-            this.scoreText = this.add.text(width / 2, 65, `${this.currentScore}/${this.targetScore}`, {
+            const scoreY = this.totalSublevels > 1 ? 130 : 65; // Adjust position if progress bar exists
+            this.scoreText = this.add.text(width / 2, scoreY, `${this.currentScore}/${this.targetScore}`, {
                 fontFamily: 'Arial, sans-serif',
                 fontSize: '24px',
                 fontWeight: '500',
@@ -1544,7 +1579,7 @@ class WordWebGame extends Phaser.Scene {
             }).setOrigin(0.5, 0).setDepth(10001);
         }
 
-        // 3. UI Buttons
+        // 4. UI Buttons
         const buttonSize = 80; // Button display size
         const buttonGap = 50; // Gap between buttons
         const sideMargin = 20; // Distance from screen edge
@@ -1592,6 +1627,88 @@ class WordWebGame extends Phaser.Scene {
         });
         const retryBtnScale = buttonSize / retryButton.width;
         retryButton.setScale(retryBtnScale);
+    }
+
+    createStepProgressBar(centerX, centerY) {
+        // Create a container for the progress bar
+        this.stepProgressBar = this.add.container(centerX, centerY);
+        this.stepProgressBar.setDepth(10001);
+        
+        const circleRadius = 8;
+        const circleGap = 90; // Tripled from 30 to 90
+        const lineThickness = 2;
+        const totalWidth = (this.totalSublevels - 1) * circleGap;
+        
+        // Starting X position (to center the progress bar)
+        const startX = -totalWidth / 2;
+        
+        // Store circle and check mark references
+        this.stepProgressBar.circles = [];
+        this.stepProgressBar.checkMarks = [];
+        
+        // Create the horizontal line connecting all circles
+        const lineGraphics = this.add.graphics();
+        lineGraphics.lineStyle(lineThickness, 0x999999);
+        lineGraphics.lineBetween(startX, 0, startX + totalWidth, 0);
+        this.stepProgressBar.add(lineGraphics);
+        this.stepProgressBar.lineGraphics = lineGraphics;
+        
+        // Create circles for each sublevel
+        for (let i = 0; i < this.totalSublevels; i++) {
+            const x = startX + i * circleGap;
+            
+            // Create circle
+            const circle = this.add.graphics();
+            circle.lineStyle(2, 0x999999);
+            circle.fillStyle(0xcccccc); // Grey fill for incomplete
+            circle.fillCircle(x, 0, circleRadius);
+            circle.strokeCircle(x, 0, circleRadius);
+            this.stepProgressBar.add(circle);
+            this.stepProgressBar.circles.push(circle);
+            
+            // Create check mark (hidden initially)
+            const checkMark = this.add.image(x, 0, 'greenCheck');
+            checkMark.setDisplaySize(circleRadius * 2.2, circleRadius * 2.2);
+            checkMark.setVisible(false);
+            this.stepProgressBar.add(checkMark);
+            this.stepProgressBar.checkMarks.push(checkMark);
+        }
+    }
+
+    updateStepProgressBar() {
+        if (!this.stepProgressBar || this.totalSublevels <= 1) return;
+        
+        // Update circles and check marks based on current sublevel
+        for (let i = 0; i < this.totalSublevels; i++) {
+            if (i < this.currentSublevelIndex) {
+                // Completed sublevel - show check mark
+                this.stepProgressBar.checkMarks[i].setVisible(true);
+            } else {
+                // Not yet completed
+                this.stepProgressBar.checkMarks[i].setVisible(false);
+            }
+        }
+        
+        // Update the line color for completed portions
+        const lineGraphics = this.stepProgressBar.lineGraphics;
+        if (lineGraphics && this.currentSublevelIndex > 0) {
+            lineGraphics.clear();
+            
+            const circleGap = 90; // Must match createStepProgressBar
+            const totalWidth = (this.totalSublevels - 1) * circleGap;
+            const startX = -totalWidth / 2;
+            
+            // Draw grey line for incomplete portion
+            lineGraphics.lineStyle(2, 0x999999);
+            lineGraphics.lineBetween(startX, 0, startX + totalWidth, 0);
+            
+            // Draw green line for completed portion
+            if (this.currentSublevelIndex > 0) {
+                const completedWidth = (this.currentSublevelIndex - 1) * circleGap;
+                lineGraphics.lineStyle(2, 0x4CAF50); // Green color
+                lineGraphics.lineBetween(startX, 0, startX + completedWidth, 0);
+            }
+        }
     }
 
     createPortraitBoundary() {
@@ -3650,17 +3767,166 @@ class WordWebGame extends Phaser.Scene {
         });
 
         if (allSlotsFilled) {
-            console.log('🎉 All slots filled! You win!');
-            // Launch win scene immediately (animations removed)
-            this.scene.launch('WinScene', {
-                currentLevelIndex: this.currentLevelIndex,
-                totalLevels: this.totalLevels,
-                undoCount: this.undoCount,
-                mistakeCount: this.mistakeCount
-            });
-            // Pause the game scene
-            this.scene.pause();
+            console.log('🎉 All slots filled!');
+            
+            // Check if there are more sublevels
+            if (this.currentSublevelIndex < this.totalSublevels - 1) {
+                // More sublevels remaining - advance to next sublevel
+                console.log(`Sublevel ${this.currentSublevelIndex + 1} complete! Moving to next sublevel...`);
+                
+                // Show simple feedback for sublevel completion
+                this.showSublevelCompleteFeedback(() => {
+                    // Move to next sublevel
+                    this.currentSublevelIndex++;
+                    this.updateStepProgressBar();
+                    this.loadNextSublevel();
+                });
+            } else {
+                // All sublevels complete - show win scene
+                console.log('🎉 All sublevels complete! Level won!');
+                this.scene.launch('WinScene', {
+                    currentLevelIndex: this.currentLevelIndex,
+                    totalLevels: this.totalLevels,
+                    undoCount: this.undoCount,
+                    mistakeCount: this.mistakeCount
+                });
+                // Pause the game scene
+                this.scene.pause();
+            }
         }
+    }
+
+    showSublevelCompleteFeedback(callback) {
+        // Disable input during feedback
+        this.input.enabled = false;
+        
+        // Create a simple "Great!" text feedback
+        const { width, height } = this.sys.game.canvas;
+        const feedbackText = this.add.text(width / 2, height / 2, 'Great!', {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '48px',
+            fontWeight: 'bold',
+            color: '#4CAF50',
+            resolution: window.devicePixelRatio || 2
+        }).setOrigin(0.5).setDepth(10002).setAlpha(0);
+        
+        // Fade in, hold, fade out
+        this.tweens.add({
+            targets: feedbackText,
+            alpha: 1,
+            duration: 200,
+            ease: 'Power2',
+            yoyo: true,
+            hold: 400,
+            onComplete: () => {
+                feedbackText.destroy();
+                if (callback) callback();
+            }
+        });
+    }
+
+    loadNextSublevel() {
+        // Clear all slots
+        this.clearAllSlots();
+        
+        // Get next sublevel words
+        const nextSublevelWords = this.allSublevels[this.currentSublevelIndex];
+        
+        // Clear word antonym map
+        this.wordAntonymMap.clear();
+        
+        // Process new words (same as in create)
+        this.level.words = nextSublevelWords.map(wordData => {
+            // Handle both string and object formats
+            if (typeof wordData === 'object' && wordData.opposite) {
+                const word = wordData.word;
+                const opposite = wordData.opposite;
+                this.wordAntonymMap.set(word, opposite);
+                this.wordAntonymMap.set(opposite, word);
+                const result = { word: word };
+                if (wordData.group !== undefined) {
+                    result.group = wordData.group;
+                }
+                return result;
+            } else if (typeof wordData === 'string' && wordData.includes('-')) {
+                const [original, antonym] = wordData.split('-');
+                this.wordAntonymMap.set(original, antonym);
+                this.wordAntonymMap.set(antonym, original);
+                return original;
+            } else if (typeof wordData === 'object' && wordData.word && wordData.word.includes('-')) {
+                const [original, antonym] = wordData.word.split('-');
+                this.wordAntonymMap.set(original, antonym);
+                this.wordAntonymMap.set(antonym, original);
+                if (wordData.group !== undefined) {
+                    return { word: original, group: wordData.group };
+                }
+                return original;
+            }
+            return wordData;
+        });
+        
+        // Clear existing word bank sprites
+        this.bankSprites.forEach(sprite => sprite.destroy());
+        this.bankSprites = [];
+        
+        // Render new word bank
+        this.renderBank();
+        
+        // Re-enable input
+        this.time.delayedCall(300, () => {
+            this.input.enabled = true;
+        });
+    }
+
+    clearAllSlots() {
+        // Clear all slots and reset their state
+        this.slotSprites.forEach(slotContainer => {
+            const wordContainer = slotContainer.getData('wordContainer');
+            if (wordContainer) {
+                // Kill any active tweens on the word container
+                this.tweens.killTweensOf(wordContainer);
+                // Return word to bank (we'll destroy it anyway)
+                wordContainer.destroy();
+                slotContainer.setData('wordContainer', null);
+            }
+            slotContainer.setData('filled', false);
+            
+            // Clear slot letters and reset visual state
+            slotContainer.list.forEach(squareContainer => {
+                // squareContainer is the container for each cell
+                const letterText = squareContainer.getData('letterText');
+                if (letterText) {
+                    letterText.setText('');
+                }
+                
+                // Get the square image from the squareContainer's data
+                const square = squareContainer.getData('square');
+                if (square) {
+                    // Kill any active tweens on the square
+                    this.tweens.killTweensOf(square);
+                    // Clear tint
+                    if (square.clearTint) {
+                        square.clearTint();
+                    }
+                    // Reset data
+                    square.setData('highlighted', false);
+                }
+                
+                // Kill any tweens on the squareContainer itself
+                this.tweens.killTweensOf(squareContainer);
+                
+                // Reset all data flags that might affect rendering
+                squareContainer.setData('highlighted', false);
+                squareContainer.setData('filled', false);
+                squareContainer.setData('letter', null);
+            });
+        });
+        
+        // Clear any active highlights
+        this.activeHighlightLine = null;
+        
+        // Update connection highlights (this will clear all hint visuals)
+        this.updateConnectionHighlights();
     }
 
     // Play entrance animations for level start

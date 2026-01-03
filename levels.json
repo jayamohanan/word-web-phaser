@@ -1,5 +1,73 @@
 {
   "test": [
+        {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        [
+          "PEW",
+          "PIE"
+        ],
+        [
+          "ARM",
+          "AIR"
+        ],
+        [
+          "TEN",
+          "THE"
+        ],
+        [
+          "BIG",
+          "BAG"
+        ],
+        [
+          "CAT",
+          "COT"
+        ]
+      ],
+      "subLevelCount": 3,
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 0,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
     {
       "slots": [
         {
@@ -14,8 +82,10 @@
         }
       ],
       "words": [
-        "TEST",
-        "GAME"
+        [
+          "TEST",
+          "GAME"
+        ]
       ],
       "rules": [
         {
@@ -36,52 +106,7 @@
     }
   ],
   "main": [
-    {
-      "shiftX": true,
-  "slots": [
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": 0
-    },
-    {
-      "length": 3,
-      "anchorCol": -2,
-      "anchorRow": -3
-    }
-  ],
-  "words": ["PEW","PIE"],
-  "rules": [
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 0,
-        "side": 2
-      },
-      "b": {
-        "slot": 0,
-        "cell": 0,
-        "side": 0
-      },
-      "op": "same"
-    },
-    {
-      "type": "cell",
-      "a": {
-        "slot": 1,
-        "cell": 1,
-        "side": 2
-      },
-      "b": {
-        "slot": 0,
-        "cell": 2,
-        "side": 0
-      },
-      "op": "same"
-    }
-  ]
-},
+
     {
       "shiftX": true,
       "slots": [
@@ -92,7 +117,9 @@
         }
       ],
       "words": [
-        "RED"
+        [
+          "RED"
+        ]
       ],
       "rules": [],
       "tutorial": {
@@ -138,8 +165,10 @@
         }
       ],
       "words": [
-        "PAY",
-        "TAX"
+        [
+          "PAY",
+          "TAX"
+        ]
       ],
       "rules": [
         {
@@ -173,8 +202,10 @@
         }
       ],
       "words": [
-        "ONE",
-        "TWO"
+        [
+          "ONE",
+          "TWO"
+        ]
       ],
       "rules": [
         {
@@ -208,8 +239,10 @@
         }
       ],
       "words": [
-        "CRY",
-        "WAR"
+        [
+          "CRY",
+          "WAR"
+        ]
       ],
       "rules": [
         {
@@ -243,8 +276,10 @@
         }
       ],
       "words": [
-        "OFT",
-        "FIT"
+        [
+          "OFT",
+          "FIT"
+        ]
       ],
       "rules": [
         {
@@ -297,9 +332,11 @@
         }
       ],
       "words": [
-        "SUN",
-        "RAY",
-        "TAN"
+        [
+          "SUN",
+          "RAY",
+          "TAN"
+        ]
       ],
       "rules": [
         {
@@ -351,9 +388,11 @@
         }
       ],
       "words": [
-        "FAR",
-        "TAR",
-        "FAX"
+        [
+          "FAR",
+          "TAR",
+          "FAX"
+        ]
       ],
       "rules": [
         {
@@ -419,9 +458,11 @@
         }
       ],
       "words": [
-        "YES",
-        "DUE",
-        "BUS"
+        [
+          "YES",
+          "DUE",
+          "BUS"
+        ]
       ],
       "rules": [
         {
@@ -492,10 +533,12 @@
         }
       ],
       "words": [
-        "GUY",
-        "GAP",
-        "AGE",
-        "GYM"
+        [
+          "GUY",
+          "GAP",
+          "AGE",
+          "GYM"
+        ]
       ],
       "rules": [
         {
@@ -577,9 +620,11 @@
         }
       ],
       "words": [
-        "TRUE",
-        "LOUE",
-        "TRUE"
+        [
+          "TRUE",
+          "LOUE",
+          "TRUE"
+        ]
       ],
       "rules": [
         {
@@ -631,9 +676,11 @@
         }
       ],
       "words": [
-        "TRV",
-        "VVG",
-        "BVT"
+        [
+          "TRV",
+          "VVG",
+          "BVT"
+        ]
       ],
       "rules": [
         {
@@ -680,8 +727,10 @@
         }
       ],
       "words": [
-        "TRVE",
-        "LOVE"
+        [
+          "TRVE",
+          "LOVE"
+        ]
       ],
       "rules": [
         {
@@ -719,13 +768,15 @@
         }
       ],
       "words": [
-        "JTM",
-        "JUK",
-        "JKT",
-        "JEK",
-        "KIT",
-        "KOM",
-        "LOM"
+        [
+          "JTM",
+          "JUK",
+          "JKT",
+          "JEK",
+          "KIT",
+          "KOM",
+          "LOM"
+        ]
       ],
       "rules": [
         {
@@ -794,20 +845,22 @@
           "group": 6,
           "length": 4,
           "anchorCol": -2,
-          "anchorRow": -0
+          "anchorRow": 0
         }
       ],
       "words": [
-        "JAYAM",
-        {
-          "word": "MOHA",
-          "group": 1
-        },
-        "GUMA",
-        {
-          "word": "OYAM",
-          "group": 6
-        }
+        [
+          "JAYAM",
+          {
+            "word": "MOHA",
+            "group": 1
+          },
+          "GUMA",
+          {
+            "word": "OYAM",
+            "group": 6
+          }
+        ]
       ],
       "rules": []
     },
@@ -825,14 +878,16 @@
         }
       ],
       "words": [
-        {
-          "word": "LOVE",
-          "opposite": "HATE"
-        },
-        {
-          "word": "WARM",
-          "opposite": "COLD"
-        }
+        [
+          {
+            "word": "LOVE",
+            "opposite": "HATE"
+          },
+          {
+            "word": "WARM",
+            "opposite": "COLD"
+          }
+        ]
       ],
       "rules": [
         {
@@ -880,10 +935,12 @@
         }
       ],
       "words": [
-        "LOCAL",
-        "CLOSE",
-        "LUNCH",
-        "CRASH"
+        [
+          "LOCAL",
+          "CLOSE",
+          "LUNCH",
+          "CRASH"
+        ]
       ],
       "rules": [
         {
@@ -963,9 +1020,11 @@
         }
       ],
       "words": [
-        "TRUE",
-        "HOUR",
-        "HATE"
+        [
+          "TRUE",
+          "HOUR",
+          "HATE"
+        ]
       ],
       "rules": [
         {
@@ -1036,10 +1095,12 @@
         }
       ],
       "words": [
-        "PAD",
-        "OLD",
-        "AGE",
-        "ANT"
+        [
+          "PAD",
+          "OLD",
+          "AGE",
+          "ANT"
+        ]
       ],
       "rules": [
         {
@@ -1096,10 +1157,12 @@
         }
       ],
       "words": [
-        "CRY",
-        "BUY",
-        "RIG",
-        "GUY"
+        [
+          "CRY",
+          "BUY",
+          "RIG",
+          "GUY"
+        ]
       ],
       "rules": [
         {
@@ -1184,10 +1247,12 @@
         }
       ],
       "words": [
-        "URN",
-        "MUG",
-        "MET",
-        "GOT"
+        [
+          "URN",
+          "MUG",
+          "MET",
+          "GOT"
+        ]
       ],
       "rules": [
         {
@@ -1267,9 +1332,11 @@
         }
       ],
       "words": [
-        "RULE",
-        "OVAL",
-        "LOCK"
+        [
+          "RULE",
+          "OVAL",
+          "LOCK"
+        ]
       ],
       "rules": [
         {
@@ -1326,10 +1393,12 @@
         }
       ],
       "words": [
-        "GROSS",
-        "TRADE",
-        "TREAT",
-        "GRASS"
+        [
+          "GROSS",
+          "TRADE",
+          "TREAT",
+          "GRASS"
+        ]
       ],
       "rules": [
         {
@@ -1423,9 +1492,11 @@
         }
       ],
       "words": [
-        "ZERO",
-        "ONCE",
-        "ZONE"
+        [
+          "ZERO",
+          "ONCE",
+          "ZONE"
+        ]
       ],
       "rules": [
         {
@@ -1487,11 +1558,13 @@
         }
       ],
       "words": [
-        "SATIN",
-        "STAIN",
-        "SAINT",
-        "SIN",
-        "SIT"
+        [
+          "SATIN",
+          "STAIN",
+          "SAINT",
+          "SIN",
+          "SIT"
+        ]
       ],
       "rules": [
         {
@@ -1581,11 +1654,13 @@
         }
       ],
       "words": [
-        "ICY",
-        "OAK",
-        "KID",
-        "BOY",
-        "BOB"
+        [
+          "ICY",
+          "OAK",
+          "KID",
+          "BOY",
+          "BOB"
+        ]
       ],
       "rules": [
         {
@@ -1666,12 +1741,14 @@
         }
       ],
       "words": [
-        "AWE",
-        "LED",
-        "PAW",
-        "LIP",
-        "LIE",
-        "LAP"
+        [
+          "AWE",
+          "LED",
+          "PAW",
+          "LIP",
+          "LIE",
+          "LAP"
+        ]
       ],
       "rules": [
         {
@@ -1774,8 +1851,10 @@
         }
       ],
       "words": [
-        "GAME",
-        "MEAT"
+        [
+          "GAME",
+          "MEAT"
+        ]
       ],
       "rules": [
         {
@@ -1829,10 +1908,12 @@
         }
       ],
       "words": [
-        "IRIS",
-        "TAXI",
-        "AXIS",
-        "FLEX"
+        [
+          "IRIS",
+          "TAXI",
+          "AXIS",
+          "FLEX"
+        ]
       ],
       "rules": [
         {
@@ -1913,12 +1994,14 @@
         }
       ],
       "words": [
-        "HOLD",
-        "WORK",
-        "MOST",
-        "HOSE",
-        "LOSE",
-        "COLD"
+        [
+          "HOLD",
+          "WORK",
+          "MOST",
+          "HOSE",
+          "LOSE",
+          "COLD"
+        ]
       ],
       "rules": [
         {
@@ -2027,12 +2110,14 @@
         }
       ],
       "words": [
-        "EVER",
-        "LOVE",
-        "FOAM",
-        "ABLE",
-        "OVAL",
-        "OMEN"
+        [
+          "EVER",
+          "LOVE",
+          "FOAM",
+          "ABLE",
+          "OVAL",
+          "OMEN"
+        ]
       ],
       "rules": [
         {
@@ -2126,9 +2211,11 @@
         }
       ],
       "words": [
-        "ROOM",
-        "ROAM",
-        "ONTO"
+        [
+          "ROOM",
+          "ROAM",
+          "ONTO"
+        ]
       ],
       "rules": [
         {
@@ -2213,10 +2300,12 @@
         }
       ],
       "words": [
-        "MESH",
-        "RICH",
-        "TOUR",
-        "HOME"
+        [
+          "MESH",
+          "RICH",
+          "TOUR",
+          "HOME"
+        ]
       ],
       "rules": [
         {
@@ -2306,11 +2395,13 @@
         }
       ],
       "words": [
-        "VIEW",
-        "DISC",
-        "ARCH",
-        "WORD",
-        "ROOT"
+        [
+          "VIEW",
+          "DISC",
+          "ARCH",
+          "WORD",
+          "ROOT"
+        ]
       ],
       "rules": [
         {
@@ -2400,11 +2491,13 @@
         }
       ],
       "words": [
-        "REIN",
-        "SIGN",
-        "EARN",
-        "NAME",
-        "EDGE"
+        [
+          "REIN",
+          "SIGN",
+          "EARN",
+          "NAME",
+          "EDGE"
+        ]
       ],
       "rules": [
         {
@@ -2517,10 +2610,12 @@
         }
       ],
       "words": [
-        "EDGE",
-        "SIGN",
-        "EARN",
-        "NAVY"
+        [
+          "EDGE",
+          "SIGN",
+          "EARN",
+          "NAVY"
+        ]
       ],
       "rules": [
         {
@@ -2610,11 +2705,13 @@
         }
       ],
       "words": [
-        "DROP",
-        "CRYO",
-        "DOOR",
-        "TRIP",
-        "TRIO"
+        [
+          "DROP",
+          "CRYO",
+          "DOOR",
+          "TRIP",
+          "TRIO"
+        ]
       ],
       "rules": [
         {
@@ -2732,11 +2829,13 @@
         }
       ],
       "words": [
-        "SOON",
-        "NOON",
-        "NOON",
-        "NANO",
-        "NOON"
+        [
+          "SOON",
+          "NOON",
+          "NOON",
+          "NANO",
+          "NOON"
+        ]
       ],
       "rules": [
         {
@@ -2849,10 +2948,12 @@
         }
       ],
       "words": [
-        "OPTS",
-        "TOPS",
-        "STOP",
-        "POST"
+        [
+          "OPTS",
+          "TOPS",
+          "STOP",
+          "POST"
+        ]
       ],
       "rules": [
         {
@@ -2937,10 +3038,12 @@
         }
       ],
       "words": [
-        "POTS",
-        "OPTS",
-        "SPOT",
-        "POST"
+        [
+          "POTS",
+          "OPTS",
+          "SPOT",
+          "POST"
+        ]
       ],
       "rules": [
         {
@@ -3016,11 +3119,13 @@
         }
       ],
       "words": [
-        "MENU",
-        "TOSS",
-        "SIZE",
-        "TRUE",
-        "ROAM"
+        [
+          "MENU",
+          "TOSS",
+          "SIZE",
+          "TRUE",
+          "ROAM"
+        ]
       ],
       "rules": [
         {
@@ -3133,10 +3238,12 @@
         }
       ],
       "words": [
-        "MATE",
-        "MATE",
-        "TEAM",
-        "MEAT"
+        [
+          "MATE",
+          "MATE",
+          "TEAM",
+          "MEAT"
+        ]
       ],
       "rules": [
         {
@@ -3207,10 +3314,12 @@
         }
       ],
       "words": [
-        "TEAM",
-        "TEAM",
-        "MEAT",
-        "MEAT"
+        [
+          "TEAM",
+          "TEAM",
+          "MEAT",
+          "MEAT"
+        ]
       ],
       "rules": [
         {
@@ -3281,8 +3390,10 @@
         }
       ],
       "words": [
-        "EDIT",
-        "DUEL"
+        [
+          "EDIT",
+          "DUEL"
+        ]
       ],
       "rules": [
         {
@@ -3350,9 +3461,11 @@
         }
       ],
       "words": [
-        "CURD",
-        "CAVE",
-        "RULE"
+        [
+          "CURD",
+          "CAVE",
+          "RULE"
+        ]
       ],
       "rules": [
         {
@@ -3413,8 +3526,10 @@
         }
       ],
       "words": [
-        "EDIT",
-        "DUEL"
+        [
+          "EDIT",
+          "DUEL"
+        ]
       ],
       "rules": [
         {
@@ -3453,8 +3568,10 @@
         }
       ],
       "words": [
-        "TRUE",
-        "LOVE"
+        [
+          "TRUE",
+          "LOVE"
+        ]
       ],
       "rules": [
         {
@@ -3483,7 +3600,9 @@
         }
       ],
       "words": [
-        "JAYA"
+        [
+          "JAYA"
+        ]
       ],
       "rules": []
     },
@@ -3501,8 +3620,10 @@
         }
       ],
       "words": [
-        "BIRD",
-        "ACER"
+        [
+          "BIRD",
+          "ACER"
+        ]
       ],
       "rules": [
         {
@@ -3547,8 +3668,10 @@
         }
       ],
       "words": [
-        "EDIT",
-        "DUEL"
+        [
+          "EDIT",
+          "DUEL"
+        ]
       ],
       "rules": [
         {
@@ -3602,11 +3725,13 @@
         }
       ],
       "words": [
-        "ARK",
-        "ORE",
-        "BUY",
-        "INK",
-        "SUE"
+        [
+          "ARK",
+          "ORE",
+          "BUY",
+          "INK",
+          "SUE"
+        ]
       ],
       "rules": [
         {
@@ -3696,11 +3821,13 @@
         }
       ],
       "words": [
-        "APT",
-        "ECO",
-        "TOE",
-        "OUT",
-        "DAY"
+        [
+          "APT",
+          "ECO",
+          "TOE",
+          "OUT",
+          "DAY"
+        ]
       ],
       "rules": [
         {
@@ -3790,11 +3917,13 @@
         }
       ],
       "words": [
-        "BAM",
-        "DUB",
-        "CRY",
-        "DAD",
-        "MIC"
+        [
+          "BAM",
+          "DUB",
+          "CRY",
+          "DAD",
+          "MIC"
+        ]
       ],
       "rules": [
         {
@@ -3884,11 +4013,13 @@
         }
       ],
       "words": [
-        "BAM",
-        "DUB",
-        "CRY",
-        "DAD",
-        "MIC"
+        [
+          "BAM",
+          "DUB",
+          "CRY",
+          "DAD",
+          "MIC"
+        ]
       ],
       "rules": [
         {
@@ -3978,11 +4109,13 @@
         }
       ],
       "words": [
-        "BAM",
-        "DUB",
-        "CRY",
-        "DAD",
-        "MIC"
+        [
+          "BAM",
+          "DUB",
+          "CRY",
+          "DAD",
+          "MIC"
+        ]
       ],
       "rules": [
         {
@@ -4077,11 +4210,13 @@
         }
       ],
       "words": [
-        "BAM",
-        "DUB",
-        "CRY",
-        "MAD",
-        "MIC"
+        [
+          "BAM",
+          "DUB",
+          "CRY",
+          "MAD",
+          "MIC"
+        ]
       ],
       "rules": [
         {
@@ -4186,13 +4321,15 @@
         }
       ],
       "words": [
-        "BUS",
-        "YET",
-        "WAR",
-        "AIR",
-        "SKY",
-        "BOW",
-        "TEA"
+        [
+          "BUS",
+          "YET",
+          "WAR",
+          "AIR",
+          "SKY",
+          "BOW",
+          "TEA"
+        ]
       ],
       "rules": [
         {
@@ -4319,10 +4456,12 @@
         }
       ],
       "words": [
-        "OLD",
-        "MOM",
-        "DUO",
-        "DAD"
+        [
+          "OLD",
+          "MOM",
+          "DUO",
+          "DAD"
+        ]
       ],
       "rules": [
         {
@@ -4397,8 +4536,10 @@
         }
       ],
       "words": [
-        "TRUE",
-        "LOVE"
+        [
+          "TRUE",
+          "LOVE"
+        ]
       ],
       "rules": [
         {
@@ -4436,9 +4577,11 @@
         }
       ],
       "words": [
-        "BUZZ",
-        "BUSY",
-        "AIDE"
+        [
+          "BUZZ",
+          "BUSY",
+          "AIDE"
+        ]
       ],
       "rules": [
         {
@@ -4490,9 +4633,11 @@
         }
       ],
       "words": [
-        "ALTO",
-        "ATOM",
-        "ZOOM"
+        [
+          "ALTO",
+          "ATOM",
+          "ZOOM"
+        ]
       ],
       "rules": [
         {
@@ -4544,9 +4689,11 @@
         }
       ],
       "words": [
-        "CZAR",
-        "HEAD",
-        "SLAY"
+        [
+          "CZAR",
+          "HEAD",
+          "SLAY"
+        ]
       ],
       "rules": [
         {
