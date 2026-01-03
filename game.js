@@ -90,7 +90,7 @@ class WordWebGame extends Phaser.Scene {
         console.log('CONFIG.LEVEL_TYPE:', CONFIG.LEVEL_TYPE);
         const levelsObject = levels[CONFIG.LEVEL_TYPE];
 
-        this.input.dragDistanceThreshold = 8;
+        this.input.dragDistanceThreshold = CONFIG.DRAG_DISTANCE_THRESHOLD;
 
         this.totalLevels = levelsObject.length;
         // Use modulo to loop levels
@@ -1948,6 +1948,9 @@ class WordWebGame extends Phaser.Scene {
 
     renderBank() {
         const startY = this.bankAreaY + 40;
+        const startX = this.sys.game.canvas.width / 2;
+        // this.add.rectangle(startX, this.bankAreaY , 300, 1, 0x000000).setAlpha(0.5).setDepth(5);
+
         const verticalGap = this.squareWidth + 24;
         this.level.words.forEach((wordData, wordIdx) => {
             // Handle both string and object formats
@@ -1965,7 +1968,7 @@ class WordWebGame extends Phaser.Scene {
             const halfWordWidth = wordWidth / 2;
 
             // Position container so word is centered
-            let startX = this.sys.game.canvas.width / 2;
+            
             let baseY = startY + wordIdx * verticalGap;
             let wordContainer = this.add.container(startX, baseY);
             let wordCells = [];

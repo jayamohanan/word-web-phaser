@@ -1,6 +1,5 @@
 {
   "test": [
-
     {
       "slots": [
         {
@@ -37,6 +36,52 @@
     }
   ],
   "main": [
+    {
+      "shiftX": true,
+  "slots": [
+    {
+      "length": 3,
+      "anchorCol": -2,
+      "anchorRow": 0
+    },
+    {
+      "length": 3,
+      "anchorCol": -2,
+      "anchorRow": -3
+    }
+  ],
+  "words": ["PEW","PIE"],
+  "rules": [
+    {
+      "type": "cell",
+      "a": {
+        "slot": 1,
+        "cell": 0,
+        "side": 2
+      },
+      "b": {
+        "slot": 0,
+        "cell": 0,
+        "side": 0
+      },
+      "op": "same"
+    },
+    {
+      "type": "cell",
+      "a": {
+        "slot": 1,
+        "cell": 1,
+        "side": 2
+      },
+      "b": {
+        "slot": 0,
+        "cell": 2,
+        "side": 0
+      },
+      "op": "same"
+    }
+  ]
+},
     {
       "shiftX": true,
       "slots": [
@@ -78,7 +123,42 @@
         ]
       }
     },
-     {
+    {
+      "shiftX": true,
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": -2,
+          "anchorRow": -3
+        }
+      ],
+      "words": [
+        "PAY",
+        "TAX"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
       "shiftX": true,
       "slots": [
         {
@@ -128,8 +208,8 @@
         }
       ],
       "words": [
-        "FAN",
-        "SPA"
+        "CRY",
+        "WAR"
       ],
       "rules": [
         {
@@ -148,7 +228,7 @@
         }
       ]
     },
-     {
+    {
       "shiftX": true,
       "slots": [
         {
@@ -163,8 +243,8 @@
         }
       ],
       "words": [
-        "FIT",
-        "OFT"
+        "OFT",
+        "FIT"
       ],
       "rules": [
         {
@@ -197,7 +277,7 @@
         }
       ]
     },
-     {
+    {
       "shiftX": true,
       "slots": [
         {
@@ -217,9 +297,9 @@
         }
       ],
       "words": [
-        "TEN",
         "SUN",
-        "MEN"
+        "RAY",
+        "TAN"
       ],
       "rules": [
         {
@@ -252,7 +332,7 @@
         }
       ]
     },
-         {
+    {
       "slots": [
         {
           "length": 3,
@@ -320,8 +400,75 @@
         }
       ]
     },
-    
-     {
+    {
+      "slots": [
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": 0
+        },
+        {
+          "length": 3,
+          "anchorCol": -4,
+          "anchorRow": -4
+        },
+        {
+          "length": 3,
+          "anchorCol": 0,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        "YES",
+        "DUE",
+        "BUS"
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 1,
+            "side": 2
+          },
+          "op": "same"
+        }
+      ]
+    },
+    {
       "slots": [
         {
           "length": 3,
@@ -409,9 +556,6 @@
         }
       ]
     }
-     
-      
-
   ],
   "reserve": [
     {
@@ -1616,7 +1760,6 @@
         }
       ]
     },
-   
     {
       "slots": [
         {
@@ -3430,12 +3573,6 @@
         }
       ]
     },
- 
-    
-   
-    
-   
-  
     {
       "slots": [
         {

@@ -116,11 +116,13 @@ var CONFIG = {
 
     //test, main, reserve
     // "LEVEL_TYPE": 'test',
-    "LEVEL_TYPE": 'main',
+    "LEVEL_TYPE": 'main',   
     // "LEVEL_TYPE": 'reserve',
 
     SHADOW_MID_OFFSET : 9,
     SHADOW_DARK_OFFSET : 2,
+
+    DRAG_DISTANCE_THRESHOLD: 4, // Minimum distance in pixels for drag to be recognized
     
    SASHA_PALETTE: [
     { name: 'Red', hex: '#e6194b', tint: '#fad1da' },
