@@ -152,8 +152,18 @@ class WordWebGame extends Phaser.Scene {
         this.wordAntonymMap = new Map();
         
         // Initialize sublevel system
-        // Words is now an array of arrays: [["PEW","PIE"], ["RAT","REA"], ...]
-        this.allSublevels = this.level.words || [[]];
+        // Words should be an array of arrays: [["PEW","PIE"], ["RAT","REA"], ...]
+        // But handle old format gracefully: ["PEW","PIE"]
+        let wordsArray = this.level.words || [];
+        
+        // Check if words is already nested (new format) or flat (old format)
+        if (wordsArray.length > 0 && !Array.isArray(wordsArray[0])) {
+            // Old format: ["PEW","PIE"] -> convert to [["PEW","PIE"]]
+            console.log('Converting old format words to nested format for level', this.currentLevelIndex);
+            wordsArray = [wordsArray];
+        }
+        
+        this.allSublevels = wordsArray;
         // Use subLevelCount if specified, otherwise use all sublevels
         this.totalSublevels = this.level.subLevelCount !== undefined 
             ? Math.min(this.level.subLevelCount, this.allSublevels.length)
@@ -161,19 +171,9 @@ class WordWebGame extends Phaser.Scene {
         this.currentSublevelIndex = 0;
         
         // Get words for current sublevel
-        const currentSublevelWords = this.allSublevels[this.currentSublevelIndex];
+        const currentSublevelWords = this.allSublevels[this.currentSublevelIndex] || [];
         
-        if (currentSublevelWords) {
-            console.log('------------------', (currentSublevelWords === null));
-            console.log('------------------',Array.isArray(currentSublevelWords));
-
-            console.log(
-  currentSublevelWords,
-  typeof currentSublevelWords,
-  Array.isArray(currentSublevelWords)
-);
-
-
+        if (currentSublevelWords && Array.isArray(currentSublevelWords)) {
             this.level.words = currentSublevelWords.map(wordData => {
                 // Handle both string and object formats
                 if (typeof wordData === 'object' && wordData.opposite) {

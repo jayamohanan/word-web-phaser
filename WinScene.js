@@ -165,7 +165,7 @@ class WinScene extends Phaser.Scene {
                     element.setFillStyle(0xe0e0e0);
                 }
             });
-            container.setScale(1.05);
+            // container.setScale(1.05);
         });
 
         container.on('pointerout', () => {
@@ -174,15 +174,15 @@ class WinScene extends Phaser.Scene {
                     element.setFillStyle(0xf7f7f7);
                 }
             });
-            container.setScale(1);
+            // container.setScale(1);
         });
 
         container.on('pointerdown', () => {
-            container.setScale(0.95);
+            // container.setScale(0.95);
         });
 
         container.on('pointerup', () => {
-            container.setScale(1.05);
+            // container.setScale(1.05);
             
             // Go to next level (loop back to first level if at the end)
             const nextLevelIndex = (this.currentLevelIndex + 1) % this.totalLevels;
