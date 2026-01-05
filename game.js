@@ -1424,6 +1424,18 @@ class WordWebGame extends Phaser.Scene {
         };
     }
 
+    getLineColorFromGroup(group) {
+        if (group === 0 || group === undefined) {
+            // Default group uses standard line color
+            return CONFIG.LINE_COLOR;
+        }
+
+        // Get color from SASHA_PALETTE (group 1 = index 0, group 2 = index 1, etc.)
+        const paletteIndex = (group - 1) % CONFIG.SASHA_PALETTE.length;
+        const tintColor = CONFIG.SASHA_PALETTE[paletteIndex].hex;
+        return parseInt(tintColor.replace('#', ''), 16);
+    }
+
     // Create textures for a specific group
     createGroupTextures(group, size, radius, color1, color2) {
         const strokeColors = this.getGroupStrokeColor(group);
@@ -2514,9 +2526,6 @@ class WordWebGame extends Phaser.Scene {
     }
 
     renderConnections() {
-        // Use the same color as slot square outline: black (0x000000)
-        const connectionColor = CONFIG.LINE_COLOR;
-
         // Support both 'rules' (new) and 'connections' (legacy)
         const rules = this.level.rules || this.level.connections || [];
         console.log('rules count ', rules.length);
@@ -2529,6 +2538,10 @@ class WordWebGame extends Phaser.Scene {
             //rule info ionly has cell rule(lines) and has type property 0 for 'same' and 1 for 'increment/decrement'
             const ruleInfo = this.parseRule(rule);
             if (!ruleInfo) return; // Skip invalid rules
+
+            // Get line color from rule.group if present (only for cell type rules)
+            const lineGroup = (rule.type === 'cell' && rule.group !== undefined) ? rule.group : 0;
+            const connectionColor = this.getLineColorFromGroup(lineGroup);
 
             // Get the squareContainer from the slot
             const fromSquareContainer = this.slotSprites[ruleInfo.slotIdx].list[ruleInfo.squareIdx];
@@ -2664,7 +2677,8 @@ class WordWebGame extends Phaser.Scene {
                 toSideIdx: rule.b.side,
                 type: 0,
                 increment: 0,
-                direction: rule.direction || 'uni' // Default to unidirectional
+                direction: rule.direction || 'uni', // Default to unidirectional
+                group: rule.group // Store group for line coloring
             };
 
             // Parse operation
@@ -3118,7 +3132,9 @@ class WordWebGame extends Phaser.Scene {
                     } else {
                         // New hint - animate it only if animate is true
                         if (animate) {
-                            this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx, fromSquares[ruleInfo.squareIdx]);
+                            // Get line color for this rule's group
+                            const lineColor = this.getLineColorFromGroup(ruleInfo.group);
+                            this.animateHintCreation(toSquareContainer, fromSquareContainer, hintLetter, ruleInfo.toSideIdx, ruleInfo.sideIdx, fromSquares[ruleInfo.squareIdx], lineColor);
                         } else {
                             // Just show instantly without animation
                             fromLetterText.setText(hintLetter);
@@ -3136,7 +3152,7 @@ class WordWebGame extends Phaser.Scene {
     }
 
     // Animate hint creation: particle travels along connection, then hint bounces in
-    animateHintCreation(sourceSquareContainer, targetSquareContainer, letter, sourceSideIdx, targetSideIdx, hintSquareContainer = null) {
+    animateHintCreation(sourceSquareContainer, targetSquareContainer, letter, sourceSideIdx, targetSideIdx, hintSquareContainer = null, lineColor = 0x000000) {
         // Get world positions
         const sourcePos = this.getSquareSideMidpoint(sourceSquareContainer, sourceSideIdx);
         const targetPos = this.getSquareSideMidpoint(targetSquareContainer, targetSideIdx);
@@ -3146,7 +3162,7 @@ class WordWebGame extends Phaser.Scene {
 
         // Create an arrow (triangle) that travels along the connection
         const arrow = this.add.graphics();
-        arrow.fillStyle(0x000000, 1);
+        arrow.fillStyle(lineColor, 1);
         arrow.setDepth(1000); // Above everything
 
         // Draw triangle pointing in the direction of travel

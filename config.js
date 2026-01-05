@@ -115,8 +115,8 @@ var CONFIG = {
     WORD_CLICK_FEEDBACK_COLOR: 0xb8d4f7, // Darker blue tint for click feedback on words
 
     //test, main, reserve
-    "LEVEL_TYPE": 'test',
-    // "LEVEL_TYPE": 'main',   
+    // "LEVEL_TYPE": 'test',
+    "LEVEL_TYPE": 'main',   
     // "LEVEL_TYPE": 'reserve',
 
     SHADOW_MID_OFFSET : 9,
