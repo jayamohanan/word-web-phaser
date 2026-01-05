@@ -3,43 +3,49 @@
     {
   "slots": [
     {
+      "group":1,
       "length": 3,
       "anchorCol": -5,
       "anchorRow": 0
     },
     {
+      "group":2,
       "length": 3,
       "anchorCol": 2,
       "anchorRow": 0
     },
     {
+      "group":1,
       "length": 3,
       "anchorCol": 0,
       "anchorRow": -3
     },
     {
+      "group":1,
       "length": 3,
       "anchorCol": -5,
       "anchorRow": -6
     },
     {
+      "group":2,
       "length": 3,
       "anchorCol": 2,
       "anchorRow": -6
     },
     {
+      "group":2,
       "length": 3,
       "anchorCol": -4,
       "anchorRow": -3
     }
   ],
   "words": [
-    "SUN",
-    "SIT",
-    "TEN",
-    "EAR",
-    "EGG",
-    "AGO"
+    {"word":"SUN", "group":1},
+    {"word":"SIT", "group":1},
+    {"word":"TEN", "group":1},
+    {"word":"EAR", "group":2},
+    {"word":"EGG", "group":2},
+    {"word":"AGO", "group":2}
   ],
   "rules": [
     {
@@ -787,6 +793,7 @@
   "main": [
 
     {
+      "callout": "Letters increase by one in the direction of the arrow    A \u2192 B",
       "shiftX": true,
       "slots": [
         {
@@ -1275,7 +1282,7 @@
       "op": "same"
     }
   ]
-},
+    },
      {
       "slots": [
         {
@@ -2165,6 +2172,76 @@
         }
       ]
     },
+      {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -8
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -5
+        },
+        {
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": -2
+        }
+      ],
+      "words": [
+        [
+          "CURD",
+          "CAVE",
+          "RULE"
+        ]
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        }
+      ]
+    },
      {
       "slots": [
         {
@@ -2234,6 +2311,96 @@
           },
           "b": {
             "slot": 0,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+      {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -1
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -5
+        },
+        {
+          "length": 4,
+          "anchorCol": -1,
+          "anchorRow": -3
+        },
+        {
+          "length": 4,
+          "anchorCol": -1,
+          "anchorRow": -7
+        }
+      ],
+      "words": [
+        [
+          "EDGE",
+          "SIGN",
+          "EARN",
+          "NAVY"
+        ]
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 3,
+            "side": 0
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 2
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 3,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
             "cell": 1,
             "side": 0
           },
@@ -2456,6 +2623,190 @@
       ]
     },
      {
+  "slots": [
+    {
+      "length": 4,
+      "anchorCol": -2,
+      "anchorRow": -4
+    },
+    {
+      "length": 4,
+      "anchorCol": -5,
+      "anchorRow": -1
+    },
+    {
+      "length": 4,
+      "anchorCol": -5,
+      "anchorRow": -6
+    },
+    {
+      "length": 4,
+      "anchorCol": 1,
+      "anchorRow": -1
+    },
+    {
+      "length": 4,
+      "anchorCol": 1,
+      "anchorRow": -6
+    }
+  ],
+  "words": [
+    "JUDO",
+    "KEEL",
+    "HINT",
+    "MARS",
+    "HERO"
+  ],
+  "rules": [
+    {
+      "type": "cell",
+      "a": {
+        "slot": 2,
+        "cell": 0,
+        "side": 2
+      },
+      "b": {
+        "slot": 0,
+        "cell": 0,
+        "side": 3
+      },
+      "op": "same"
+    },
+    {
+      "type": "cell",
+      "a": {
+        "slot": 0,
+        "cell": 1,
+        "side": 0
+      },
+      "b": {
+        "slot": 4,
+        "cell": 1,
+        "side": 2
+      },
+      "op": "same"
+    },
+    {
+      "type": "cell",
+      "a": {
+        "slot": 0,
+        "cell": 2,
+        "side": 2
+      },
+      "b": {
+        "slot": 1,
+        "cell": 2,
+        "side": 0
+      },
+      "op": "same"
+    },
+    {
+      "type": "cell",
+      "a": {
+        "slot": 0,
+        "cell": 3,
+        "side": 1
+      },
+      "b": {
+        "slot": 3,
+        "cell": 3,
+        "side": 0
+      },
+      "op": "same"
+    }
+  ]
+},
+ {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -5,
+          "anchorRow": -8
+        },
+        {
+          "length": 4,
+          "anchorCol": 0,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -4
+        },
+        {
+          "length": 4,
+          "anchorCol": -2,
+          "anchorRow": -1
+        }
+      ],
+      "words": [
+        [
+          "MESH",
+          "RICH",
+          "TOUR",
+          "HOME"
+        ]
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 2,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 1,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 1
+          },
+          "b": {
+            "slot": 1,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 1,
+            "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+     {
       "slots": [
         {
           "length": 4,
@@ -2607,6 +2958,96 @@
           "b": {
             "slot": 1,
             "cell": 2,
+            "side": 0
+          },
+          "op": "same"
+        }
+      ]
+    },
+      {
+      "slots": [
+        {
+          "length": 4,
+          "anchorCol": -5,
+          "anchorRow": -3
+        },
+        {
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": -6
+        },
+        {
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": -3
+        },
+        {
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": 0
+        }
+      ],
+      "words": [
+        [
+          "OPTS",
+          "TOPS",
+          "STOP",
+          "POST"
+        ]
+      ],
+      "rules": [
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 1
+          },
+          "b": {
+            "slot": 2,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 2,
+            "side": 0
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 2,
+            "cell": 3,
+            "side": 2
+          },
+          "b": {
+            "slot": 3,
+            "cell": 3,
             "side": 0
           },
           "op": "same"
@@ -2837,44 +3278,54 @@
       "op": "same"
     }
   ]
-}
-  ],
-  "reserve": [
-    {
+},
+ {
       "slots": [
         {
           "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -7
+          "anchorCol": -1,
+          "anchorRow": -2
         },
         {
           "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -3
+          "anchorCol": 1,
+          "anchorRow": -4
         },
         {
           "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -1
+          "anchorCol": -4,
+          "anchorRow": -4
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": 0
+        },
+        {
+          "length": 4,
+          "anchorCol": -1,
+          "anchorRow": -6
         }
       ],
       "words": [
         [
-          "TRUE",
-          "LOUE",
-          "TRUE"
+          "REIN",
+          "SIGN",
+          "EARN",
+          "NAME",
+          "EDGE"
         ]
       ],
       "rules": [
         {
           "type": "cell",
           "a": {
-            "slot": 0,
+            "slot": 2,
             "cell": 2,
             "side": 2
           },
           "b": {
-            "slot": 1,
+            "slot": 3,
             "cell": 2,
             "side": 0
           },
@@ -2883,54 +3334,122 @@
         {
           "type": "cell",
           "a": {
-            "slot": 1,
+            "slot": 2,
+            "cell": 3,
+            "side": 0
+          },
+          "b": {
+            "slot": 4,
             "cell": 0,
             "side": 2
           },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 3,
+            "cell": 3,
+            "side": 0
+          },
           "b": {
-            "slot": 2,
+            "slot": 0,
+            "cell": 0,
+            "side": 2
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 1,
+            "side": 0
+          },
+          "b": {
+            "slot": 4,
+            "cell": 1,
+            "side": 2
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 4,
+            "cell": 2,
+            "side": 2
+          },
+          "b": {
+            "slot": 1,
             "cell": 0,
             "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 0
+          },
+          "b": {
+            "slot": 1,
+            "cell": 1,
+            "side": 2
           },
           "op": "same"
         }
       ]
     },
-    {
+      {
       "slots": [
         {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -7
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": 0
         },
         {
-          "length": 3,
-          "anchorCol": -2,
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": 0
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
           "anchorRow": -4
         },
         {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -1
+          "length": 4,
+          "anchorCol": 1,
+          "anchorRow": -4
+        },
+        {
+          "length": 4,
+          "anchorCol": -4,
+          "anchorRow": -7
         }
       ],
       "words": [
         [
-          "TRV",
-          "VVG",
-          "BVT"
+          "NANO",
+          "NEON",
+          "NOUN",
+          "NAAN",
+          "SOON"
         ]
       ],
       "rules": [
         {
           "type": "cell",
           "a": {
-            "slot": 0,
-            "cell": 2,
+            "slot": 1,
+            "cell": 1,
             "side": 2
           },
           "b": {
-            "slot": 1,
+            "slot": 3,
             "cell": 1,
             "side": 0
           },
@@ -2939,95 +3458,27 @@
         {
           "type": "cell",
           "a": {
-            "slot": 1,
-            "cell": 2,
+            "slot": 2,
+            "cell": 3,
+            "side": 1
+          },
+          "b": {
+            "slot": 3,
+            "cell": 0,
+            "side": 3
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 4,
+            "cell": 1,
             "side": 2
           },
           "b": {
             "slot": 2,
-            "cell": 0,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -7
-        },
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -3
-        }
-      ],
-      "words": [
-        [
-          "TRVE",
-          "LOVE"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -8
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -5
-        },
-        {
-          "length": 3,
-          "anchorCol": -2,
-          "anchorRow": -2
-        }
-      ],
-      "words": [
-        [
-          "JTM",
-          "JUK",
-          "JKT",
-          "JEK",
-          "KIT",
-          "KOM",
-          "LOM"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 0,
+            "cell": 1,
             "side": 0
           },
           "op": "same"
@@ -3035,19 +3486,50 @@
         {
           "type": "cell",
           "a": {
-            "slot": 1,
-            "cell": 2,
-            "side": 2
+            "slot": 4,
+            "cell": 3,
+            "side": 1
           },
           "b": {
+            "slot": 3,
+            "cell": 3,
+            "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
             "slot": 2,
             "cell": 0,
+            "side": 2
+          },
+          "b": {
+            "slot": 0,
+            "cell": 0,
             "side": 0
+          },
+          "op": "same"
+        },
+        {
+          "type": "cell",
+          "a": {
+            "slot": 0,
+            "cell": 3,
+            "side": 1
+          },
+          "b": {
+            "slot": 1,
+            "cell": 0,
+            "side": 3
           },
           "op": "same"
         }
       ]
-    },
+    }
+  ],
+  "reserve": [
+
     {
       "slots": [
         {
@@ -3150,16 +3632,6 @@
         }
       ]
     },
-  
-    
-   
-  
-  
-   
-  
-   
-   
-  
     {
       "slots": [
         {
@@ -3207,7 +3679,6 @@
         }
       ]
     },
-   
     {
       "slots": [
         {
@@ -3440,97 +3911,7 @@
         }
       ]
     },
-  
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -5,
-          "anchorRow": -8
-        },
-        {
-          "length": 4,
-          "anchorCol": 0,
-          "anchorRow": -6
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -4
-        },
-        {
-          "length": 4,
-          "anchorCol": -2,
-          "anchorRow": -1
-        }
-      ],
-      "words": [
-        [
-          "MESH",
-          "RICH",
-          "TOUR",
-          "HOME"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 3,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 3,
-            "side": 1
-          },
-          "b": {
-            "slot": 1,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 1,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 3,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
+   
     {
       "slots": [
         {
@@ -3627,220 +4008,8 @@
         }
       ]
     },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -1,
-          "anchorRow": -2
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": -4
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -4
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": 0
-        },
-        {
-          "length": 4,
-          "anchorCol": -1,
-          "anchorRow": -6
-        }
-      ],
-      "words": [
-        [
-          "REIN",
-          "SIGN",
-          "EARN",
-          "NAME",
-          "EDGE"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 3,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 3,
-            "side": 0
-          },
-          "b": {
-            "slot": 4,
-            "cell": 0,
-            "side": 2
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 3,
-            "cell": 3,
-            "side": 0
-          },
-          "b": {
-            "slot": 0,
-            "cell": 0,
-            "side": 2
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 1,
-            "side": 0
-          },
-          "b": {
-            "slot": 4,
-            "cell": 1,
-            "side": 2
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 4,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 0,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 3,
-            "side": 0
-          },
-          "b": {
-            "slot": 1,
-            "cell": 1,
-            "side": 2
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -1
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -5
-        },
-        {
-          "length": 4,
-          "anchorCol": -1,
-          "anchorRow": -3
-        },
-        {
-          "length": 4,
-          "anchorCol": -1,
-          "anchorRow": -7
-        }
-      ],
-      "words": [
-        [
-          "EDGE",
-          "SIGN",
-          "EARN",
-          "NAVY"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 1,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 0,
-            "cell": 2,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 1,
-            "cell": 3,
-            "side": 0
-          },
-          "b": {
-            "slot": 3,
-            "cell": 0,
-            "side": 2
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 0,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 3,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
+   
+  
     {
       "slots": [
         {
@@ -3965,220 +4134,8 @@
         }
       ]
     },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": 0
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": 0
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -4
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": -4
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -7
-        }
-      ],
-      "words": [
-        [
-          "SOON",
-          "NOON",
-          "NOON",
-          "NANO",
-          "NOON"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 3,
-            "side": 1
-          },
-          "b": {
-            "slot": 3,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 4,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 4,
-            "cell": 3,
-            "side": 1
-          },
-          "b": {
-            "slot": 3,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 0,
-            "cell": 0,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 2,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 3,
-            "side": 1
-          },
-          "b": {
-            "slot": 1,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        }
-      ]
-    },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -5,
-          "anchorRow": -3
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": -6
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": -3
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": 0
-        }
-      ],
-      "words": [
-        [
-          "OPTS",
-          "TOPS",
-          "STOP",
-          "POST"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 3,
-            "side": 1
-          },
-          "b": {
-            "slot": 2,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 3,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 2,
-            "side": 0
-          },
-          "b": {
-            "slot": 1,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 2,
-            "cell": 3,
-            "side": 2
-          },
-          "b": {
-            "slot": 3,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        }
-      ]
-    },
+    
+  
     {
       "slots": [
         {
@@ -4532,76 +4489,7 @@
         }
       ]
     },
-    {
-      "slots": [
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -8
-        },
-        {
-          "length": 4,
-          "anchorCol": -4,
-          "anchorRow": -5
-        },
-        {
-          "length": 4,
-          "anchorCol": 1,
-          "anchorRow": -2
-        }
-      ],
-      "words": [
-        [
-          "CURD",
-          "CAVE",
-          "RULE"
-        ]
-      ],
-      "rules": [
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 1,
-            "side": 2
-          },
-          "b": {
-            "slot": 1,
-            "cell": 1,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 0,
-            "cell": 3,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 3,
-            "side": 0
-          },
-          "op": "same"
-        },
-        {
-          "type": "cell",
-          "a": {
-            "slot": 1,
-            "cell": 0,
-            "side": 2
-          },
-          "b": {
-            "slot": 2,
-            "cell": 0,
-            "side": 3
-          },
-          "op": "same"
-        }
-      ]
-    },
+  
     {
       "slots": [
         {

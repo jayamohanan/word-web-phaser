@@ -54,6 +54,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.image('skipButton', 'graphics/skip.png');
         this.load.image('retryButton', 'graphics/retry.png');
         this.load.image('greenCheck', 'graphics/green_check.png');
+        this.load.image('hintIcon', 'graphics/Hint.png');
 
         // Load WebFontLoader script
         this.load.script('webfont', 'fonts/webfontloader.js');
@@ -1567,9 +1568,20 @@ class WordWebGame extends Phaser.Scene {
             this.createStepProgressBar(width / 2, 95); // 30 + 30 + 35 = 95 (Level text top + Level text height + gap)
         }
 
+        // 2.5. Callout block (if callout text exists in level data)
+        let calloutBottomY = null;
+        if (this.level.callout) {
+            const calloutY = this.totalSublevels > 1 ? 135 + 30 : 80 + 30; // Below progress bar or level number
+            calloutBottomY = this.createCalloutBlock(width / 2, calloutY, this.level.callout);
+        }
+
         // 3. Score display below level number (only if score system is enabled)
         if (CONFIG.ENABLE_SCORE_SYSTEM) {
-            const scoreY = this.totalSublevels > 1 ? 130 : 65; // Adjust position if progress bar exists
+            let scoreY = this.totalSublevels > 1 ? 130 : 65; // Adjust position if progress bar exists
+            // Further adjust if callout exists
+            if (calloutBottomY !== null) {
+                scoreY = calloutBottomY + 15; // 15px below callout
+            }
             this.scoreText = this.add.text(width / 2, scoreY, `${this.currentScore}/${this.targetScore}`, {
                 fontFamily: 'Arial, sans-serif',
                 fontSize: '24px',
@@ -1627,6 +1639,64 @@ class WordWebGame extends Phaser.Scene {
         });
         const retryBtnScale = buttonSize / retryButton.width;
         retryButton.setScale(retryBtnScale);
+    }
+
+    createCalloutBlock(centerX, centerY, calloutText) {
+        const padding = 16;
+        const iconSize = 48;
+        const iconGap = 12;
+        const maxWidth = this.sys.game.canvas.width * 0.85; // 85% of screen width
+        
+        // Create text to measure dimensions
+        const textStyle = {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '24px',
+            fontWeight: '400',
+            color: '#000000ff',
+            resolution: window.devicePixelRatio || 2,
+            wordWrap: { width: maxWidth - (padding * 2) - iconSize - iconGap }
+        };
+        
+        const tempText = this.add.text(0, 0, calloutText, textStyle);
+        const textWidth = tempText.width;
+        const textHeight = tempText.height;
+        tempText.destroy();
+        
+        // Calculate rectangle dimensions
+        const rectWidth = Math.min(textWidth + (padding * 2) + iconSize + iconGap, maxWidth);
+        const rectHeight = Math.max(textHeight + (padding * 2), iconSize + (padding * 2));
+        
+        // Create container for callout
+        const calloutContainer = this.add.container(centerX, centerY);
+        calloutContainer.setDepth(10001);
+        
+        // Create background rectangle with light color
+        const bgRect = this.add.graphics();
+        bgRect.fillStyle(0xFFF9E6, 1); // Light yellow background
+        bgRect.lineStyle(1, 0xE8E0C8, 1); // Subtle border
+        bgRect.fillRoundedRect(-rectWidth / 2, 0, rectWidth, rectHeight, 8);
+        bgRect.strokeRoundedRect(-rectWidth / 2, 0, rectWidth, rectHeight, 8);
+        calloutContainer.add(bgRect);
+        
+        // Add hint icon
+        const hintIcon = this.add.image(
+            -rectWidth / 2 + padding + iconSize / 2,
+            rectHeight / 2,
+            'hintIcon'
+        ).setDisplaySize(iconSize, iconSize);
+        calloutContainer.add(hintIcon);
+        
+        // Add text
+        const text = this.add.text(
+            -rectWidth / 2 + padding + iconSize + iconGap,
+            padding,
+            calloutText,
+            textStyle
+        ).setOrigin(0, 0);
+        calloutContainer.add(text);
+        
+        // Return bottom Y position for subsequent UI element positioning
+        return centerY + rectHeight;
     }
 
     createStepProgressBar(centerX, centerY) {
