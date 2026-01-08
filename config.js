@@ -98,7 +98,7 @@ var CONFIG = {
     LEVEL_START_ANIMATIONS: false,  // Set to false to disable entrance animations
 
     // Debug mode - show portrait boundary (720x1280 area) on desktop
-    SHOW_PORTRAIT_BOUNDARY: true,  // Set to false to hide portrait boundary in debug
+    SHOW_PORTRAIT_BOUNDARY: false,  // Set to false to hide portrait boundary in debug
 
     //Game Scores
     HINT_SCORE_1: '5',
