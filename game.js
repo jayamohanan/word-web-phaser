@@ -117,7 +117,7 @@ class WordWebGame extends Phaser.Scene {
 
 
         // Create gradient backgrounds
-        this.createGradientBackgrounds();
+        // this.createGradientBackgrounds();
 
         this.slotSprites = [];
         this.bankSprites = [];
@@ -1324,6 +1324,7 @@ class WordWebGame extends Phaser.Scene {
     }
 
     createGradientBackgrounds() {
+        console.log('**********Creating gradient backgrounds...');
         const { width, height } = this.sys.game.canvas;
 
         // Convert hex colors to integers
@@ -1353,6 +1354,7 @@ class WordWebGame extends Phaser.Scene {
     }
 
     createCellTextures() {
+        console.log('Creating cell textures...');
         const size = this.squareWidth;
         const radius = CONFIG.SQUARE_RADIUS;
         const color1 = CONFIG.CELL_BG1_COLOR;
@@ -1438,12 +1440,14 @@ class WordWebGame extends Phaser.Scene {
 
     // Create textures for a specific group
     createGroupTextures(group, size, radius, color1, color2) {
+        console.log('size ',size);
+        size=60;
         const strokeColors = this.getGroupStrokeColor(group);
 
         // Create word cell texture with diagonal split (top-right to bottom-left)
         const wordTexture = this.textures.createCanvas(`wordCellTexture_${group}`, size, size);
         const wordCtx = wordTexture.getSourceImage().getContext('2d');
-
+        console.log('************Creating textures for group:', group, 'with stroke colors:', strokeColors);
         // Draw rounded rectangle background with color1
         wordCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
         this.drawRoundedRect(wordCtx, 0, 0, size, size, radius);
@@ -1480,6 +1484,7 @@ class WordWebGame extends Phaser.Scene {
         slotCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
         this.drawRoundedRect(slotCtx, 0, 0, size, size, radius);
         slotCtx.fill();
+        console.log('************Creating slot texture for group:', group, 'with stroke colors:', strokeColors);
 
         // Add stroke to the rounded texture (color based on group)
         slotCtx.strokeStyle = '#' + strokeColors.slot.toString(16).padStart(6, '0');
@@ -4344,7 +4349,9 @@ export default WordWebGame;
 const config = {
     type: Phaser.WEBGL, // Use WebGL for better rendering quality
     parent: 'game-container',
-    backgroundColor: 'transparent', // Using gradient backgrounds instead
+    transparent: true,
+// backgroundColor: null,
+    // backgroundColor: 'transparent', // Using gradient backgrounds instead
     scene: [WordWebGame, WinScene],
 
     // Crisp rendering settings
@@ -4362,7 +4369,7 @@ const config = {
     render: {
         antialiasGL: true, // WebGL anti-aliasing
         pixelArt: false, // Set to true only for retro pixel art games
-    }
+    },
 };
 
 // Only create game instance if this is the main script (not imported)
