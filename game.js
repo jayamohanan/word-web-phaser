@@ -2,6 +2,7 @@ import * as Utils from './utils.js';
 import WinScene from './WinScene.js';
 import TutorialManager from './TutorialManager.js';
 import { WordAnimationStateMachine, AnimationSequenceBuilder, WordState } from './WordAnimationStateMachine.js';
+import LoadingScene from './LoadingScene.js';
 
 // Main Phaser game logic for Word Web
 // Loads level data, renders slots, words, and handles drag-drop
@@ -48,28 +49,8 @@ class WordWebGame extends Phaser.Scene {
     }
 
     preload() {
-        // Only load assets if not already cached (prevents reloading on scene restart)
-        if (!this.cache.json.has('levels')) {
-            this.load.json('levels', 'levels.json');
-        }
-        
-        if (!this.cache.audio.has('fillSound')) {
-            this.load.audio('fillSound', 'sounds/fill_sound4.wav');
-            this.load.audio('burstSound', 'sounds/burst.wav');
-            this.load.audio('invalidSound', 'sounds/invalid.ogg');
-            this.load.audio('successSound', 'sounds/success1.wav');
-        }
-        
-        if (!this.textures.exists('handPointer')) {
-            this.load.image('handPointer', 'graphics/hand_pointer.webp');
-            this.load.image('hintButton', 'graphics/hint.webp');
-            this.load.image('skipButton', 'graphics/skip.webp');
-            this.load.image('retryButton', 'graphics/retry.webp');
-            this.load.image('greenCheck', 'graphics/green_check.webp');
-            this.load.image('hintIcon', 'graphics/hint.webp');
-            this.load.image('square', 'graphics/square.webp');
-            this.load.image('square-stroke', 'graphics/square-stroke.webp');
-        }
+        // Assets are now loaded by LoadingScene and cached
+        // No need to load anything here
     }
 
     async create() {
@@ -4303,7 +4284,7 @@ const config = {
     transparent: true,
 // backgroundColor: null,
     // backgroundColor: 'transparent', // Using gradient backgrounds instead
-    scene: [WordWebGame, WinScene],
+    scene: [LoadingScene, WordWebGame, WinScene],
 
     // Crisp rendering settings
     roundPixels: true, // Round positions to whole pixels for crisp rendering

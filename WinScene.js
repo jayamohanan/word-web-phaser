@@ -33,6 +33,9 @@ class WinScene extends Phaser.Scene {
     }
 
     create() {
+        // Save level progress when level is completed
+        this.saveLevelProgress(this.currentLevelIndex);
+
         const { width, height } = this.sys.game.canvas;
 
         // Semi-transparent overlay
@@ -267,6 +270,26 @@ class WinScene extends Phaser.Scene {
                     confetti.destroy();
                 }
             });
+        }
+    }
+
+    saveLevelProgress(completedLevelIndex) {
+        try {
+            // Get existing progress
+            let progress = { lastCompletedLevel: -1 };
+            const saved = localStorage.getItem('wordWebProgress');
+            if (saved) {
+                progress = JSON.parse(saved);
+            }
+            
+            // Update if this level is higher than previously saved
+            if (completedLevelIndex > progress.lastCompletedLevel) {
+                progress.lastCompletedLevel = completedLevelIndex;
+                localStorage.setItem('wordWebProgress', JSON.stringify(progress));
+                console.log(`Progress saved: Level ${completedLevelIndex} completed`);
+            }
+        } catch (e) {
+            console.warn('Could not save progress:', e);
         }
     }
 
