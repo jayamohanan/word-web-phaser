@@ -104,7 +104,6 @@ export class WordAnimationStateMachine {
      * Transition to a new state
      */
     setState(newState) {
-        console.log(`Word state: ${this.currentState} -> ${newState}`);
         this.currentState = newState;
     }
 
@@ -174,7 +173,6 @@ export class WordAnimationStateMachine {
         const hadSnapTween = this.snapTween !== null;
         
         if (!hadActiveSequence && !hadSnapTween) {
-            console.log('Nothing to cancel - no active sequence or snap tween');
             return; // Nothing to cancel
         }
         
@@ -430,6 +428,7 @@ export class AnimationSequenceBuilder {
                         // Update hints and show arrows
                         scene.updateAllConstraintHints(true);
                         scene.updateConnectionHighlights();
+                        scene.highlightWordCellsOverHints(); // Highlight word cells over hints
                         scene.showConnectionValidationFeedback(slotIdx);
                         
                         // Delay before next action
@@ -544,6 +543,7 @@ export class AnimationSequenceBuilder {
                         // Update hints and show arrows
                         scene.updateAllConstraintHints(true);
                         scene.updateConnectionHighlights();
+                        scene.highlightWordCellsOverHints(); // Highlight word cells over hints
                         scene.showConnectionValidationFeedback(slotIdx);
                         
                         // Delay before next action

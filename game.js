@@ -72,7 +72,6 @@ class WordWebGame extends Phaser.Scene {
                         families: ['Poppins-Regular', 'Poppins-Medium', 'DMSans-Medium', 'Roboto-Regular', 'Roboto-Medium', 'Roboto-Bold', 'Style', 'ClearSans-Regular', 'ClearSans-Medium', 'ClearSans-Bold'],
                     },
                     active: () => {
-                        console.log('Fonts loaded successfully!');
                         resolve();
                     },
                     inactive: () => {
@@ -91,15 +90,11 @@ class WordWebGame extends Phaser.Scene {
         }
         const levels = this.cache.json.get('levels');
 
-        console.log('1');
         if (!levels || !levels[CONFIG.LEVEL_TYPE]) {
-            console.log('2');
             console.error('Failed to load levels data. Check if levels.json is loaded correctly.');
             console.error('Available JSON cache keys:', this.cache.json.getKeys());
             return;
         }
-        console.log('3');
-        console.log('CONFIG.LEVEL_TYPE:', CONFIG.LEVEL_TYPE);
         const levelsObject = levels[CONFIG.LEVEL_TYPE];
 
         this.input.dragDistanceThreshold = CONFIG.DRAG_DISTANCE_THRESHOLD;
@@ -249,14 +244,11 @@ class WordWebGame extends Phaser.Scene {
         // Add background click handler to clear highlights (if feature enabled)
         if (CONFIG.ENABLE_LINE_CLICK_HIGHLIGHTING) {
             this.input.on('pointerdown', (pointer) => {
-                console.log('Background pointerdown');
 
                 // If a zone is hovered, the user clicked on a line
                 if (this.hoveredZone) {
                     const lineGraphics = this.hoveredZone.getData('connectionLine');
                     const ruleInfo = this.hoveredZone.getData('ruleInfo');
-                    console.log('Click on hovered zone, line graphics:', lineGraphics);
-                    console.log('1***********************************');
                     if (ruleInfo && lineGraphics) {
                         console.log('Handling line click from hovered zone');
                         this.handleConnectionLineClick(ruleInfo, lineGraphics);
@@ -318,7 +310,6 @@ class WordWebGame extends Phaser.Scene {
 
         // Highlight slot squares when dragging over drop zone
         this.input.on('dragenter', (pointer, gameObject, dropZone) => {
-            console.log('*******dragenter');
             if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
             if (!gameObject || !gameObject.getData('word')) return;
 
@@ -360,7 +351,6 @@ class WordWebGame extends Phaser.Scene {
 
         // Remove highlight when dragging out of drop zone
         this.input.on('dragleave', (pointer, gameObject, dropZone) => {
-            console.log('*******dragleave');
             if (!dropZone || dropZone.getData('slotIdx') === undefined) return;
 
             const slotIdx = dropZone.getData('slotIdx');
@@ -400,7 +390,6 @@ class WordWebGame extends Phaser.Scene {
 
         // Global drop handler for slots - using state machine
         this.input.on('drop', (pointer, gameObject, dropZone) => {
-            console.log('*******drop');
             // Only handle if dropZone is a slot square
             if (!dropZone || dropZone.getData('slotIdx') === undefined) {
                 console.assert.log('No drop zone or slotIdx');
@@ -1391,7 +1380,6 @@ const tween = this.tweens.add({
     }
 
     createGradientBackgrounds() {
-        console.log('**********Creating gradient backgrounds...');
         const { width, height } = this.sys.game.canvas;
 
         // Convert hex colors to integers
@@ -2236,7 +2224,6 @@ const tween = this.tweens.add({
             let dragOffset = { x: 0, y: 0 };
             wordContainer.on('dragstart', (pointer) => {
                 this.clearLineHighlight();
-                console.log('=== DRAGSTART EVENT FIRED ===');
 
                 // Enable slot drop zones for dragging
                 this.enableSlotDropZones();
@@ -2274,26 +2261,19 @@ const tween = this.tweens.add({
 
                 // Get state machine to handle drag start
                 const stateMachine = wordContainer.getData('stateMachine');
-                console.log('State machine exists:', !!stateMachine);
 
                 if (stateMachine) {
-                    console.log('Current state:', stateMachine.getState());
-                    console.log('Is placing:', stateMachine.isPlacing());
-                    console.log('Is animating:', stateMachine.isAnimating());
 
                     // If word is being placed, cancel all animations and reset
                     if (stateMachine.isPlacing()) {
-                        console.log('Word is being placed - cancelling animations');
                         const originalWord = wordContainer.getData('originalWordBeforeTransform');
                         if (originalWord) {
-                            console.log('Resetting to original word:', originalWord);
                             this.resetWordToOriginal(wordContainer, originalWord);
                         }
                     }
 
                     // Notify state machine of drag start (will cancel animations)
                     const wasCancelled = stateMachine.onDragStart();
-                    console.log('Animations were cancelled:', wasCancelled);
                 }
 
                 // If this word was placed on a slot, remove it from that slot
@@ -2316,7 +2296,6 @@ const tween = this.tweens.add({
                 wordContainer.y = pointer.y - dragOffset.y;
             });
             wordContainer.on('dragend', (pointer, dragX, dragY, dropped) => {
-                console.log('88888dragend event fired, dropped=', dropped);
                 // Disable slot drop zones after dragging
                 this.disableSlotDropZones();
 
@@ -2481,7 +2460,6 @@ const tween = this.tweens.add({
     renderConnections() {
         // Support both 'rules' (new) and 'connections' (legacy)
         const rules = this.level.rules || this.level.connections || [];
-        console.log('rules count ', rules.length);
 
         // Words rules are now marked with italic letters on slots (no lines/labels)
 
@@ -2519,7 +2497,6 @@ const tween = this.tweens.add({
                     // Create an invisible interactive zone over the line for click detection
                     const hitWidth = 20; // Width of the clickable area
                     const lineLength = Math.sqrt(Math.pow(toPt.x - fromPt.x, 2) + Math.pow(toPt.y - fromPt.y, 2));
-                    console.log('line length ', lineLength);
                     const angle = Math.atan2(toPt.y - fromPt.y, toPt.x - fromPt.x);
 
                     // Calculate midpoint of the line for proper zone centering
@@ -2536,13 +2513,9 @@ const tween = this.tweens.add({
                     zone.setData('connectionLine', line);
                     zone.setData('ruleInfo', ruleInfo);
 
-                    console.log('Setting up zone click handler for line', ruleIndex);
-
-
 
                     // Add hover effect for visual feedback
                     zone.on('pointerover', () => {
-                        console.log('Zone hover');
                         this.hoveredZone = zone; // Track hovered zone
                         // Only change width if line is not actively highlighted
                         if (this.activeHighlightLine !== line) {
@@ -2550,7 +2523,6 @@ const tween = this.tweens.add({
                         }
                     });
                     zone.on('pointerout', () => {
-                        console.log('Zone hover out');
                         this.hoveredZone = null; // Clear hovered zone
                         // Only reset if line is not actively highlighted
                         if (this.activeHighlightLine !== line) {
@@ -2890,16 +2862,20 @@ const tween = this.tweens.add({
             });
         });
 
-        // Clear highlights from word containers
+        // Clear highlights from word containers (but preserve fill colors)
         this.bankSprites.forEach(wordContainer => {
             if (wordContainer.getData('placed')) {
                 const word = wordContainer.getData('word');
-                wordContainer.list.forEach((child, idx) => {
-                    if (child.type === 'Image') {
-                        // Clear tint to reset to default color
-                        child.clearTint();
-                    }
-                });
+                const wordCells = wordContainer.getData('wordCells');
+                if (wordCells) {
+                    wordCells.forEach(cell => {
+                        // Reset fill (square) to white, keep stroke as is
+                        if (cell.square) {
+                            cell.square.setTint(this.cellFillColor); // Reset fill to white
+                        }
+                        // Stroke doesn't need to be reset here - it keeps its group color
+                    });
+                }
             }
         });
 
@@ -2936,10 +2912,12 @@ const tween = this.tweens.add({
                         wc.getData('placed') && wc.getData('slotIdx') === ruleInfo.slotIdx
                     );
                     if (wordContainer) {
-                        const wordSquares = wordContainer.list.filter(c => c.type === 'Image');
-                        if (wordSquares[ruleInfo.squareIdx]) {
-                            const square = wordSquares[ruleInfo.squareIdx];
-                            square.setTint(this.connectionHighlightColor);
+                        const wordCells = wordContainer.getData('wordCells');
+                        if (wordCells && wordCells[ruleInfo.squareIdx]) {
+                            const square = wordCells[ruleInfo.squareIdx].square;
+                            if (square) {
+                                square.setTint(this.connectionHighlightColor);
+                            }
                         }
                     }
                 }
@@ -2950,14 +2928,52 @@ const tween = this.tweens.add({
                         wc.getData('placed') && wc.getData('slotIdx') === ruleInfo.toSlotIdx
                     );
                     if (wordContainer) {
-                        const wordSquares = wordContainer.list.filter(c => c.type === 'Image');
-                        if (wordSquares[ruleInfo.toSquareIdx]) {
-                            const square = wordSquares[ruleInfo.toSquareIdx];
-                            square.setTint(this.connectionHighlightColor);
+                        const wordCells = wordContainer.getData('wordCells');
+                        if (wordCells && wordCells[ruleInfo.toSquareIdx]) {
+                            const square = wordCells[ruleInfo.toSquareIdx].square;
+                            if (square) {
+                                square.setTint(this.connectionHighlightColor);
+                            }
                         }
                     }
                 }
             }
+        });
+    }
+
+    // Highlight word cells that are placed over hint cells with green background
+    highlightWordCellsOverHints() {
+        this.bankSprites.forEach(wordContainer => {
+            // Only check placed words
+            if (!wordContainer.getData('placed')) return;
+            
+            const slotIdx = wordContainer.getData('slotIdx');
+            if (slotIdx === undefined) return;
+            
+            const slotContainer = this.slotSprites[slotIdx];
+            if (!slotContainer) return;
+            
+            const slotCells = slotContainer.getData('slotCells');
+            const wordCells = wordContainer.getData('wordCells');
+            
+            if (!slotCells || !wordCells) return;
+            
+            // Check each word cell position against corresponding slot cell
+            wordCells.forEach((wordCell, index) => {
+                if (index >= slotCells.length) return;
+                
+                const slotCell = slotCells[index];
+                const letterText = slotCell.squareContainer.getData('letterText');
+                
+                // Check if this slot position had a hint BEFORE the word was placed
+                // (letterText exists and is not empty, but cell was not filled when hint was shown)
+                const hadHint = letterText && letterText.text && letterText.text.trim() !== '';
+                
+                if (hadHint && wordCell.square) {
+                    // Apply green tint to word cell's fill (square) because it sits over a hint cell
+                    wordCell.square.setTint(this.connectionHighlightColor);
+                }
+            });
         });
     }
 
@@ -3806,7 +3822,6 @@ const tween = this.tweens.add({
         });
 
         if (allSlotsFilled) {
-            console.log('🎉 All slots filled!');
             
             // Check if there are more sublevels
             if (this.currentSublevelIndex < this.totalSublevels - 1) {
@@ -3822,7 +3837,6 @@ const tween = this.tweens.add({
                 });
             } else {
                 // All sublevels complete - show win scene
-                console.log('🎉 All sublevels complete! Level won!');
                 this.scene.launch('WinScene', {
                     currentLevelIndex: this.currentLevelIndex,
                     totalLevels: this.totalLevels,
