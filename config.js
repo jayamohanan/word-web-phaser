@@ -2,8 +2,8 @@
 var CONFIG = {
     SIZE: {
         LARGE: {
-            SQUARE_WIDTH: 60,
-            SQUARE_GAP: 3,
+            SQUARE_WIDTH: 64,
+            SQUARE_GAP: 1,
             SQUARE_RADIUS: 5,
             GRID_LINE_WIDTH: 1,
             SLOT_STROKE_WIDTH: 3,

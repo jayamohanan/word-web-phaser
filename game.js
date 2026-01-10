@@ -11,6 +11,8 @@ class WordWebGame extends Phaser.Scene {
         super('WordWebGame');
     }
     init(data) {
+        this.firstSquares = [];
+        this.firstStrokes = [];
         this.originX = this.sys.game.canvas.width * CONFIG.ORIGIN_X_FACTOR;
         this.originY = this.sys.game.canvas.height * CONFIG.ORIGIN_Y_FACTOR;
         this.currentLevelIndex = data.levelIndex !== undefined ? data.levelIndex : 0;
@@ -41,6 +43,7 @@ class WordWebGame extends Phaser.Scene {
         this.currentSublevelIndex = 0;
         this.totalSublevels = 0;
         this.stepProgressBar = null;
+        this.cellFillColor = CONFIG.CELL_BG1_COLOR;
 
     }
 
@@ -55,6 +58,8 @@ class WordWebGame extends Phaser.Scene {
         this.load.image('retryButton', 'graphics/retry.png');
         this.load.image('greenCheck', 'graphics/green_check.png');
         this.load.image('hintIcon', 'graphics/Hint.png');
+        this.load.image('square', 'graphics/square.png');
+        this.load.image('square-stroke', 'graphics/square-stroke.png');
 
         // Load WebFontLoader script
         this.load.script('webfont', 'fonts/webfontloader.js');
@@ -215,12 +220,10 @@ class WordWebGame extends Phaser.Scene {
 
         this.createAreas();
 
-        // Create dynamic textures for cell backgrounds
-        this.createCellTextures();
+        // No longer creating dynamic textures - using square.png and square-stroke.png instead
 
-        // Calculate max swap pairs and create grayscale textures for swap animations
+        // Calculate max swap pairs (used for tinting)
         this.maxSwapPairs = this.calculateMaxSwapPairs();
-        this.createSwapHighlightTextures();
 
         // Show portrait boundary for debugging (if enabled in config)
         if (CONFIG.SHOW_PORTRAIT_BOUNDARY) {
@@ -526,12 +529,35 @@ class WordWebGame extends Phaser.Scene {
             // Note: Hints, connection highlights, and arrows are now updated AFTER 
             // the sequential letter animation completes (see playPlacementAnimation callback)
         });
+        
+
+  this.input.keyboard.on('keydown-Y', () => {
+    console.log('Y pressed changing color');
+    
+    if(this.firstSquares.length > 0){
+        this.firstSquares.forEach(square => {
+            square.setTint(0x00ff00);
+        });
+    }
+    if(this.firstStrokes.length > 0){
+        this.firstStrokes.forEach(stroke => {
+            stroke.setTint(0x0000ff);
+        });
+    }
+    
+  });
+
+
+
     }
     // Play sequential letter bounce animation when word is placed
     playPlacementAnimation(wordContainer, onComplete) {
+        // if (onComplete) onComplete();
+        // return;
         const wordCells = wordContainer.getData('wordCells');
         const letters = wordCells.map(cell => cell.letter);
         const squares = wordCells.map(cell => cell.square);
+        const strokes = wordCells.map(cell => cell.stroke);
         const slotIdx = wordContainer.getData('slotIdx');
 
         if (letters.length === 0) {
@@ -549,37 +575,78 @@ class WordWebGame extends Phaser.Scene {
         // Animate each letter sequentially with a delay
         letters.forEach((letter, i) => {
             const square = squares[i];
+            const stroke = strokes[i];
             const delay = i * 50; // 50ms delay between each letter for smoother cascade
 
             // Choose targets based on mode: letter-only or cell (letter + square with baked-in stroke)
-            const targets = animateSquares ? [letter, square] : [letter];
-
-            // Bounce animation: scale up then back to normal
-            const tween = this.tweens.add({
-                targets: targets,
-                scaleX: 1.4,
-                scaleY: 1.4,
-                duration: 120,
-                ease: 'Back.easeOut',
-                delay: delay,
-                yoyo: true,
-                onComplete: () => {
-                    // Reset scale to ensure it's back to normal
-                    letter.setScale(1);
-                    if (square) square.setScale(1);
-
-                    // Show induced letter in correlated slot(s) as this letter completes
-                    if (slotIdx !== undefined) {
-                        this.showInducedLetter(slotIdx, i);
-                    }
-
-                    // If this is the last letter, call onComplete
-                    if (i === letters.length - 1) {
-                        wordContainer.setData('placementAnimationTweens', null);
-                        if (onComplete) onComplete();
-                    }
+            const targets = (animateSquares ? [letter, square, stroke] : [letter]).filter(Boolean);
+            // const targets = [letter];          
+            
+            targets.forEach(t => {
+                if (!t.getData('baseScaleX')) {
+                    t.setData('baseScaleX', t.scaleX);
+                    t.setData('baseScaleY', t.scaleY);
                 }
             });
+
+
+            const SCALE_FACTOR = 1.4;
+
+const tween = this.tweens.add({
+  targets,
+  scaleX: (target) => target.getData('baseScaleX') * SCALE_FACTOR,
+  scaleY: (target) => target.getData('baseScaleY') * SCALE_FACTOR,
+  duration: 120,
+  ease: 'Back.easeOut',
+  delay,
+  yoyo: true,
+  onComplete: () => {
+    targets.forEach(t => {
+      t.setScale(
+        t.getData('baseScaleX'),
+        t.getData('baseScaleY')
+      );
+    });
+
+    // your existing logic
+    if (slotIdx !== undefined) {
+      this.showInducedLetter(slotIdx, i);
+    }
+
+    if (i === letters.length - 1) {
+      wordContainer.setData('placementAnimationTweens', null);
+      if (onComplete) onComplete();
+    }
+  }
+});
+
+            // Bounce animation: scale up then back to normal
+            // const tween = this.tweens.add({
+            //     targets: targets,
+            //     scaleX: 1.4,
+            //     scaleY: 1.4,
+            //     duration: 120,
+            //     ease: 'Back.easeOut',
+            //     delay: delay,
+            //     yoyo: true,
+            //     onComplete: () => {
+            //         // Reset scale to ensure it's back to normal
+            //         letter.setScale(1);
+            //         if (square) square.setScale(1);
+            //         if (stroke) stroke.setScale(1);
+
+            //         // Show induced letter in correlated slot(s) as this letter completes
+            //         if (slotIdx !== undefined) {
+            //             this.showInducedLetter(slotIdx, i);
+            //         }
+
+            //         // If this is the last letter, call onComplete
+            //         if (i === letters.length - 1) {
+            //             wordContainer.setData('placementAnimationTweens', null);
+            //             if (onComplete) onComplete();
+            //         }
+            //     }
+            // });
 
             animationTweens.push(tween);
         });
@@ -753,14 +820,14 @@ class WordWebGame extends Phaser.Scene {
                 square1 = cell1.square;
                 square2 = cell2.square;
 
-                // Store original textures
-                originalTexture1 = square1.texture.key;
-                originalTexture2 = square2.texture.key;
+                // Store original tints
+                originalTexture1 = square1.tintTopLeft; // Store tint value instead of texture
+                originalTexture2 = square2.tintTopLeft;
 
-                // Apply grayscale highlight texture
-                const highlightTexture = `swapHighlight${pairIndex}`;
-                square1.setTexture(highlightTexture);
-                square2.setTexture(highlightTexture);
+                // Apply grayscale highlight tint
+                const highlightTint = this.getSwapHighlightTint(pairIndex);
+                square1.setTint(highlightTint);
+                square2.setTint(highlightTint);
             }
 
             // Animate only letters swapping positions (not the cells/squares)
@@ -787,10 +854,10 @@ class WordWebGame extends Phaser.Scene {
                 ease: curve,
                 easeParams: [4],
                 onComplete: () => {
-                    // Restore original cell textures (only for swap operation)
+                    // Restore original cell tints (only for swap operation)
                     if (isSwapOp && square1 && square2) {
-                        square1.setTexture(originalTexture1);
-                        square2.setTexture(originalTexture2);
+                        square1.setTint(originalTexture1);
+                        square2.setTint(originalTexture2);
                     }
 
                     completedSwaps++;
@@ -1353,57 +1420,12 @@ class WordWebGame extends Phaser.Scene {
         this.bankAreaHeight = height * 0.4;
     }
 
-    createCellTextures() {
-        console.log('Creating cell textures...');
-        const size = this.squareWidth;
-        const radius = CONFIG.SQUARE_RADIUS;
-        const color1 = CONFIG.CELL_BG1_COLOR;
-        const color2 = CONFIG.CELL_BG2_COLOR;
-
-        // Detect distinct groups in level
-        const groups = this.detectLevelGroups();
-        console.log(`Detected level groups: ${groups}`);
-        // Remove existing textures if they exist (for hot reload)
-        groups.forEach(group => {
-            if (this.textures.exists(`wordCellTexture_${group}`)) {
-                this.textures.remove(`wordCellTexture_${group}`);
-            }
-            if (this.textures.exists(`slotCellTexture_${group}`)) {
-                this.textures.remove(`slotCellTexture_${group}`);
-            }
-        });
-
-        // Create textures for each group
-        groups.forEach(group => {
-            this.createGroupTextures(group, size, radius, color1, color2);
-        });
-    }
-
-    // Detect all distinct groups in the level
-    detectLevelGroups() {
-        const groups = new Set();
-        groups.add(0); // Always include default group
-
-        // Check slots for groups
-        if (this.level.slots) {
-            this.level.slots.forEach(slot => {
-                if (slot.group !== undefined) {
-                    groups.add(slot.group);
-                }
-            });
-        }
-
-        // Check words for groups
-        if (this.level.words) {
-            this.level.words.forEach(word => {
-                // Words might be objects with group property
-                if (typeof word === 'object' && word.group !== undefined) {
-                    groups.add(word.group);
-                }
-            });
-        }
-
-        return Array.from(groups).sort((a, b) => a - b);
+    // No longer creating dynamic textures - using square.png and square-stroke.png with tinting
+    // This function now just returns colors for a group
+    
+    getCellFillColor(group = 0) {
+        // Always return white fill color - tinting will be applied to the base white texture
+        return 0xf7f7f7; // CELL_BG1_COLOR - white for all cells
     }
 
     // Get stroke color for a group
@@ -1438,82 +1460,6 @@ class WordWebGame extends Phaser.Scene {
         return parseInt(tintColor.replace('#', ''), 16);
     }
 
-    // Create textures for a specific group
-    createGroupTextures(group, size, radius, color1, color2) {
-        console.log('size ',size);
-        size=60;
-        const strokeColors = this.getGroupStrokeColor(group);
-
-        // Create word cell texture with diagonal split (top-right to bottom-left)
-        const wordTexture = this.textures.createCanvas(`wordCellTexture_${group}`, size, size);
-        const wordCtx = wordTexture.getSourceImage().getContext('2d');
-        console.log('************Creating textures for group:', group, 'with stroke colors:', strokeColors);
-        // Draw rounded rectangle background with color1
-        wordCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
-        this.drawRoundedRect(wordCtx, 0, 0, size, size, radius);
-        wordCtx.fill();
-
-        // Draw diagonal triangle overlay (color2) with clipping to rounded rectangle
-        wordCtx.save();
-        this.drawRoundedRect(wordCtx, 0, 0, size, size, radius);
-        wordCtx.clip();
-        wordCtx.fillStyle = '#' + color2.toString(16).padStart(6, '0');
-        wordCtx.beginPath();
-        wordCtx.moveTo(size, size); // bottom-right
-        wordCtx.lineTo(size, 0);    // top-right
-        wordCtx.lineTo(0, size);    // bottom-left
-        wordCtx.closePath();
-        wordCtx.fill();
-        wordCtx.restore();
-
-        // Add stroke to the rounded texture (color based on group)
-        wordCtx.strokeStyle = '#' + strokeColors.word.toString(16).padStart(6, '0');
-        wordCtx.lineWidth = this.wordStrokeWidth;
-        // if(group!==0){
-        //     wordCtx.lineWidth = this.wordStrokeWidth + 2;
-        // }
-        this.drawRoundedRect(wordCtx, this.wordStrokeWidth / 2, this.wordStrokeWidth / 2,
-            size - this.wordStrokeWidth, size - this.wordStrokeWidth, radius);
-        wordCtx.stroke();
-
-        wordTexture.refresh();
-
-        // Create slot cell texture with uniform color1 and rounded corners
-        const slotTexture = this.textures.createCanvas(`slotCellTexture_${group}`, size, size);
-        const slotCtx = slotTexture.getSourceImage().getContext('2d');
-        slotCtx.fillStyle = '#' + color1.toString(16).padStart(6, '0');
-        this.drawRoundedRect(slotCtx, 0, 0, size, size, radius);
-        slotCtx.fill();
-        console.log('************Creating slot texture for group:', group, 'with stroke colors:', strokeColors);
-
-        // Add stroke to the rounded texture (color based on group)
-        slotCtx.strokeStyle = '#' + strokeColors.slot.toString(16).padStart(6, '0');
-        slotCtx.lineWidth = this.slotStrokeWidth;
-        // if(group!==0){
-        //     slotCtx.lineWidth = this.slotStrokeWidth + 2;
-        // }
-        this.drawRoundedRect(slotCtx, this.slotStrokeWidth / 2, this.slotStrokeWidth / 2,
-            size - this.slotStrokeWidth, size - this.slotStrokeWidth, radius);
-        slotCtx.stroke();
-
-        slotTexture.refresh();
-    }
-
-    // Helper function to draw rounded rectangle path
-    drawRoundedRect(ctx, x, y, width, height, radius) {
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + width - radius, y);
-        ctx.arcTo(x + width, y, x + width, y + radius, radius);
-        ctx.lineTo(x + width, y + height - radius);
-        ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-        ctx.lineTo(x + radius, y + height);
-        ctx.arcTo(x, y + height, x, y + height - radius, radius);
-        ctx.lineTo(x, y + radius);
-        ctx.arcTo(x, y, x + radius, y, radius);
-        ctx.closePath();
-    }
-
     // Calculate maximum number of swap pairs in level
     calculateMaxSwapPairs() {
         if (!this.level.rules) return 0;
@@ -1528,43 +1474,12 @@ class WordWebGame extends Phaser.Scene {
         return maxPairs;
     }
 
-    // Create grayscale textures for swap animation highlighting
-    createSwapHighlightTextures() {
-        const size = this.squareWidth;
-
-        // Remove existing swap textures if they exist
-        for (let i = 0; i < this.maxSwapPairs; i++) {
-            const textureName = `swapHighlight${i}`;
-            if (this.textures.exists(textureName)) {
-                this.textures.remove(textureName);
-            }
-        }
-
-        // Create grayscale textures with incrementing intensity
-        const radius = CONFIG.SQUARE_RADIUS;
-        for (let i = 0; i < this.maxSwapPairs; i++) {
-            const textureName = `swapHighlight${i}`;
-            const texture = this.textures.createCanvas(textureName, size, size);
-            const ctx = texture.getSourceImage().getContext('2d');
-
-            // Calculate grayscale value: 0.9, 0.7, 0.5, 0.3, etc.
-            const grayValue = Phaser.Math.Clamp(0.7 - i * 0.2, 0, 1);
-            const gray = Math.floor(255 * grayValue);
-
-            // Fill with grayscale color using rounded rectangle
-            ctx.fillStyle = `rgb(${gray}, ${gray}, ${gray})`;
-            this.drawRoundedRect(ctx, 0, 0, size, size, radius);
-            ctx.fill();
-
-            // Add stroke to match original texture with rounded corners
-            ctx.strokeStyle = '#' + this.wordStrokeColor.toString(16).padStart(6, '0');
-            ctx.lineWidth = this.wordStrokeWidth;
-            this.drawRoundedRect(ctx, this.wordStrokeWidth / 2, this.wordStrokeWidth / 2,
-                size - this.wordStrokeWidth, size - this.wordStrokeWidth, radius);
-            ctx.stroke();
-
-            texture.refresh();
-        }
+    // Get grayscale tint color for swap animation highlighting
+    getSwapHighlightTint(pairIndex) {
+        // Calculate grayscale value: 0.9, 0.7, 0.5, 0.3, etc.
+        const grayValue = Phaser.Math.Clamp(0.7 - pairIndex * 0.2, 0, 1);
+        const gray = Math.floor(255 * grayValue);
+        return (gray << 16) | (gray << 8) | gray; // Convert to hex color
     }
 
     createUIElements() {
@@ -1912,21 +1827,33 @@ class WordWebGame extends Phaser.Scene {
 
                 // Get group from slot (default to 0)
                 const slotGroup = slot.group !== undefined ? slot.group : 0;
-                const textureName = `slotCellTexture_${slotGroup}`;
+                const strokeColors = this.getGroupStrokeColor(slotGroup);
 
-                // Create the image (square) centered at (0, 0) within the squareContainer using slot texture (includes stroke)
-                let square = this.add.image(0, 0, textureName);
+                // Create fill image (square.png) - tint to light grey/white
+                let square = this.add.image(0, 0, 'square');
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
+                square.setTint(this.cellFillColor); // Light grey/white fill
+                square.setAlpha(1.0); // Ensure full opacity
 
-                // Add shadows and square first (text will be added in second pass)
+                // Create stroke image (square-stroke.png) on top - tint to stroke color
+                let stroke = this.add.image(0, 0, 'square-stroke');
+                stroke.setDisplaySize(this.squareWidth, this.squareWidth);
+                stroke.setAlpha(1.0);
+                stroke.setTint(strokeColors.slot); // Black/grey or group color
+                
+                stroke.setAlpha(1.0); // Ensure full opacity
+
+                // Add shadows, square fill, and stroke (text will be added in second pass)
                 // squareContainer.add(shadowDark);
                 squareContainer.add(shadowMid);
                 squareContainer.add(square);
+                squareContainer.add(stroke);
                 // squareContainer.add(highlightEdge);
 
                 // Store data on the squareContainer (not the rectangle)
                 squareContainer.setData({ slotIdx, squareIdx: i, filled: false, letter: null, group: slotGroup });
                 squareContainer.setData('square', square);
+                squareContainer.setData('stroke', stroke);
 
                 // Add squareContainer to the slotContainer
                 slotContainer.add(squareContainer);
@@ -1938,6 +1865,7 @@ class WordWebGame extends Phaser.Scene {
                     shadowMid: shadowMid,
                     // highlightEdge: highlightEdge,
                     square: square,
+                    stroke: stroke,
                     letterText: null, // Will be set in second pass
                     index: i
                 });
@@ -2177,21 +2105,39 @@ class WordWebGame extends Phaser.Scene {
             let wordContainer = this.add.container(startX, baseY);
             let wordCells = [];
 
-            const textureName = `wordCellTexture_${wordGroup}`;
+            const strokeColors = this.getGroupStrokeColor(wordGroup);
 
-            // First, create all background squares and add them to container
+            // First, create all background squares and strokes and add them to container
             // Position children relative to container with offset for centering
             for (let i = 0; i < word.length; i++) {
                 let x = i * this.gridSize - halfWordWidth + this.gridSize / 2;
                 let y = 0;
-                // Create image object for word cell at position x,y using word texture (includes stroke)
-                let square = this.add.image(x, y, textureName);
+                
+                // Create fill image (square.png) - tint to light grey/white
+                let square = this.add.image(x, y, 'square');
                 square.setDisplaySize(this.squareWidth, this.squareWidth);
+                
+                square.setTint(this.cellFillColor); // Light grey/white fill
+              
+                // square.clearTint();
+                square.setAlpha(1.0); // Ensure full opacity
+                // square.setAlpha(0);
                 square.setData({ wordIdx, letterIdx: i });
                 wordContainer.add(square);
 
+                // Create stroke image (square-stroke.png) on top - tint to stroke color
+                let stroke = this.add.image(x, y, 'square-stroke');
+                stroke.setDisplaySize(this.squareWidth, this.squareWidth);
+                stroke.setTint(strokeColors.word); // Black/grey or group color
+                stroke.setAlpha(1.0); // Ensure full opacity
+                stroke.setData({ wordIdx, letterIdx: i });
+                wordContainer.add(stroke);
+                 if(i===0){
+                    this.firstSquares.push(square);
+                    this.firstStrokes.push(stroke);
+                }
                 // Store cell object with references
-                wordCells.push({ square: square, letter: null, index: i });
+                wordCells.push({ square: square, stroke: stroke, letter: null, index: i });
             }
 
             // Then, create all letters and add them to container (so they render above all squares)
@@ -2400,6 +2346,8 @@ class WordWebGame extends Phaser.Scene {
             });
             this.bankSprites.push(wordContainer);
         });
+
+       
     }
 
     makeDraggable(wordGroup) {
