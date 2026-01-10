@@ -48,44 +48,67 @@ class WordWebGame extends Phaser.Scene {
     }
 
     preload() {
-        this.load.json('levels', 'levels.json');
-        this.load.audio('fillSound', 'sounds/fill_sound4.wav');
-        this.load.audio('burstSound', 'sounds/burst.wav');
-        this.load.audio('invalidSound', 'sounds/invalid.ogg');
-        this.load.audio('successSound', 'sounds/success1.wav');
-        this.load.image('handPointer', 'graphics/hand_pointer.webp');
-        this.load.image('hintButton', 'graphics/hint.png');
-        this.load.image('skipButton', 'graphics/skip.png');
-        this.load.image('retryButton', 'graphics/retry.png');
-        this.load.image('greenCheck', 'graphics/green_check.png');
-        this.load.image('hintIcon', 'graphics/Hint.png');
-        this.load.image('square', 'graphics/square.png');
-        this.load.image('square-stroke', 'graphics/square-stroke.png');
+        // Only load assets if not already cached (prevents reloading on scene restart)
+        if (!this.cache.json.has('levels')) {
+            this.load.json('levels', 'levels.json');
+        }
+        
+        if (!this.cache.audio.has('fillSound')) {
+            this.load.audio('fillSound', 'sounds/fill_sound4.wav');
+            this.load.audio('burstSound', 'sounds/burst.wav');
+            this.load.audio('invalidSound', 'sounds/invalid.ogg');
+            this.load.audio('successSound', 'sounds/success1.wav');
+        }
+        
+        if (!this.textures.exists('handPointer')) {
+            this.load.image('handPointer', 'graphics/hand_pointer.webp');
+            this.load.image('hintButton', 'graphics/hint.png');
+            this.load.image('skipButton', 'graphics/skip.png');
+            this.load.image('retryButton', 'graphics/retry.png');
+            this.load.image('greenCheck', 'graphics/green_check.png');
+            this.load.image('hintIcon', 'graphics/hint.png');
+            this.load.image('square', 'graphics/square.png');
+            this.load.image('square-stroke', 'graphics/square-stroke.png');
+        }
 
-        // Load WebFontLoader script
-        this.load.script('webfont', 'fonts/webfontloader.js');
+        // Load WebFontLoader script only once
+        if (!window.WebFont) {
+            this.load.script('webfont', 'fonts/webfontloader.js');
+        }
 
-        // Create the promise immediately, but it will resolve after load completes
-        this.fontsReady = new Promise((resolve) => {
-            this.load.once('complete', () => {
-                WebFont.load({
-                    custom: {
-                        families: ['Poppins-Regular', 'Poppins-Medium', 'DMSans-Medium', 'Roboto-Regular', 'Roboto-Medium', 'Roboto-Bold', 'Style', 'ClearSans-Regular', 'ClearSans-Medium', 'ClearSans-Bold'],
-                    },
-                    active: () => {
-                        resolve();
-                    },
-                    inactive: () => {
-                        console.warn('Fonts failed to load');
-                        resolve();
-                    }
-                });
+        // Handle font loading - skip if fonts already loaded
+        if (!this.registry.get('fontsLoaded')) {
+            this.fontsReady = new Promise((resolve) => {
+                // If WebFont is already available and fonts are loaded, resolve immediately
+                if (window.WebFont && this.registry.get('fontsLoaded')) {
+                    resolve();
+                } else {
+                    this.load.once('complete', () => {
+                        WebFont.load({
+                            custom: {
+                                families: ['Poppins-Regular', 'Poppins-Medium', 'DMSans-Medium', 'Roboto-Regular', 'Roboto-Medium', 'Roboto-Bold', 'Style', 'ClearSans-Regular', 'ClearSans-Medium', 'ClearSans-Bold'],
+                            },
+                            active: () => {
+                                this.registry.set('fontsLoaded', true);
+                                resolve();
+                            },
+                            inactive: () => {
+                                console.warn('Fonts failed to load');
+                                this.registry.set('fontsLoaded', true);
+                                resolve();
+                            }
+                        });
+                    });
+                }
             });
-        });
+        } else {
+            // Fonts already loaded, resolve immediately
+            this.fontsReady = Promise.resolve();
+        }
     }
 
     async create() {
-        await this.fontsReady;
+        // Wait for fonts only if needed (resolved immediately on subsequent levels)
         if (this.fontsReady) {
             await this.fontsReady;
         }

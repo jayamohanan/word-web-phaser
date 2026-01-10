@@ -1481,6 +1481,7 @@
     },
 
   {
+    "shiftX": true,
   "slots": [
     {
       "length": 5,

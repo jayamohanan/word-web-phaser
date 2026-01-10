@@ -70,7 +70,7 @@ var CONFIG = {
     SLOT_MARKER_FONT_WEIGHT: '300', // Font weight for slot markers (use '300', '400', '500', or '700' as string)
 
     // Feature toggles
-    ENABLE_LINE_CLICK_HIGHLIGHTING: true, // Enable click on connection lines to highlight matching word bank cells
+    ENABLE_LINE_CLICK_HIGHLIGHTING: false, // Enable click on connection lines to highlight matching word bank cells
 
     // Background gradients (Poki gaming style)
     // Outer background gradient (full canvas)
