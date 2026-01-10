@@ -52,6 +52,7 @@ class WordWebGame extends Phaser.Scene {
         this.load.audio('fillSound', 'sounds/fill_sound4.wav');
         this.load.audio('burstSound', 'sounds/burst.wav');
         this.load.audio('invalidSound', 'sounds/invalid.ogg');
+        this.load.audio('successSound', 'sounds/success1.wav');
         this.load.image('handPointer', 'graphics/hand_pointer.webp');
         this.load.image('hintButton', 'graphics/hint.png');
         this.load.image('skipButton', 'graphics/skip.png');
@@ -3837,6 +3838,9 @@ const tween = this.tweens.add({
                 });
             } else {
                 // All sublevels complete - show win scene
+                // Play success sound
+                this.sound.play('successSound', { volume: 0.8 });
+                
                 this.scene.launch('WinScene', {
                     currentLevelIndex: this.currentLevelIndex,
                     totalLevels: this.totalLevels,

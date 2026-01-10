@@ -127,13 +127,26 @@ class WinScene extends Phaser.Scene {
         const buttonLetters = ['N', 'E', 'X', 'T'];
         const cellSize = 60;
         const gap = 6;
+        const padding = 15; // Padding around the cells
+        const cornerRadius = 3; // Rounded corner radius
         
-        // Calculate total width to center the button
-        const totalWidth = buttonLetters.length * cellSize + (buttonLetters.length - 1) * gap;
-        const startX = -totalWidth / 2 + cellSize / 2;
+        // Calculate total width of cells
+        const totalCellsWidth = buttonLetters.length * cellSize + (buttonLetters.length - 1) * gap;
+        const startX = -totalCellsWidth / 2 + cellSize / 2;
         
-        const buttonElements = [];
+        // Outer rectangle dimensions (with padding)
+        const outerWidth = totalCellsWidth + (padding * 2);
+        const outerHeight = cellSize + (padding * 2);
         
+        // Create outer rounded rectangle background
+        const outerRect = this.add.graphics();
+        outerRect.fillStyle(0xf7f7f7, 1);
+        outerRect.fillRoundedRect(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight, cornerRadius);
+        outerRect.lineStyle(3, 0x333333, 1);
+        outerRect.strokeRoundedRect(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight, cornerRadius);
+        container.add(outerRect);
+        
+        // Create N E X T cells (visual only, no interaction)
         buttonLetters.forEach((letter, index) => {
             const cellX = startX + index * (cellSize + gap);
             
@@ -150,39 +163,66 @@ class WinScene extends Phaser.Scene {
                 resolution: window.devicePixelRatio || 2
             }).setOrigin(0.5);
             
-            buttonElements.push(square, letterText);
             container.add([square, letterText]);
         });
         
-        // Make the entire container interactive
-        const hitArea = new Phaser.Geom.Rectangle(-totalWidth / 2, -cellSize / 2, totalWidth, cellSize);
+        // Make the entire container interactive (uses outer rectangle bounds)
+        const hitArea = new Phaser.Geom.Rectangle(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight);
         container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { useHandCursor: true });
         
-        // Button hover effects - scale entire container to preserve gaps
+        // Button hover effects - change outer rectangle color and scale
         container.on('pointerover', () => {
-            buttonElements.forEach(element => {
-                if (element.type === 'Rectangle') {
-                    element.setFillStyle(0xe0e0e0);
-                }
+            // Redraw outer rectangle with hover color
+            outerRect.clear();
+            outerRect.fillStyle(0xe0e0e0, 1);
+            outerRect.fillRoundedRect(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight, cornerRadius);
+            outerRect.lineStyle(3, 0x333333, 1);
+            outerRect.strokeRoundedRect(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight, cornerRadius);
+            
+            // Scale up the entire container
+            this.tweens.add({
+                targets: container,
+                scale: 1.05,
+                duration: 150,
+                ease: 'Power2'
             });
-            // container.setScale(1.05);
         });
 
         container.on('pointerout', () => {
-            buttonElements.forEach(element => {
-                if (element.type === 'Rectangle') {
-                    element.setFillStyle(0xf7f7f7);
-                }
+            // Redraw outer rectangle with normal color
+            outerRect.clear();
+            outerRect.fillStyle(0xf7f7f7, 1);
+            outerRect.fillRoundedRect(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight, cornerRadius);
+            outerRect.lineStyle(3, 0x333333, 1);
+            outerRect.strokeRoundedRect(-outerWidth / 2, -outerHeight / 2, outerWidth, outerHeight, cornerRadius);
+            
+            // Scale back to normal
+            this.tweens.add({
+                targets: container,
+                scale: 1.0,
+                duration: 150,
+                ease: 'Power2'
             });
-            // container.setScale(1);
         });
 
         container.on('pointerdown', () => {
-            // container.setScale(0.95);
+            // Scale down slightly on click
+            this.tweens.add({
+                targets: container,
+                scale: 0.98,
+                duration: 100,
+                ease: 'Power2'
+            });
         });
 
         container.on('pointerup', () => {
-            // container.setScale(1.05);
+            // Scale back up
+            this.tweens.add({
+                targets: container,
+                scale: 1.05,
+                duration: 100,
+                ease: 'Power2'
+            });
             
             // Go to next level (loop back to first level if at the end)
             const nextLevelIndex = (this.currentLevelIndex + 1) % this.totalLevels;
