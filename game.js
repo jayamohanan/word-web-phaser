@@ -62,13 +62,13 @@ class WordWebGame extends Phaser.Scene {
         
         if (!this.textures.exists('handPointer')) {
             this.load.image('handPointer', 'graphics/hand_pointer.webp');
-            this.load.image('hintButton', 'graphics/hint.png');
-            this.load.image('skipButton', 'graphics/skip.png');
-            this.load.image('retryButton', 'graphics/retry.png');
-            this.load.image('greenCheck', 'graphics/green_check.png');
-            this.load.image('hintIcon', 'graphics/hint.png');
-            this.load.image('square', 'graphics/square.png');
-            this.load.image('square-stroke', 'graphics/square-stroke.png');
+            this.load.image('hintButton', 'graphics/hint.webp');
+            this.load.image('skipButton', 'graphics/skip.webp');
+            this.load.image('retryButton', 'graphics/retry.webp');
+            this.load.image('greenCheck', 'graphics/green_check.webp');
+            this.load.image('hintIcon', 'graphics/hint.webp');
+            this.load.image('square', 'graphics/square.webp');
+            this.load.image('square-stroke', 'graphics/square-stroke.webp');
         }
     }
 
