@@ -22,8 +22,8 @@ class WordWebGame extends Phaser.Scene {
 
         this.slotStrokeColor = CONFIG.SLOT_STROKE_COLOR;
         this.wordStrokeColor = CONFIG.WORD_STROKE_COLOR;
-        this.letterFontFamily = CONFIG.LETTER_FONT_FAMILY === 'default' ? 'Arial, sans-serif' : CONFIG.LETTER_FONT_FAMILY;
-        this.letterFontWeight = CONFIG.LETTER_FONT_WEIGHT;
+        this.letterFontFamily = 'Arial, sans-serif';
+        this.letterFontWeight = 'normal';
         this.connectionHighlightColor = CONFIG.CONNECTION_HIGHLIGHT_COLOR;
         this.autopilotEnabled = CONFIG.AUTOPILOT_ENABLED;
         this.autopilotInProgress = false; // Track if autopilot is currently running
@@ -70,48 +70,9 @@ class WordWebGame extends Phaser.Scene {
             this.load.image('square', 'graphics/square.png');
             this.load.image('square-stroke', 'graphics/square-stroke.png');
         }
-
-        // Load WebFontLoader script only once
-        if (!window.WebFont) {
-            this.load.script('webfont', 'fonts/webfontloader.js');
-        }
-
-        // Handle font loading - skip if fonts already loaded
-        if (!this.registry.get('fontsLoaded')) {
-            this.fontsReady = new Promise((resolve) => {
-                // If WebFont is already available and fonts are loaded, resolve immediately
-                if (window.WebFont && this.registry.get('fontsLoaded')) {
-                    resolve();
-                } else {
-                    this.load.once('complete', () => {
-                        WebFont.load({
-                            custom: {
-                                families: ['Poppins-Regular', 'Poppins-Medium', 'DMSans-Medium', 'Roboto-Regular', 'Roboto-Medium', 'Roboto-Bold', 'Style', 'ClearSans-Regular', 'ClearSans-Medium', 'ClearSans-Bold'],
-                            },
-                            active: () => {
-                                this.registry.set('fontsLoaded', true);
-                                resolve();
-                            },
-                            inactive: () => {
-                                console.warn('Fonts failed to load');
-                                this.registry.set('fontsLoaded', true);
-                                resolve();
-                            }
-                        });
-                    });
-                }
-            });
-        } else {
-            // Fonts already loaded, resolve immediately
-            this.fontsReady = Promise.resolve();
-        }
     }
 
     async create() {
-        // Wait for fonts only if needed (resolved immediately on subsequent levels)
-        if (this.fontsReady) {
-            await this.fontsReady;
-        }
         const levels = this.cache.json.get('levels');
 
         if (!levels || !levels[CONFIG.LEVEL_TYPE]) {
@@ -1348,7 +1309,7 @@ const tween = this.tweens.add({
 
         // Create text at the exact cell position
         const pointText = this.add.text(x, y, `+${points}`, {
-            fontFamily: 'Poppins-Bold',
+            fontFamily: 'Arial, sans-serif',
             fontSize: '32px',
             fontWeight: 'bold',
             color: '#000000',
@@ -1995,8 +1956,9 @@ const tween = this.tweens.add({
                     bounds.centerY,
                     markerLetter,
                     {
-                        fontFamily: CONFIG.SLOT_MARKER_FONT_FAMILY,
-                        fontWeight: CONFIG.SLOT_MARKER_FONT_WEIGHT,
+                        fontFamily: 'Arial, sans-serif',
+                        fontStyle: 'italic',
+                        fontWeight: 'normal',
                         fontSize: '32px',
                         color: '#666666',
                         resolution: window.devicePixelRatio || 2

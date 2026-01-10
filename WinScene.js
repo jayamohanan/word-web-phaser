@@ -56,7 +56,7 @@ class WinScene extends Phaser.Scene {
         
         // Create heading as plain text
         const headingText = this.add.text(0, -140, randomMessage, {
-            fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+            fontFamily: 'Arial, sans-serif',
             fontSize: '48px',
             color: '#333',
             fontStyle: 'bold',
@@ -65,7 +65,7 @@ class WinScene extends Phaser.Scene {
         
         // Create mistake count text
         const mistakeText = this.add.text(0, -80, `Mistake${this.mistakeCount !== 1 ? 's' : ''}: ${this.mistakeCount}`, {
-            fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+            fontFamily: 'Arial, sans-serif',
             fontSize: '28px',
             color: '#666',
             resolution: window.devicePixelRatio || 2
@@ -108,7 +108,7 @@ class WinScene extends Phaser.Scene {
                 
                 // Add letter text
                 const letterText = this.add.text(cellX, 0, letter, {
-                    fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+                    fontFamily: 'Arial, sans-serif',
                     fontSize: `${cellSize * 0.78}px`,
                     color: '#333',
                     fontStyle: 'bold',
@@ -156,7 +156,7 @@ class WinScene extends Phaser.Scene {
             
             // Add letter text
             const letterText = this.add.text(cellX, 0, letter, {
-                fontFamily: CONFIG.LETTER_FONT_FAMILY || 'Arial',
+                fontFamily: 'Arial, sans-serif',
                 fontSize: `${cellSize * 0.65}px`,
                 color: '#333',
                 fontStyle: 'bold',
