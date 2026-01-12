@@ -1483,11 +1483,12 @@ const tween = this.tweens.add({
         const sideMargin = 20; // Distance from screen edge
         const bottomMargin = height * 0.20; // 10% from bottom
 
-        // Hint button - right side, 10% from bottom
+        // Hint button - right side, 10% from bottom (HIDDEN)
         const hintButton = this.add.image(width - sideMargin - buttonSize / 2, height - bottomMargin, 'hintButton')
             // .setDisplaySize(buttonSize, buttonSize)
             .setInteractive({ useHandCursor: true })
-            .setDepth(10001);
+            .setDepth(10001)
+            .setVisible(false); // Hidden as currently non-functional
 
         hintButton.on('pointerdown', () => {
             // TODO: Implement hint functionality
@@ -1496,7 +1497,7 @@ const tween = this.tweens.add({
 
         const hintBtnScale = buttonSize / hintButton.width;
         hintButton.setScale(hintBtnScale);
-        // Skip button - right side, directly above hint button
+        // Skip button - right side, directly above hint button (HIDDEN)
         const skipButton = this.add.image(
             width - sideMargin - buttonSize / 2,
             height - bottomMargin - buttonSize - buttonGap,
@@ -1504,7 +1505,8 @@ const tween = this.tweens.add({
         )
             // .setDisplaySize(buttonSize, buttonSize)
             .setInteractive({ useHandCursor: true })
-            .setDepth(10001);
+            .setDepth(10001)
+            .setVisible(false); // Hidden as currently non-functional
 
         skipButton.on('pointerdown', () => {
             // TODO: Implement skip functionality

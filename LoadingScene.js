@@ -67,6 +67,14 @@ class LoadingScene extends Phaser.Scene {
     }
 
     getSavedLevel() {
+        // Check if progress should be reset
+        if (CONFIG.RESET_PROGRESS) {
+            // Clear saved progress from localStorage
+            localStorage.removeItem('wordWebProgress');
+            console.log('Progress reset - starting from level 1');
+            return 0; // Start from level 0
+        }
+
         try {
             const saved = localStorage.getItem('wordWebProgress');
             if (saved) {
