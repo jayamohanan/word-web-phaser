@@ -13,11 +13,24 @@ class LevelViewerScene extends WordWebGame {
     }
 
     preload() {
-        // Load assets from parent directory (Phaser handles caching automatically)
+        // Load all assets from parent directory (Phaser handles caching automatically)
         this.load.json('levels', '../levels.json');
+        
+        // Load all audio files
         this.load.audio('fillSound', '../sounds/fill_sound4.wav');
         this.load.audio('burstSound', '../sounds/burst.wav');
+        this.load.audio('invalidSound', '../sounds/invalid.ogg');
+        this.load.audio('successSound', '../sounds/success1.wav');
+        
+        // Load all images
         this.load.image('handPointer', '../graphics/hand_pointer.webp');
+        this.load.image('hintButton', '../graphics/hint.webp');
+        this.load.image('skipButton', '../graphics/skip.webp');
+        this.load.image('retryButton', '../graphics/retry.webp');
+        this.load.image('greenCheck', '../graphics/green_check.webp');
+        this.load.image('hintIcon', '../graphics/hint.webp');
+        this.load.image('square', '../graphics/square.webp');
+        this.load.image('square-stroke', '../graphics/square-stroke.webp');
     }
 
     create() {
