@@ -109,7 +109,7 @@ var CONFIG = {
     POINTS_PER_CELL_ON_HINT: 10,  // Points awarded for placing a word cell correctly over a hint
 
     // Progress Management
-    RESET_PROGRESS: true,  // Set to true to erase all saved progress and start from level 1, false to continue from last played level
+    RESET_PROGRESS: false,  // Set to true to erase all saved progress and start from level 1, false to continue from last played level
 
     // Hover Effects
     HOVER_SCALE_ENABLED: false,  // Set to false to disable scale highlight on hover
